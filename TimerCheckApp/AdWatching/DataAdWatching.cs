@@ -325,6 +325,7 @@ public class DataAdWatching : IAdWatching
             _deviceService.CleanDeviceRunningApps(device.Id);
             await Task.Delay(15000, cancellationToken);
             _logService.LogInfo($"打开快手", device.Id);
+            _ = arrTask.TryAdd("快手", DateTime.Now.ToString());
             await _deviceService.CurAdbClient.StartAppAsync(_device, PlatformType.Kuaishou.GetPackageName());
             await Task.Delay(5000, cancellationToken);
         }
@@ -334,6 +335,7 @@ public class DataAdWatching : IAdWatching
             _deviceService.CleanDeviceRunningApps(device.Id);
             await Task.Delay(15000, cancellationToken);
             _logService.LogInfo($"打开快手极速版", device.Id);
+            _ = arrTask.TryAdd("快手极速版", DateTime.Now.ToString());
             await _deviceService.CurAdbClient.StartAppAsync(_device, PlatformType.KuaishouJs.GetPackageName());
             await Task.Delay(5000, cancellationToken);
         }
@@ -343,6 +345,7 @@ public class DataAdWatching : IAdWatching
             _deviceService.CleanDeviceRunningApps(device.Id);
             await Task.Delay(15000, cancellationToken);
             _logService.LogInfo($"打开抖音", device.Id);
+            _ = arrTask.TryAdd("抖音", DateTime.Now.ToString());
             await _deviceService.CurAdbClient.StartAppAsync(_device, PlatformType.Douyin.GetPackageName());
             await Task.Delay(5000, cancellationToken);
         }

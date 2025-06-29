@@ -1514,7 +1514,7 @@ public class KuaishouAdWatching : IAdWatching
         {
             _logService.LogInfo($"准备支付宝", device.Id);
             _deviceService.CleanDeviceRunningApps(device.Id);
-            await Task.Delay(15000, cancellationToken);
+            await Task.Delay(15000, cancellationToken);xx
             await _deviceService.CurAdbClient.StartAppAsync(_device, PlatformType.AliPay.GetPackageName());
             await Task.Delay(5000, cancellationToken);
         }
@@ -1523,6 +1523,7 @@ public class KuaishouAdWatching : IAdWatching
             _logService.LogInfo($"准备快手极速版", device.Id);
             _deviceService.CleanDeviceRunningApps(device.Id);
             await Task.Delay(15000, cancellationToken);
+            _ = arrTask.TryAdd("快手极速版", DateTime.Now.ToString());
             await _deviceService.CurAdbClient.StartAppAsync(_device, PlatformType.KuaishouJs.GetPackageName());
             await Task.Delay(5000, cancellationToken);
         }
@@ -1531,6 +1532,7 @@ public class KuaishouAdWatching : IAdWatching
             _logService.LogInfo($"准备打开快手", device.Id);
             _deviceService.CleanDeviceRunningApps(device.Id);
             await Task.Delay(15000, cancellationToken);
+            _ = arrTask.TryAdd("快手", DateTime.Now.ToString());
             await _deviceService.CurAdbClient.StartAppAsync(_device, PlatformType.Kuaishou.GetPackageName());
             await Task.Delay(5000, cancellationToken);
         }
