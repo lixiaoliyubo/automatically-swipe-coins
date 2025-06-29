@@ -1506,7 +1506,7 @@ public class KuaishouAdWatching : IAdWatching
         {
             await SwipeAsync(device, _device, 2000, "左滑", 500, 500, 100, 500, 400);
         }
-        else if (text.TextBlocks.Any(a => a.Text == "任务中心"))
+        else if (text.TextBlocks.Any(a => a.Text == "任务中心" || a.Text.StartsWith("说点什么")))
         {
             await ClickAsync(device, _device, null, 2000, "返回-首页");
         }
