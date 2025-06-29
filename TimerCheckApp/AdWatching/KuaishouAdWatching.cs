@@ -1545,7 +1545,11 @@ public class KuaishouAdWatching : IAdWatching
             await _deviceService.CurAdbClient.StartAppAsync(_device, PlatformType.Kuaishou.GetPackageName());
             await Task.Delay(5000, cancellationToken);
         }
-        else if (text.TextBlocks.Any(a => a.Text == "首页" || a.Text == "我") && text.TextBlocks.Any(a => a.Text == "去赚钱" || a.Text == "精选"))
+        
+        else if (
+            (text.TextBlocks.Any(a => a.Text == "首页" || a.Text == "我") && text.TextBlocks.Any(a => a.Text == "去赚钱" || a.Text == "精选")) ||
+            (text.TextBlocks.Any(a => Regex.IsMatch(a.Text, @"^(\d+)/(\d+)$")) && text.TextBlocks.Any(a => a.Text == "关注" || a.Text == "视频" || a.Text == "发现"))
+            )
         {
             await _cacheService.RemoveAsync($"KuaishouAdWatching_{device.CurPage.ToString()}");
             var r = new Random().Next(5000, 15000);
