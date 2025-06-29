@@ -19,6 +19,7 @@ public class HongGuoWatching : IAdWatching
     private readonly ILogService _logService;
     private readonly IDeviceService _deviceService;
     private readonly ICacheService _cacheService;
+    private readonly ISqlSugarService _sqlSugarService;
     private bool IsOperate = false;
 
     public ConcurrentDictionary<string, string> arrTask { get; set; } = new()
@@ -34,11 +35,12 @@ public class HongGuoWatching : IAdWatching
     };
 
 
-    public HongGuoWatching(ILogService logService, IDeviceService deviceService, ICacheService cacheService)
+    public HongGuoWatching(ILogService logService, IDeviceService deviceService, ICacheService cacheService, ISqlSugarService sqlSugarService)
     {
         _logService = logService;
         _deviceService = deviceService;
         _cacheService = cacheService;
+        _sqlSugarService = sqlSugarService;
     }
 
     public async Task AutomateAdWatching(DeviceModel device, CancellationToken cancellationToken)

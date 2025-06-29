@@ -1,4 +1,4 @@
-﻿using TimerCheckApp.enums;
+using TimerCheckApp.enums;
 using TimerCheckApp.Extensions;
 using PaddleOCRSharp;
 using System.Collections.Concurrent;
@@ -22,17 +22,19 @@ public class DataAdWatching : IAdWatching
     private readonly ILogService _logService;
     private readonly IDeviceService _deviceService;
     private readonly ICacheService _cacheService;
+    private readonly ISqlSugarService _sqlSugarService;
     private bool IsOperate = false;
     public ConcurrentDictionary<string, string> arrTask { get; set; } = new()
     {
 
     };
 
-    public DataAdWatching(ILogService logService, IDeviceService deviceService, ICacheService cacheService)
+    public DataAdWatching(ILogService logService, IDeviceService deviceService, ICacheService cacheService, ISqlSugarService sqlSugarService)
     {
         _logService = logService;
         _deviceService = deviceService;
         _cacheService = cacheService;
+        _sqlSugarService = sqlSugarService;
     }
 
     public async Task AutomateAdWatching(DeviceModel device, CancellationToken cancellationToken)

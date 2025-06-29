@@ -9,6 +9,7 @@ using AdvancedSharpAdbClient.DeviceCommands;
 using System.Diagnostics;
 using OpenCvSharp;
 using System.IO;
+using TimerCheckApp.Models;
 
 namespace TimerCheckApp.AdWatching;
 
@@ -20,6 +21,7 @@ public class DouyinAdWatching : IAdWatching
     private readonly ILogService _logService;
     private readonly IDeviceService _deviceService;
     private readonly ICacheService _cacheService;
+    private readonly ISqlSugarService _sqlSugarService;
     /// <summary>
     /// 当前是否有操作
     /// </summary>
@@ -56,11 +58,12 @@ public class DouyinAdWatching : IAdWatching
     };
 
 
-    public DouyinAdWatching(ILogService logService, IDeviceService deviceService, ICacheService cacheService)
+    public DouyinAdWatching(ILogService logService, IDeviceService deviceService, ICacheService cacheService, ISqlSugarService sqlSugarService)
     {
         _logService = logService;
         _deviceService = deviceService;
         _cacheService = cacheService;
+        _sqlSugarService = sqlSugarService;
     }
 
     /// <summary>

@@ -2,6 +2,7 @@ using System;
 using Microsoft.Extensions.DependencyInjection;
 using TimerCheckApp.enums;
 using TimerCheckApp.Services.Interfaces;
+using TimerCheckApp.Models;
 
 namespace TimerCheckApp.AdWatching
 {
@@ -13,6 +14,7 @@ namespace TimerCheckApp.AdWatching
         private readonly ILogService _logService;
         private readonly ICacheService _cacheService;
         private readonly IServiceProvider _serviceProvider;
+        private readonly ISqlSugarService _sqlSugarService;
 
         /// <summary>
         /// 构造函数
@@ -20,11 +22,12 @@ namespace TimerCheckApp.AdWatching
         /// <param name="logService">日志服务</param>
         /// <param name="cacheService">缓存服务</param>
         /// <param name="serviceProvider">服务提供者</param>
-        public AdWatchingFactory(ILogService logService, ICacheService cacheService, IServiceProvider serviceProvider)
+        public AdWatchingFactory(ILogService logService, ICacheService cacheService, IServiceProvider serviceProvider, ISqlSugarService sqlSugarService)
         {
             _logService = logService;
             _cacheService = cacheService;
             _serviceProvider = serviceProvider;
+            _sqlSugarService = sqlSugarService;
         }
 
         /// <summary>
@@ -39,17 +42,17 @@ namespace TimerCheckApp.AdWatching
             
             return platformType switch
             {
-                PlatformType.Douyin => new DouyinAdWatching(_logService, deviceService, _cacheService),
-                PlatformType.Kuaishou => new KuaishouAdWatching(_logService, deviceService, _cacheService),
-                PlatformType.KuaishouJs => new KuaishouAdWatching(_logService, deviceService, _cacheService),
-                PlatformType.FanQie => new FanQieMusicAdWatching(_logService, deviceService, _cacheService),
-                PlatformType.FanQieMusic => new FanQieMusicAdWatching(_logService, deviceService, _cacheService),
-                PlatformType.HongGuo => new HongGuoWatching(_logService, deviceService, _cacheService),
-                PlatformType.HeMa => new HeMaWatching(_logService, deviceService, _cacheService),
-                PlatformType.XiGua => new XiGuaWatching(_logService, deviceService, _cacheService),
-                PlatformType.Novel => new FanQieNovelAdWatching(_logService, deviceService, _cacheService),
-                PlatformType.AliPay => new AliPayAdWatching(_logService, deviceService, _cacheService),
-                PlatformType.Data => new DataAdWatching(_logService, deviceService, _cacheService),
+                PlatformType.Douyin => new DouyinAdWatching(_logService, deviceService, _cacheService, _sqlSugarService),
+                PlatformType.Kuaishou => new KuaishouAdWatching(_logService, deviceService, _cacheService, _sqlSugarService),
+                PlatformType.KuaishouJs => new KuaishouAdWatching(_logService, deviceService, _cacheService, _sqlSugarService),
+                PlatformType.FanQie => new FanQieMusicAdWatching(_logService, deviceService, _cacheService, _sqlSugarService),
+                PlatformType.FanQieMusic => new FanQieMusicAdWatching(_logService, deviceService, _cacheService, _sqlSugarService),
+                PlatformType.HongGuo => new HongGuoWatching(_logService, deviceService, _cacheService, _sqlSugarService),
+                PlatformType.HeMa => new HeMaWatching(_logService, deviceService, _cacheService, _sqlSugarService),
+                PlatformType.XiGua => new XiGuaWatching(_logService, deviceService, _cacheService, _sqlSugarService),
+                PlatformType.Novel => new FanQieNovelAdWatching(_logService, deviceService, _cacheService, _sqlSugarService),
+                PlatformType.AliPay => new AliPayAdWatching(_logService, deviceService, _cacheService, _sqlSugarService),
+                PlatformType.Data => new DataAdWatching(_logService, deviceService, _cacheService, _sqlSugarService),
                 _ => throw new ArgumentException($"不支持的平台类型：{platformType}", nameof(platformType))
             };
         }

@@ -8,6 +8,7 @@ using AdvancedSharpAdbClient.Models;
 using AdvancedSharpAdbClient.DeviceCommands;
 using OpenCvSharp;
 using System.IO;
+using TimerCheckApp.Models;
 
 namespace TimerCheckApp.AdWatching;
 
@@ -19,6 +20,7 @@ public class KuaishouAdWatching : IAdWatching
     private readonly ILogService _logService;
     private readonly IDeviceService _deviceService;
     private readonly ICacheService _cacheService;
+    private readonly ISqlSugarService _sqlSugarService;
     private bool IsOperate = false;
 
     public ConcurrentDictionary<string, string> arrTask { get; set; } = new()
@@ -40,11 +42,12 @@ public class KuaishouAdWatching : IAdWatching
         ["上次滑动时间"] = string.Empty
     };
 
-    public KuaishouAdWatching(ILogService logService, IDeviceService deviceService, ICacheService cacheService)
+    public KuaishouAdWatching(ILogService logService, IDeviceService deviceService, ICacheService cacheService, ISqlSugarService sqlSugarService)
     {
         _logService = logService;
         _deviceService = deviceService;
         _cacheService = cacheService;
+        _sqlSugarService = sqlSugarService;
     }
     public async Task AutomateAdWatching(DeviceModel device, CancellationToken cancellationToken)
     {
@@ -930,10 +933,10 @@ public class KuaishouAdWatching : IAdWatching
 
                             if (!IsOperate && (DateTime.Now - device.LastClickTime).TotalSeconds > 10)
                             {
-                                if (arrTask["上下滑动"].ToInt32() > 1500)
+                                if (arrTask["上下滑动"].ToInt32() > 500)
                                 {
-                                    arrTask["上下滑动"] = $"{(arrTask["上下滑动"].ToInt32() - 100)}";
-                                    await SwipeAsync(device, _device, 3000, "在首页停留时间超过30秒自动下滑", 500, 900, 500, 1000, 200);
+                                   arrTask["上下滑动"] = $"{(arrTask["上下滑动"].ToInt32() - 100)}";
+                                   await SwipeAsync(device, _device, 3000, "在首页停留时间超过30秒自动下滑", 500, 900, 500, 1000, 200);
                                 }
                                 else
                                 {

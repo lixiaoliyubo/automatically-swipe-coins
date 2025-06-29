@@ -25,6 +25,7 @@ public class DeviceService : IDeviceService, IDisposable
     private readonly Dictionary<string, CancellationTokenSource> _deviceTasks;
     private readonly IWebSocketService _webSocketService;
     private readonly IAdWatchingFactory _adWatchingFactory;
+    private readonly ISqlSugarService _sqlSugarService;
     private readonly object _ocrEngineLock = new object();
 
     public AdbClient CurAdbClient { get => _adbClient; }
@@ -41,7 +42,8 @@ public class DeviceService : IDeviceService, IDisposable
     /// <param name="adbServer">ADB服务器</param>
     /// <param name="webSocketService">WebSocket服务</param>
     /// <param name="adWatchingFactory">广告观看工厂</param>
-    public DeviceService(ILogService logService, ICacheService cacheService, AdbClient adbClient, AdbServer adbServer, IWebSocketService webSocketService, IAdWatchingFactory adWatchingFactory)
+    /// <param name="sqlSugarService">数据库服务</param>
+    public DeviceService(ILogService logService, ICacheService cacheService, AdbClient adbClient, AdbServer adbServer, IWebSocketService webSocketService, IAdWatchingFactory adWatchingFactory, ISqlSugarService sqlSugarService)
     {
         _cacheService = cacheService;
         _logService = logService;
@@ -49,6 +51,7 @@ public class DeviceService : IDeviceService, IDisposable
         _adbServer = adbServer;
         _webSocketService = webSocketService;
         _adWatchingFactory = adWatchingFactory;
+        _sqlSugarService = sqlSugarService;
         _deviceTasks = new Dictionary<string, CancellationTokenSource>();
 
         // 启动ADB服务器
