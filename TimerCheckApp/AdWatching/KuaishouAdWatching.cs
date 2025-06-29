@@ -1514,7 +1514,7 @@ public class KuaishouAdWatching : IAdWatching
         {
             _logService.LogInfo($"准备支付宝", device.Id);
             _deviceService.CleanDeviceRunningApps(device.Id);
-            await Task.Delay(15000, cancellationToken);xx
+            await Task.Delay(15000, cancellationToken);
             await _deviceService.CurAdbClient.StartAppAsync(_device, PlatformType.AliPay.GetPackageName());
             await Task.Delay(5000, cancellationToken);
         }
