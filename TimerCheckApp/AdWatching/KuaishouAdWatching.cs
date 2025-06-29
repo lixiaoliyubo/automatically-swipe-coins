@@ -1483,6 +1483,21 @@ public class KuaishouAdWatching : IAdWatching
         {
             isDesktop = true;
         }
+        if (isDesktop && dateTime.Hour >= 5)
+        {
+            _ = arrTask.Remove("支付宝", out _);
+            await Task.Delay(5000, cancellationToken);
+        }
+        else if (isDesktop && dateTime.Hour >= 3)
+        {
+            _ = arrTask.Remove("快手极速版", out _);
+            await Task.Delay(5000, cancellationToken);
+        }
+        else if (isDesktop && dateTime.Hour >= 0)
+        {
+            _ = arrTask.Remove("快手", out _);
+            await Task.Delay(5000, cancellationToken);
+        }
 
         if (
             (text.TextBlocks.Any(a => a.Text == "软件商店") && text.TextBlocks.Any(a => a.Text == "主题商店")) ||
@@ -1495,42 +1510,33 @@ public class KuaishouAdWatching : IAdWatching
         {
             await ClickAsync(device, _device, null, 2000, "返回-首页");
         }
-        else if (isDesktop && dateTime.Hour >= 5 && !arrTask.ContainsKey("快手极速版"))
+        else if (!isDesktop && dateTime.Hour >= 5 && !arrTask.ContainsKey("支付宝"))
         {
-            var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "快手极速版");
-            if (BoxPoint != null)
-            {
-                arrTask.TryAdd("快手极速版", DateTime.Now.ToString());
-                _logService.LogInfo($"桌面中打开快手极速版", device.Id);
-                var pos = BoxPoint.BoxPoints.CalculateTextBlockCenter();
-                await ClickAsync(device, _device, new List<OCRPoint>() { new OCRPoint(pos.X, pos.Y - 50) }, 10000, BoxPoint.Text);
-            }
+            _logService.LogInfo($"准备支付宝", device.Id);
+            _deviceService.CleanDeviceRunningApps(device.Id);
+            await Task.Delay(15000, cancellationToken);
+            await _deviceService.CurAdbClient.StartAppAsync(_device, PlatformType.AliPay.GetPackageName());
+            await Task.Delay(5000, cancellationToken);
         }
-        else if (isDesktop && dateTime.Hour >= 0 && !arrTask.ContainsKey("快手"))
-        {
-            var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "快手");
-            if (BoxPoint != null)
-            {
-                arrTask.TryAdd("快手", DateTime.Now.ToString());
-                _logService.LogInfo($"桌面中打开快手", device.Id);
-                var pos = BoxPoint.BoxPoints.CalculateTextBlockCenter();
-                await ClickAsync(device, _device, new List<OCRPoint>() { new OCRPoint(pos.X, pos.Y - 50) }, 10000, BoxPoint.Text);
-            }
-        }
-        else if (!isDesktop && dateTime.Hour >= 5 && !arrTask.ContainsKey("快手极速版"))
+        else if (!isDesktop && dateTime.Hour >= 3 && !arrTask.ContainsKey("快手极速版"))
         {
             _logService.LogInfo($"准备快手极速版", device.Id);
             _deviceService.CleanDeviceRunningApps(device.Id);
             await Task.Delay(15000, cancellationToken);
+            await _deviceService.CurAdbClient.StartAppAsync(_device, PlatformType.KuaishouJs.GetPackageName());
+            await Task.Delay(5000, cancellationToken);
         }
         else if (!isDesktop && dateTime.Hour >= 0 && !arrTask.ContainsKey("快手"))
         {
             _logService.LogInfo($"准备打开快手", device.Id);
             _deviceService.CleanDeviceRunningApps(device.Id);
             await Task.Delay(15000, cancellationToken);
+            await _deviceService.CurAdbClient.StartAppAsync(_device, PlatformType.Kuaishou.GetPackageName());
+            await Task.Delay(5000, cancellationToken);
         }
         else if (text.TextBlocks.Any(a => a.Text == "首页") && text.TextBlocks.Any(a => a.Text == "去赚钱" || a.Text == "精选"))
         {
+            await _cacheService.RemoveAsync($"KuaishouAdWatching_{device.CurPage.ToString()}");
             var r = new Random().Next(5000, 15000);
             if (!text.TextBlocks.Any(a => a.Text == "点击进入直播间"))
             {

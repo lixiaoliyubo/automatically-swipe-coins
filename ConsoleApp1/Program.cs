@@ -23,41 +23,104 @@ using System.Runtime.InteropServices;
 using System.Speech.Synthesis;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Windows.Forms;
+using TimerCheckApp.enums;
 using TimerCheckApp.Extensions;
 using Point = OpenCvSharp.Point;
 namespace ConsoleApp1;
 public class ConsoleApp1
 {
-
-
     static void Main(string[] args)
     {
+        ConcurrentDictionary<string, string> arrTask = new()
+        {
+            ["快手"] = string.Empty,
+            ["抖音"] = string.Empty,
+            ["快手极速版"] = string.Empty,
+        };
 
-            using (var synthesizer = new SpeechSynthesizer())
+        _ = arrTask.Remove("快手极速版", out _);
+
+        var PackageName = PlatformType.KuaishouJs.GetPackageName();
+
+
+        // 初始化ADB连接
+        var adbClient = new AdbClient();
+
+
+        // 获取第一个连接的设备
+        var devices = adbClient.GetDevices();
+
+        foreach (var device in devices)
+        {
+
+            Task.Run(async () =>
             {
-                // 设置输出为WAV文件
-                synthesizer.SetOutputToWaveFile(@"E:\AdAuto\TimerCheckApp\Resources\audio\error.wav");
+                var status = adbClient.GetAppStatus(device, PackageName);
+                Console.WriteLine($"App运行状态: {status}");
 
-                // 选择语音（可选）
-                foreach (var voice in synthesizer.GetInstalledVoices())
+                // 获取设备上安装的所有包
+                var receiver = new ConsoleOutputReceiver();
+                adbClient.ExecuteRemoteCommand("pm list packages -3", device, receiver);
+                var output = receiver.ToString().Trim();
+                var packages = output.Split('\n').Select(p => p.Replace("package:", "").Trim()).Where(p => !string.IsNullOrEmpty(p));
+
+                Console.WriteLine($"设备 {device.Serial} 上共有 {packages.Count()} 个应用");
+
+                // 逐个强制停止应用
+                foreach (var package in packages)
                 {
-                    if (voice.VoiceInfo.Culture.Name == "zh-CN")
+                    try
                     {
-                        synthesizer.SelectVoice(voice.VoiceInfo.Name);
-                        break;
+                        adbClient.ExecuteRemoteCommand($"am force-stop {package}", device, new ConsoleOutputReceiver());
+                        Console.WriteLine($"已停止应用: {package}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"停止应用 {package} 失败: {ex.Message}");
                     }
                 }
+                await Task.Delay(10000);
+                await adbClient.StartAppAsync(device, PackageName);
+            });
 
-                // 设置语音速率（-10到10）
-                synthesizer.Rate = 0;
-                synthesizer.Volume = 100; // 音量（0-100）
+
+        }
+        Console.WriteLine("完成...");
+
+        Console.ReadKey();
+    }
+
+    /// <summary>
+    /// 音频输出
+    /// </summary>
+    /// <param name="args"></param>
+    static void Main308(string[] args)
+    {
+        using (var synthesizer = new SpeechSynthesizer())
+        {
+            // 设置输出为WAV文件
+            synthesizer.SetOutputToWaveFile(@"E:\AdAuto\TimerCheckApp\Resources\audio\error.wav");
+
+            // 选择语音（可选）
+            foreach (var voice in synthesizer.GetInstalledVoices())
+            {
+                if (voice.VoiceInfo.Culture.Name == "zh-CN")
+                {
+                    synthesizer.SelectVoice(voice.VoiceInfo.Name);
+                    break;
+                }
+            }
+
+            // 设置语音速率（-10到10）
+            synthesizer.Rate = 0;
+            synthesizer.Volume = 100; // 音量（0-100）
 
             // 开始转换
             synthesizer.Speak("主人，任务出现问题，请及时查看");
         }
         Console.ReadKey();
-
     }
     /// <summary>
     /// 检测当前设备活动的App
@@ -78,7 +141,7 @@ public class ConsoleApp1
                 Console.WriteLine("错误：未检测到连接的设备");
                 return;
             }
-            var sss =  adbClient.GetAppStatus(device, "com.eg.android.AlipayGphone");
+            var sss = adbClient.GetAppStatus(device, "com.eg.android.AlipayGphone");
             Console.WriteLine($"正在检测设备: {device.Serial}");
 
             // 方案2：备用检测方法
@@ -145,7 +208,7 @@ public class ConsoleApp1
     {
         var _adbClient = new AdbClient();
         var adbClients = _adbClient.GetDevices();
-         (int width, int height) size = new(0, 0);
+        (int width, int height) size = new(0, 0);
         foreach (var _device in adbClients.Where(a => a.Name.Contains("OP5627")))
         {
             int i = 0;
