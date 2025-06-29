@@ -20,6 +20,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Reactive.Concurrency;
 using System.Runtime.InteropServices;
+using System.Speech.Synthesis;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -30,11 +31,39 @@ public class ConsoleApp1
 {
 
 
+    static void Main(string[] args)
+    {
+
+            using (var synthesizer = new SpeechSynthesizer())
+            {
+                // 设置输出为WAV文件
+                synthesizer.SetOutputToWaveFile(@"E:\AdAuto\TimerCheckApp\Resources\audio\error.wav");
+
+                // 选择语音（可选）
+                foreach (var voice in synthesizer.GetInstalledVoices())
+                {
+                    if (voice.VoiceInfo.Culture.Name == "zh-CN")
+                    {
+                        synthesizer.SelectVoice(voice.VoiceInfo.Name);
+                        break;
+                    }
+                }
+
+                // 设置语音速率（-10到10）
+                synthesizer.Rate = 0;
+                synthesizer.Volume = 100; // 音量（0-100）
+
+            // 开始转换
+            synthesizer.Speak("主人，任务出现问题，请及时查看");
+        }
+        Console.ReadKey();
+
+    }
     /// <summary>
     /// 检测当前设备活动的App
     /// </summary>
     /// <param name="args"></param>
-    static void Main(string[] args)
+    static void Main307(string[] args)
     {
         // 初始化ADB连接
         var adbClient = new AdbClient();

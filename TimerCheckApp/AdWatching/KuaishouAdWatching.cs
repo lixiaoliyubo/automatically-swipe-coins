@@ -1495,7 +1495,7 @@ public class KuaishouAdWatching : IAdWatching
         {
             await ClickAsync(device, _device, null, 2000, "返回-首页");
         }
-        else if (isDesktop && dateTime.Hour >= 5)
+        else if (isDesktop && dateTime.Hour >= 5 && !arrTask.ContainsKey("快手极速版"))
         {
             var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "快手极速版");
             if (BoxPoint != null)
@@ -1506,7 +1506,7 @@ public class KuaishouAdWatching : IAdWatching
                 await ClickAsync(device, _device, new List<OCRPoint>() { new OCRPoint(pos.X, pos.Y - 50) }, 10000, BoxPoint.Text);
             }
         }
-        else if (isDesktop && dateTime.Hour >= 0)
+        else if (isDesktop && dateTime.Hour >= 0 && !arrTask.ContainsKey("快手"))
         {
             var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "快手");
             if (BoxPoint != null)
@@ -1516,6 +1516,18 @@ public class KuaishouAdWatching : IAdWatching
                 var pos = BoxPoint.BoxPoints.CalculateTextBlockCenter();
                 await ClickAsync(device, _device, new List<OCRPoint>() { new OCRPoint(pos.X, pos.Y - 50) }, 10000, BoxPoint.Text);
             }
+        }
+        else if (!isDesktop && dateTime.Hour >= 5 && !arrTask.ContainsKey("快手极速版"))
+        {
+            _logService.LogInfo($"准备快手极速版", device.Id);
+            _deviceService.CleanDeviceRunningApps(device.Id);
+            await Task.Delay(15000, cancellationToken);
+        }
+        else if (!isDesktop && dateTime.Hour >= 0 && !arrTask.ContainsKey("快手"))
+        {
+            _logService.LogInfo($"准备打开快手", device.Id);
+            _deviceService.CleanDeviceRunningApps(device.Id);
+            await Task.Delay(15000, cancellationToken);
         }
         else if (text.TextBlocks.Any(a => a.Text == "首页") && text.TextBlocks.Any(a => a.Text == "去赚钱" || a.Text == "精选"))
         {
@@ -1534,17 +1546,16 @@ public class KuaishouAdWatching : IAdWatching
                 await SwipeAsync(device, _device, 0, "滑动刷视频", 300, 1000, 300, 600, 400);
             }
         }
-        else if (!isDesktop && dateTime.Hour >= 5 && !arrTask.ContainsKey("快手极速版"))
+        else
         {
-            _logService.LogInfo($"准备快手极速版", device.Id);
-            _deviceService.CleanDeviceRunningApps(device.Id);
-            await Task.Delay(15000, cancellationToken);
-        }
-        else if (!isDesktop && dateTime.Hour >= 0 && !arrTask.ContainsKey("快手"))
-        {
-            _logService.LogInfo($"准备打开快手", device.Id);
-            _deviceService.CleanDeviceRunningApps(device.Id);
-            await Task.Delay(15000, cancellationToken);
+            int count = await _cacheService.GetAsync<int>($"KuaishouAdWatching_{device.CurPage.ToString()}");
+            count++;
+            await _cacheService.SetAsync($"DataAdWatching_{device.CurPage.ToString()}", count);
+            if (count > 10)
+            {
+                await _deviceService.PlayAudioAsync("error.wav");
+                await Task.Delay(10000, cancellationToken);
+            }
         }
     }
 

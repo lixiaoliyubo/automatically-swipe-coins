@@ -303,7 +303,7 @@ public class DataAdWatching : IAdWatching
                 await ClickAsync(device, _device, BoxPoint.BoxPoints, 2000, BoxPoint.Text);
             }
         }
-        else if (isDesktop && dateTime.Hour >= 6)
+        else if (isDesktop && dateTime.Hour >= 6 && !arrTask.ContainsKey("快手"))
         {
             var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "快手");
             if (BoxPoint != null)
@@ -313,7 +313,7 @@ public class DataAdWatching : IAdWatching
                 await ClickAsync(device, _device, BoxPoint.BoxPoints, 10000, BoxPoint.Text);
             }
         }
-        else if (isDesktop && dateTime.Hour >= 4)
+        else if (isDesktop && dateTime.Hour >= 4 && !arrTask.ContainsKey("快手"))
         {
             var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "快手极速版");
             if (BoxPoint != null)
@@ -323,14 +323,33 @@ public class DataAdWatching : IAdWatching
                 await ClickAsync(device, _device, BoxPoint.BoxPoints, 10000, BoxPoint.Text);
             }
         }
-        else if (isDesktop && dateTime.Hour >= 0)
+        else if (isDesktop && dateTime.Hour >= 0 && !arrTask.ContainsKey("抖音"))
         {
             var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "抖音");
             if (BoxPoint != null)
             {
+                arrTask.TryAdd("抖音", DateTime.Now.ToString());
                 _logService.LogInfo($"桌面中打开抖音", device.Id);
                 await ClickAsync(device, _device, BoxPoint.BoxPoints, 10000, BoxPoint.Text);
             }
+        }
+        else if (!isDesktop && dateTime.Hour >= 6 && !arrTask.ContainsKey("快手"))
+        {
+            _logService.LogInfo($"准备打开快手", device.Id);
+            _deviceService.CleanDeviceRunningApps(device.Id);
+            await Task.Delay(15000, cancellationToken);
+        }
+        else if (!isDesktop && dateTime.Hour >= 3 && !arrTask.ContainsKey("快手极速版"))
+        {
+            _logService.LogInfo($"准备打开快手极速版", device.Id);
+            _deviceService.CleanDeviceRunningApps(device.Id);
+            await Task.Delay(15000, cancellationToken);
+        }
+        else if (!isDesktop && dateTime.Hour >= 0 && !arrTask.ContainsKey("抖音"))
+        {
+            _logService.LogInfo($"准备打开抖音", device.Id);
+            _deviceService.CleanDeviceRunningApps(device.Id);
+            await Task.Delay(15000, cancellationToken);
         }
         else if (text.TextBlocks.Any(a => a.Text == "我") && text.TextBlocks.Any(a => a.Text.StartsWith("首页")))
         {
@@ -349,21 +368,16 @@ public class DataAdWatching : IAdWatching
                 await SwipeAsync(device, _device, 0, "滑动刷视频", 300, 1000, 300, 600, 400);
             }
         }
-        else if(!isDesktop && dateTime.Hour >= 6 && !arrTask.ContainsKey("快手"))
+        else
         {
-            _logService.LogInfo($"准备打开快手", device.Id);
-            _deviceService.CleanDeviceRunningApps(device.Id);
-            await Task.Delay(15000, cancellationToken);
-        }
-        else if (!isDesktop && dateTime.Hour >= 3 && !arrTask.ContainsKey("快手极速版"))
-        {
-            _logService.LogInfo($"准备快手极速版", device.Id);
-            _deviceService.CleanDeviceRunningApps(device.Id);
-            await Task.Delay(15000, cancellationToken);
-        }
-        else {
+            int count = await _cacheService.GetAsync<int>($"DataAdWatching_{device.CurPage.ToString()}");
+            count++;
+            await _cacheService.SetAsync($"DataAdWatching_{device.CurPage.ToString()}", count);
+            if (count > 10) {
 
-            _logService.LogInfo("无操作", device.Id);
+                await _deviceService.PlayAudioAsync("error.wav");
+                await Task.Delay(10000, cancellationToken);
+            }
         }
     }
 

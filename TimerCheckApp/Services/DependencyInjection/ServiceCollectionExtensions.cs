@@ -63,6 +63,12 @@ namespace TimerCheckApp.Services.DependencyInjection
                 return new SqlSugarService(logService);
             });
             
+            // 注册音频服务（单例模式）
+            services.AddSingleton<IAudioService>(provider => 
+            {
+                var logService = provider.GetRequiredService<ILogService>();
+                return new AudioService(logService);
+            });
 
             return services;
         }

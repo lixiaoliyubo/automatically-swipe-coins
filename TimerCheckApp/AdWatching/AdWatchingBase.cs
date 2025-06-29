@@ -8,7 +8,7 @@ namespace TimerCheckApp.AdWatching
     /// <summary>
     /// 广告观看自动化基类
     /// </summary>
-    public abstract class AdWatchingBase : IAdWatching
+    public abstract class AdWatchingBase 
     {
         /// <summary>
         /// 任务列表

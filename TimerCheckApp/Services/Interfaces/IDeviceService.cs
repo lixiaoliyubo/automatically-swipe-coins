@@ -69,5 +69,16 @@ namespace TimerCheckApp.Services.Interfaces
         /// <param name="deviceId">设备ID</param>
         /// <returns>尺寸元组 (宽度, 高度)</returns>
         (int width, int height) GetDeviceSize(string deviceId);
+
+        /// <summary>
+        /// 播放提示音
+        /// </summary>
+        /// <param name="fileName">音频文件名</param>
+        Task PlayAudioAsync(string fileName);
+
+        /// <summary>
+        /// 停止所有音频播放
+        /// </summary>
+        void StopAllAudio();
     }
 }

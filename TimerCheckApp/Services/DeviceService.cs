@@ -26,6 +26,7 @@ public class DeviceService : IDeviceService, IDisposable
     private readonly IWebSocketService _webSocketService;
     private readonly IAdWatchingFactory _adWatchingFactory;
     private readonly ISqlSugarService _sqlSugarService;
+    private readonly IAudioService _audioService;
     private readonly object _ocrEngineLock = new object();
 
     public AdbClient CurAdbClient { get => _adbClient; }
@@ -43,7 +44,8 @@ public class DeviceService : IDeviceService, IDisposable
     /// <param name="webSocketService">WebSocket服务</param>
     /// <param name="adWatchingFactory">广告观看工厂</param>
     /// <param name="sqlSugarService">数据库服务</param>
-    public DeviceService(ILogService logService, ICacheService cacheService, AdbClient adbClient, AdbServer adbServer, IWebSocketService webSocketService, IAdWatchingFactory adWatchingFactory, ISqlSugarService sqlSugarService)
+    /// <param name="audioService">音频服务</param>
+    public DeviceService(ILogService logService, ICacheService cacheService, AdbClient adbClient, AdbServer adbServer, IWebSocketService webSocketService, IAdWatchingFactory adWatchingFactory, ISqlSugarService sqlSugarService, IAudioService audioService)
     {
         _cacheService = cacheService;
         _logService = logService;
@@ -52,6 +54,7 @@ public class DeviceService : IDeviceService, IDisposable
         _webSocketService = webSocketService;
         _adWatchingFactory = adWatchingFactory;
         _sqlSugarService = sqlSugarService;
+        _audioService = audioService;
         _deviceTasks = new Dictionary<string, CancellationTokenSource>();
 
         // 启动ADB服务器
@@ -484,6 +487,27 @@ public class DeviceService : IDeviceService, IDisposable
 
     #endregion
 
+    #region 音频播放
+
+    /// <summary>
+    /// 播放提示音
+    /// </summary>
+    /// <param name="fileName">音频文件名</param>
+    public async Task PlayAudioAsync(string fileName)
+    {
+        await _audioService.PlayAsync(fileName);
+    }
+
+    /// <summary>
+    /// 停止所有音频播放
+    /// </summary>
+    public void StopAllAudio()
+    {
+        _audioService.StopAll();
+    }
+
+    #endregion
+
     #region 资源释放
 
     /// <summary>
@@ -497,6 +521,9 @@ public class DeviceService : IDeviceService, IDisposable
             cts.Cancel();
         }
         _deviceTasks.Clear();
+
+        // 停止所有音频播放
+        StopAllAudio();
 
         // 释放OCR引擎资源
         lock (_ocrEngineLock)
