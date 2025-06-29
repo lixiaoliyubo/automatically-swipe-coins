@@ -43,6 +43,7 @@ namespace TimerCheckApp.AdWatching
             return platformType switch
             {
                 PlatformType.Douyin => new DouyinAdWatching(_logService, deviceService, _cacheService, _sqlSugarService),
+                PlatformType.DouyinJs => new DouyinAdWatching(_logService, deviceService, _cacheService, _sqlSugarService),
                 PlatformType.Kuaishou => new KuaishouAdWatching(_logService, deviceService, _cacheService, _sqlSugarService),
                 PlatformType.KuaishouJs => new KuaishouAdWatching(_logService, deviceService, _cacheService, _sqlSugarService),
                 PlatformType.FanQie => new FanQieMusicAdWatching(_logService, deviceService, _cacheService, _sqlSugarService),

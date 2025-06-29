@@ -32,8 +32,14 @@ namespace TimerCheckApp.enums
         /// 抖音
         /// </summary>
         [Description("抖音极速版")]
-        [AppPackage("com.ss.android.ugc.aweme.lite")]
+        [AppPackage("com.ss.android.ugc.aweme")]
         Douyin = 0,
+        /// <summary>
+        /// 抖音极速版
+        /// </summary>
+        [Description("抖音极速版")]
+        [AppPackage("com.ss.android.ugc.aweme.lite")]
+        DouyinJs = 11,
         /// <summary>
         /// 快手
         /// </summary>

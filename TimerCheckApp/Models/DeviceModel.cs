@@ -37,7 +37,7 @@ namespace TimerCheckApp.Models
         /// <summary>
         /// 获取或设置当前选择的平台类型
         /// </summary>
-        private PlatformType _curPlatform = PlatformType.Douyin;
+        private PlatformType _curPlatform = PlatformType.DouyinJs;
 
         /// <summary>
         /// 获取或设置当前选择的平台类型
