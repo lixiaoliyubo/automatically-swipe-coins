@@ -56,7 +56,16 @@ public class DataAdWatching : IAdWatching
                         if (device.CurPage == AppPageEnum.DyAndKsAddKsJs)
                         {
                             // 刷短剧
-                            await HandleSlideUpPageInteractions(device, _device, text, cancellationToken);
+                            try
+                            {
+
+                                await HandleSlideUpPageInteractions(device, _device, text, cancellationToken);
+                                await Task.Delay(5000);
+                            }
+                            catch (Exception ex)
+                            {
+                                _logService.LogError($"自动化过程出错: {ex.Message}", device.Id);
+                            }
 
                             await Task.Delay(2000);
                             continue;
@@ -319,7 +328,7 @@ public class DataAdWatching : IAdWatching
                 await ClickAsync(device, _device, BoxPoint.BoxPoints, 2000, BoxPoint.Text);
             }
         }
-        else if (!isDesktop && dateTime.Hour >= 6 && !arrTask.ContainsKey("快手"))
+        else if (dateTime.Hour >= 6 && !arrTask.ContainsKey("快手"))
         {
             _logService.LogInfo($"清理快手", device.Id);
             _deviceService.CleanDeviceRunningApps(device.Id);
@@ -329,7 +338,7 @@ public class DataAdWatching : IAdWatching
             await _deviceService.CurAdbClient.StartAppAsync(_device, PlatformType.Kuaishou.GetPackageName());
             await Task.Delay(5000, cancellationToken);
         }
-        else if (!isDesktop && dateTime.Hour >= 3 && !arrTask.ContainsKey("快手极速版"))
+        else if (dateTime.Hour >= 3 && !arrTask.ContainsKey("快手极速版"))
         {
             _logService.LogInfo($"清理快手极速版", device.Id);
             _deviceService.CleanDeviceRunningApps(device.Id);
@@ -339,7 +348,7 @@ public class DataAdWatching : IAdWatching
             await _deviceService.CurAdbClient.StartAppAsync(_device, PlatformType.KuaishouJs.GetPackageName());
             await Task.Delay(5000, cancellationToken);
         }
-        else if (!isDesktop && dateTime.Hour >= 0 && !arrTask.ContainsKey("抖音"))
+        else if (dateTime.Hour >= 0 && !arrTask.ContainsKey("抖音"))
         {
             _logService.LogInfo($"清理抖音", device.Id);
             _deviceService.CleanDeviceRunningApps(device.Id);

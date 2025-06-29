@@ -187,7 +187,16 @@ public class KuaishouAdWatching : IAdWatching
                         else if (device.CurPage == AppPageEnum.Data)
                         {
                             // 刷短剧
-                            await HandleSlideUpPageInteractions(device, _device, text, cancellationToken);
+                            try
+                            {
+
+                                await HandleSlideUpPageInteractions(device, _device, text, cancellationToken);
+                            }
+                            catch (Exception ex)
+                            {
+                                _logService.LogError($"自动化过程出错: {ex.Message}", device.Id);
+                                await Task.Delay(5000);
+                            }
                             await Task.Delay(2000);
                             continue;
                         }
@@ -1510,7 +1519,7 @@ public class KuaishouAdWatching : IAdWatching
         {
             await ClickAsync(device, _device, null, 2000, "返回-首页");
         }
-        else if (!isDesktop && dateTime.Hour >= 5 && !arrTask.ContainsKey("支付宝"))
+        else if (dateTime.Hour >= 5 && !arrTask.ContainsKey("支付宝"))
         {
             _logService.LogInfo($"准备支付宝", device.Id);
             _deviceService.CleanDeviceRunningApps(device.Id);
@@ -1518,7 +1527,7 @@ public class KuaishouAdWatching : IAdWatching
             await _deviceService.CurAdbClient.StartAppAsync(_device, PlatformType.AliPay.GetPackageName());
             await Task.Delay(5000, cancellationToken);
         }
-        else if (!isDesktop && dateTime.Hour >= 3 && !arrTask.ContainsKey("快手极速版"))
+        else if (dateTime.Hour >= 3 && !arrTask.ContainsKey("快手极速版"))
         {
             _logService.LogInfo($"准备快手极速版", device.Id);
             _deviceService.CleanDeviceRunningApps(device.Id);
@@ -1527,7 +1536,7 @@ public class KuaishouAdWatching : IAdWatching
             await _deviceService.CurAdbClient.StartAppAsync(_device, PlatformType.KuaishouJs.GetPackageName());
             await Task.Delay(5000, cancellationToken);
         }
-        else if (!isDesktop && dateTime.Hour >= 0 && !arrTask.ContainsKey("快手"))
+        else if (dateTime.Hour >= 0 && !arrTask.ContainsKey("快手"))
         {
             _logService.LogInfo($"准备打开快手", device.Id);
             _deviceService.CleanDeviceRunningApps(device.Id);
@@ -1536,7 +1545,7 @@ public class KuaishouAdWatching : IAdWatching
             await _deviceService.CurAdbClient.StartAppAsync(_device, PlatformType.Kuaishou.GetPackageName());
             await Task.Delay(5000, cancellationToken);
         }
-        else if (text.TextBlocks.Any(a => a.Text == "首页") && text.TextBlocks.Any(a => a.Text == "去赚钱" || a.Text == "精选"))
+        else if (text.TextBlocks.Any(a => a.Text == "首页" || a.Text == "我") && text.TextBlocks.Any(a => a.Text == "去赚钱" || a.Text == "精选"))
         {
             await _cacheService.RemoveAsync($"KuaishouAdWatching_{device.CurPage.ToString()}");
             var r = new Random().Next(5000, 15000);
