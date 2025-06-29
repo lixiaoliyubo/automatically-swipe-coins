@@ -1,0 +1,360 @@
+# 极限投屏API
+
+最后修改时间: 2025-03-04
+
+极限投屏使用WebSocket作为API提供接口能力(免费用户可操作数量10台以内)
+
+WebSocket API是常见的、通用的http协议的API接口，支持各种语言调用，如：按键精灵，易语言，C++，Python，Html，Vue，Node.js 等等。。。
+
+- 极限投屏WebSocket API地址：ws://127.0.0.1:33332
+
+- WebSocket在线测试：https://wstool.js.org/
+
+- Html demo :
+
+[下载文件](file/Qo7md9eS5ocLR0xvkhDcUa2Fnof.x-zip-compressed)
+
+# 获取所有设备信息
+
+请求：
+
+```JSON
+{ "action":"list" }
+```
+
+响应：
+
+```JSON
+{
+    "StatusCode": 200,
+    "result": [
+        {
+            "deviceId": "ga7d65ylnj6xinhm",
+            "name": "ga7d65ylnj6xinhm",
+            "no": 1
+        },
+        {
+            "deviceId": "VBJDU18B14001987",
+            "name": "VBJDU18B14001987",
+            "no": 24
+        }
+    ]
+}
+```
+
+# 截图
+
+请求：
+
+```JSON
+{
+    "action": "screen",
+    "comm": {
+        "deviceIds": "all",
+        "savePath": "d:/quickmirror",
+        "onlyDeviceName": 1
+    }
+}
+```
+
+- deviceIds: "all"表示所有设备，也可以通过传递逗号分隔的deviceId来指定设备，例如"ga7d65ylnj6xinhm,VBJDU18B14001987"
+
+- onlyDeviceName: 是否直接用设备序列号作为截图文件名
+  - 1 表示截图文件名字只有设备序列号（例如ga7d65ylnj6xinhm.png）
+  - 0 表示截图文件名包含设备序号和截图时间（例如1_ga7d65ylnj6xinhm_20240707_114500_096.png）
+
+- 注意：如果是无线连接，设备序号中的:和.会被替换为_(例如设备192.168.2.109:5555截图文件名为1_192_168_2_109_5555_20240707_114919_656.png)
+
+ 
+
+
+
+响应：
+
+```JSON
+{
+    "StatusCode": 200,
+    "result": "OK"
+}
+```
+
+# 屏幕控制
+
+请求：
+
+```JSON
+{
+    "action": "PointerEvent",
+    "comm": {
+        "deviceIds": "all",
+        "mask": "0",
+        "x": "0.5",
+        "y": "0.5",
+        "endx": "0",
+        "endy": "0",
+        "delta": "0"
+    }
+}
+```
+
+- deviceIds: "all"表示所有设备，也可以通过传递逗号分隔的deviceId来指定设备，例如"ga7d65ylnj6xinhm,VBJDU18B14001987"
+
+- mask: 事件类型： 0按下, 1移动, 2松开, 3鼠标右键(返回), 4滚轮向上, 5滚轮向下, 6上滑, 7下滑, 8左滑, 9右滑
+
+- x,y: 事件坐标，传百分比，范围是0-1
+
+- endx,endy: 结束坐标，只有上下左右滑动事件才需要这两个参数，其他事件不需要传
+
+- delta: 滚轮事件的幅度，范围是大于0的整数，数值越大滚轮滚动幅度越大，只有滚轮事件才需要这个参数，其他事件不需要传
+
+响应：
+
+```JSON
+{
+    "StatusCode": 200,
+    "result": "OK"
+}
+```
+
+示例：
+
+上滑屏幕
+
+```JSON
+//先执行按下 mask=0 x=0.5 y=0.5 从中间位置开始
+{
+    "action": "PointerEvent",
+    "comm": {
+        "deviceIds": "all",
+        "mask": "0",
+        "x": "0.5",
+        "y": "0.5",
+        "endx": "0",
+        "endy": "0",
+        "delta": "0"
+    }
+}
+//执行移动mask=1 y移动到0.2位置 松开前可执行多个移动就会变成拖动  
+{
+    "action": "PointerEvent",
+    "comm": {
+        "deviceIds": "all",
+        "mask": "1",
+        "x": "0.5",
+        "y": "0.2",
+        "endx": "0",
+        "endy": "0",
+        "delta": "0"
+    }
+}
+//最后松开mask=2 x y 传最后移动到的位置
+{
+    "action": "PointerEvent",
+    "comm": {
+        "deviceIds": "all",
+        "mask": "2",
+        "x": "0.5",
+        "y": "0.2",
+        "endx": "0",
+        "endy": "0",
+        "delta": "0"
+    }
+}
+```
+
+# 获取剪切板内容
+
+请求：
+
+```JSON
+{
+    "action": "getclipboard",
+    "comm": {
+        "deviceIds": "8318fc66"
+    }
+}
+```
+
+- deviceIds: 这个指令不支持多个手机deviceIds
+
+
+
+响应：
+
+```JSON
+{
+    "StatusCode": 200,
+    "result": "剪切板测试"
+}
+```
+
+# 发送到剪切板
+
+请求：
+
+```JSON
+{
+    "action": "writeclipboard",
+    "comm": {
+        "deviceIds": "all",
+        "content": "Hi,QuickMirror"
+    }
+}
+```
+
+- deviceIds: "all"表示所有设备，也可以通过传递逗号分隔的deviceId来指定设备，例如"ga7d65ylnj6xinhm,VBJDU18B14001987"
+
+
+
+响应：
+
+```JSON
+{
+    "StatusCode": 200,
+    "result": "OK"
+}
+```
+
+# 执行ADB命令
+
+请求：
+
+```JSON
+{
+    "action": "adb",
+    "comm": {
+        "command": "am start -a android.intent.action.VIEW -d https://blog.csdn.net/rankun1/article/details/87970523",
+        "deviceIds": "ga7d65ylnj6xinhm"
+    }
+}
+```
+
+- deviceIds: "all"表示所有设备，也可以通过传递逗号分隔的deviceId来指定设备，例如"ga7d65ylnj6xinhm,VBJDU18B14001987"
+
+
+
+响应：
+
+```JSON
+{
+    "StatusCode": 200,
+    "result": {
+        "ga7d65ylnj6xinhm": [
+            "Starting: Intent { act=android.intent.action.VIEW dat=https://www.aa.app/... }"
+        ]
+    }
+}
+```
+
+# 执行ADB脚本
+
+请求：
+
+执行指定脚本：
+
+```JSON
+{
+    "action": "ExecuteBat",
+    "comm": {
+        "deviceIds": "ga7d65ylnj6xinhm",
+        "filePath" :"C:\\Scripts\\test.bat"
+    }
+}
+```
+
+停止指定脚本：
+
+```json
+{
+    "action": "StopBat",
+    "comm": {
+        "deviceIds": "ga7d65ylnj6xinhm",
+        "filePath" :"C:\\Scripts\\test.bat"
+    }
+}
+```
+
+- deviceIds: "all"表示所有设备，也可以通过传递逗号分隔的deviceId来指定设备，例如"ga7d65ylnj6xinhm,VBJDU18B14001987"
+
+
+
+响应：
+
+```JSON
+{
+    "StatusCode": 200,
+    "result": "OK"
+}
+```
+
+# 执行AutoX.js脚本
+
+请求：
+
+执行指定脚本：
+
+```JSON
+{
+    "action": "ExecuteAutoJs",
+    "comm": {
+        "deviceIds": "ga7d65ylnj6xinhm",
+        "filePath" :"C:\\Scripts\\test.js"
+    }
+}
+```
+
+停止指定脚本：
+
+```json
+{
+    "action": "StopAutoJs",
+    "comm": {
+        "deviceIds": "ga7d65ylnj6xinhm",
+        "filePath" :"C:\\Scripts\\test.js"
+    }
+}
+```
+
+- deviceIds: "all"表示所有设备，也可以通过传递逗号分隔的deviceId来指定设备，例如"ga7d65ylnj6xinhm,VBJDU18B14001987"
+
+
+
+响应：
+
+```JSON
+{
+    "StatusCode": 200,
+    "result": "OK"
+}
+```
+
+# 打开独立窗口
+
+效果和点击独立窗口按钮一样
+
+请求：
+
+```JSON
+{
+    "action": "showsinglewindow",
+    "comm": {
+        "deviceIds": "ga7d65ylnj6xinhm"
+    }
+}
+```
+
+- deviceIds: 这个指令不支持多个手机deviceIds
+
+
+
+响应：
+
+```JSON
+{
+    "StatusCode": 200,
+    "result": "OK"
+}
+```
+
+
+

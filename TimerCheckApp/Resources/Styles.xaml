@@ -1,0 +1,148 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converters="clr-namespace:TimerCheckApp.Converters" 
+    xmlns:ui="http://schemas.yuandl.cn/xamltheme/2024/xaml">
+    <!--  CONVERTERS  -->
+    <ui:ValueToSizeConverter x:Key="ValueToSizeConverter" />
+    <ui:ColorToBrushConverter x:Key="ColorToBrushConverter" />
+    <ui:ColorToStringConverter x:Key="colorToStringConverter" />
+    <converters:ObjectToStringConverter x:Key="ObjectToStringConverter"/>
+    <converters:NumberToVisibilityConverter x:Key="numberToVisibilityConverter" />
+    <converters:NumberToVisibilityConverter x:Key="numberInvertedToVisibilityConverter" IsInverted="True"/>
+    <converters:StringToVisibilityHiddenConverter x:Key="StringToVisibilityHiddenConverter"/>
+    <converters:MultiParamsConverter x:Key="MultiParamsConverter"/>
+    <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+    <converters:BooleanToVisibilityConverter x:Key="InvertedBooleanToVisibilityConverter"  IsInverted="True"/>
+    <converters:ThemeToIndexConverter x:Key="ThemeToIndexConverter" />
+
+
+    <Style x:Key="RepeatButtonStyle" TargetType="{x:Type ui:Button}" BasedOn="{StaticResource DefaultUiButtonStyle}">
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{ui:ThemeResource ControlTextSecondaryColorBrush}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Icon" Value="{ui:SymbolIcon copy24}"/>
+    </Style>
+    
+    <Style x:Key="ButtonCopyIconStyle" TargetType="{x:Type ui:Button}" BasedOn="{StaticResource DefaultUiButtonStyle}">
+        <Setter Property="FontSize" Value="20" />
+        <Setter Property="Padding" Value="8,5" />
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    <DrawingBrush x:Key="borderdashedBrush" Viewport="0,0,8,8" ViewportUnits="Absolute" TileMode="Tile">
+        <DrawingBrush.Drawing>
+            <DrawingGroup>
+                <GeometryDrawing Brush="{ui:ThemeResource ControlElevationBorderBrush}">
+                    <GeometryDrawing.Geometry>
+                        <GeometryGroup>
+                            <RectangleGeometry Rect="0,0,50,50" />
+                            <RectangleGeometry Rect="50,50,50,50" />
+                        </GeometryGroup>
+                    </GeometryDrawing.Geometry>
+                </GeometryDrawing>
+            </DrawingGroup>
+        </DrawingBrush.Drawing>
+    </DrawingBrush>
+    <Style x:Key="BorderRowStyle"  TargetType="Border">
+        <Setter Property="Background" Value="{ui:ThemeResource ControlFillColorBrush}"/>
+        <Setter Property="TextElement.Foreground" Value="{ui:ThemeResource ControlTextSecondaryColorBrush}"/>
+        <Setter Property="BorderBrush" Value="{ui:ThemeResource SystemAccentColorBrush}"/>
+        <Setter Property="BorderThickness" Value="4,0,0,0"/>
+        <Setter Property="Margin" Value="0"/>
+        <Setter Property="Padding" Value="10,5"/>
+        <Setter Property="TextElement.FontWeight" Value="Bold"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style x:Key="ButtonRowStyle"  TargetType="{x:Type Button}">
+        <Setter Property="Background" Value="{ui:ThemeResource ControlFillColorBrush}"/>
+        <Setter Property="BorderBrush" Value="{ui:ThemeResource ControlElevationBorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Margin" Value="5"/>
+        <Setter Property="Padding" Value="5"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Effect">
+            <Setter.Value>
+                <DropShadowEffect Color="#CAD3E1" Direction="270" ShadowDepth="3" Opacity="0.8"/>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="{ui:ThemeResource ControlFocusedFillColorBrush}"/>
+            </Trigger>
+            <EventTrigger RoutedEvent="MouseEnter">
+                <BeginStoryboard>
+                    <Storyboard>
+                        <DoubleAnimation Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:2"/>
+                    </Storyboard>
+                </BeginStoryboard>
+            </EventTrigger>
+            <EventTrigger RoutedEvent="MouseLeave">
+                <BeginStoryboard>
+                    <Storyboard>
+                        <DoubleAnimation Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:2"/>
+                    </Storyboard>
+                </BeginStoryboard>
+            </EventTrigger>
+        </Style.Triggers>
+    </Style>
+    <Style  x:Key="DefaultTreeTextBoxStyle" TargetType="{x:Type TextBox}">
+        <Setter  Property="Foreground" Value="{ui:ThemeResource  ControlTextColorBrush }"/>
+        <Setter  Property="FontWeight" Value="Bold"/>
+        <Setter  Property="Background" Value="Transparent"/>
+        <Setter  Property="BorderThickness" Value="0"/>
+    </Style>
+    
+    <Style x:Key="SubtleButtonStyle" TargetType="{x:Type Button}">
+        <Setter Property="FocusVisualStyle" Value="{DynamicResource DefaultControlFocusVisualStyle}" />
+        <Setter Property="Foreground" Value="{DynamicResource ApplicationTextColorBrush}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Focusable" Value="True" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Padding" Value="1" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type Button}">
+                    <Border
+                        x:Name="border"
+                        Background="Transparent"
+                        BorderBrush="Transparent"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="4"
+                        SnapsToDevicePixels="true">
+                        <ContentPresenter
+                            x:Name="contentPresenter"
+                            Margin="{TemplateBinding Padding}"
+                            HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                            VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                            Focusable="False"
+                            RecognizesAccessKey="True"
+                            SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"
+                            TextElement.Foreground="{TemplateBinding Foreground}" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsDefaulted" Value="true">
+                            <Setter TargetName="border" Property="Background" Value="Transparent" />
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="true">
+                            <Setter TargetName="border" Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+                            <Setter TargetName="contentPresenter" Property="TextElement.Foreground" Value="{DynamicResource ControlTextColorBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="true">
+                            <Setter TargetName="border" Property="Background" Value="{DynamicResource SubtleFillColorTertiaryBrush}" />
+                            <Setter TargetName="contentPresenter" Property="TextElement.Foreground" Value="{DynamicResource ControlTextColorBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="false">
+                            <!-- <Setter TargetName="border" Property="Background" Value="{DynamicResource ControlFillColorDisabledBrush}" />
+                     <Setter Property="TextElement.Foreground" TargetName="contentPresenter" Value="{DynamicResource TextFillColorDisabledBrush}"/>-->
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>
