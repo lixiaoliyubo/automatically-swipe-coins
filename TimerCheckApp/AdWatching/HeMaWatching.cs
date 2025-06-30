@@ -6,7 +6,6 @@ using System.Text.RegularExpressions;
 using TimerCheckApp.Services.Interfaces;
 using AdvancedSharpAdbClient.Models;
 using AdvancedSharpAdbClient.DeviceCommands;
-using TimerCheckApp.Services.Extensions;
 using TimerCheckApp.Models;
 
 namespace TimerCheckApp.AdWatching;

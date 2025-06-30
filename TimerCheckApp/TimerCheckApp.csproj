@@ -7,6 +7,7 @@
 	  <ImplicitUsings>enable</ImplicitUsings>
 	  <UseWPF>true</UseWPF>
 	  <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	  <DefineConstants>TRACE;DEBUG;WPF;$(DefineConstants)</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
@@ -51,5 +52,9 @@
 	  <None Update="tessdata\chi_sim.traineddata">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Services\Extensions\" />
   </ItemGroup>
 </Project>

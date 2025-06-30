@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Concurrent;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Memory;
 using TimerCheckApp.Services.Interfaces;
 
@@ -13,76 +9,22 @@ namespace TimerCheckApp.Services
     public class MemoryCacheService : ICacheService
     {
         private readonly ILogService _logService;
-        private readonly ConcurrentDictionary<string, CacheItem> _memoryCache;
+        private readonly IMemoryCache _memoryCache;
         private readonly TimeSpan _defaultExpirationTime;
-        private readonly SemaphoreSlim _semaphore;
-        private readonly Timer _cleanupTimer;
-
-        /// <summary>
-        /// 缓存项
-        /// </summary>
-        private class CacheItem
-        {
-            /// <summary>
-            /// 缓存值
-            /// </summary>
-            public object Value { get; set; }
-
-            /// <summary>
-            /// 过期时间
-            /// </summary>
-            public DateTime ExpirationTime { get; set; }
-        }
 
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="logService">日志服务</param>
+        /// <param name="memoryCache">内存缓存</param>
         /// <param name="defaultExpirationHours">默认过期时间（小时）</param>
-        public MemoryCacheService(ILogService logService, int defaultExpirationHours = 24)
+        public MemoryCacheService(ILogService logService, IMemoryCache memoryCache = null, int defaultExpirationHours = 24)
         {
             _logService = logService;
-            _memoryCache = new ConcurrentDictionary<string, CacheItem>();
+            _memoryCache = memoryCache ?? new MemoryCache(new MemoryCacheOptions());
             _defaultExpirationTime = TimeSpan.FromHours(defaultExpirationHours);
-            _semaphore = new SemaphoreSlim(1, 1);
-            
-            // 启动定期清理过期内存缓存的任务
-            _cleanupTimer = new Timer(CleanupExpiredCache, null, TimeSpan.FromMinutes(10), TimeSpan.FromMinutes(10));
 
             _logService.LogInfo("内存缓存服务已初始化", "MemoryCacheService");
-        }
-
-        /// <summary>
-        /// 清理过期的内存缓存
-        /// </summary>
-        private void CleanupExpiredCache(object state)
-        {
-            var now = DateTime.UtcNow;
-            var expiredKeys = _memoryCache.Where(kvp => IsExpired(kvp.Value, now))
-                                         .Select(kvp => kvp.Key)
-                                         .ToList();
-
-            foreach (var key in expiredKeys)
-            {
-                _memoryCache.TryRemove(key, out _);
-            }
-
-            if (expiredKeys.Count > 0)
-            {
-                _logService.LogInfo($"已清理 {expiredKeys.Count} 个过期的内存缓存项", "MemoryCacheService");
-            }
-        }
-
-        /// <summary>
-        /// 检查缓存项是否过期
-        /// </summary>
-        /// <param name="item">缓存项</param>
-        /// <param name="now">当前时间</param>
-        /// <returns>是否过期</returns>
-        private bool IsExpired(CacheItem item, DateTime? now = null)
-        {
-            var currentTime = now ?? DateTime.UtcNow;
-            return item.ExpirationTime <= currentTime;
         }
 
         /// <summary>
@@ -99,15 +41,9 @@ namespace TimerCheckApp.Services
                 return default;
             }
 
-            if (_memoryCache.TryGetValue(key, out var cacheItem) && !IsExpired(cacheItem))
+            if (_memoryCache.TryGetValue(key, out T value))
             {
-                return (T)cacheItem.Value;
-            }
-
-            // 如果缓存项不存在或已过期，移除它
-            if (cacheItem != null)
-            {
-                _memoryCache.TryRemove(key, out _);
+                return value;
             }
 
             return default;
@@ -139,14 +75,12 @@ namespace TimerCheckApp.Services
                 return;
             }
 
-            var expiration = DateTime.UtcNow.Add(expirationTime ?? _defaultExpirationTime);
-            var cacheItem = new CacheItem
+            var cacheEntryOptions = new MemoryCacheEntryOptions
             {
-                Value = value,
-                ExpirationTime = expiration
+                AbsoluteExpirationRelativeToNow = expirationTime ?? _defaultExpirationTime
             };
 
-            _memoryCache[key] = cacheItem;
+            _memoryCache.Set(key, value, cacheEntryOptions);
         }
 
         /// <summary>
@@ -175,7 +109,8 @@ namespace TimerCheckApp.Services
                 return false;
             }
 
-            return _memoryCache.TryRemove(key, out _);
+            _memoryCache.Remove(key);
+            return true;
         }
 
         /// <summary>
@@ -201,7 +136,7 @@ namespace TimerCheckApp.Services
                 return false;
             }
 
-            return _memoryCache.TryGetValue(key, out var cacheItem) && !IsExpired(cacheItem);
+            return _memoryCache.TryGetValue(key, out _);
         }
 
         /// <summary>
@@ -219,7 +154,10 @@ namespace TimerCheckApp.Services
         /// </summary>
         public void Clear()
         {
-            _memoryCache.Clear();
+            if (_memoryCache is MemoryCache memoryCache)
+            {
+                memoryCache.Compact(1.0);
+            }
             _logService.LogInfo("已清空所有内存缓存", "MemoryCacheService");
         }
 

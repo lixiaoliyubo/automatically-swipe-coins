@@ -1,4 +1,5 @@
 using AdvancedSharpAdbClient;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using TimerCheckApp.AdWatching;
@@ -49,26 +50,17 @@ namespace TimerCheckApp.Services.DependencyInjection
             // 注册视图模型（单例模式）
             services.AddSingleton<MainViewModel>();
 
+            // 注册内存缓存服务（单例模式）
+            services.AddSingleton<IMemoryCache, MemoryCache>(sp => new MemoryCache(new MemoryCacheOptions()));
+            
             // 注册缓存服务（单例模式）- 使用内存缓存
-            services.AddSingleton<ICacheService>(provider => 
-            {
-                var logService = provider.GetRequiredService<ILogService>();
-                return new MemoryCacheService(logService);
-            });
+            services.AddSingleton<ICacheService, MemoryCacheService>();
             
             // 注册SQLSugar SQLite服务（单例模式）
-            services.AddSingleton<ISqlSugarService>(provider => 
-            {
-                var logService = provider.GetRequiredService<ILogService>();
-                return new SqlSugarService(logService);
-            });
+            services.AddSingleton<ISqlSugarService, SqlSugarService>();
             
             // 注册音频服务（单例模式）
-            services.AddSingleton<IAudioService>(provider => 
-            {
-                var logService = provider.GetRequiredService<ILogService>();
-                return new AudioService(logService);
-            });
+            services.AddSingleton<IAudioService,AudioService>();
 
             return services;
         }

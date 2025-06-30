@@ -1,11 +1,18 @@
 using NLog;
 using NLog.Config;
 using NLog.Targets;
+using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Text;
+using System.Linq;
+using TimerCheckApp.Models;
 using TimerCheckApp.Services.Interfaces;
+
+#if WPF
+using System.Windows;
+#endif
 
 namespace TimerCheckApp.Services;
 /// <summary>
@@ -177,6 +184,24 @@ public class LogService : ILogService, INotifyPropertyChanged
         AddLogEntry("Error", message, deviceId, isWebSocketLog);
     }
     /// <summary>
+    /// 在UI线程上执行操作（WPF环境）或直接执行操作（非WPF环境）
+    /// </summary>
+    /// <param name="action">要执行的操作</param>
+    private void ExecuteOnUIThread(Action action)
+    {
+#if WPF
+        // 在WPF环境中，检查App.Current是否为null
+        if (Application.Current != null)
+        {
+            Application.Current.Dispatcher.InvokeAsync(action);
+            return;
+        }
+#endif
+        // 在非WPF环境中或App.Current为null时，直接执行操作
+        action();
+    }
+
+    /// <summary>
     /// 添加日志条目到集合
     /// </summary>
     /// <param name="level">日志级别</param>
@@ -187,7 +212,7 @@ public class LogService : ILogService, INotifyPropertyChanged
     {
         try
         {
-            App.Current.Dispatcher.InvokeAsync(() =>
+            ExecuteOnUIThread(() =>
             {
                 // 创建新日志条目
                 var logEntry = new LogEntry(level, message, deviceId);
@@ -243,7 +268,7 @@ public class LogService : ILogService, INotifyPropertyChanged
     /// </summary>
     public void ClearLogs(string deviceId = "", bool isWebSocketLog = false)
     {
-        App.Current.Dispatcher.InvokeAsync(() =>
+        ExecuteOnUIThread(() =>
         {
             if (isWebSocketLog)
             {
@@ -269,15 +294,15 @@ public class LogService : ILogService, INotifyPropertyChanged
     {
         var deviceLogs = new ObservableCollection<LogEntry>();
 
+        // 获取日志不需要在UI线程上执行，因为我们只是读取数据
         if (isWebSocketLog)
         {
-            deviceLogs.AddRange(_webSocketLogEntries.Where(log => log.DeviceId == deviceId).ToList());
+            deviceLogs.AddRange(_webSocketLogEntries.Where(log => string.IsNullOrEmpty(deviceId) || log.DeviceId == deviceId).ToList());
         }
         else
         {
-            deviceLogs.AddRange(_logEntries.Where(log => log.DeviceId == deviceId).ToList());
+            deviceLogs.AddRange(_logEntries.Where(log => string.IsNullOrEmpty(deviceId) || log.DeviceId == deviceId).ToList());
         }
-
 
         return deviceLogs;
     }

@@ -8,6 +8,7 @@ using AdvancedSharpAdbClient;
 using AdvancedSharpAdbClient.DeviceCommands;
 using AdvancedSharpAdbClient.Models;
 using AdvancedSharpAdbClient.Receivers;
+using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
 using OpenCvSharp;
 using System;
@@ -27,11 +28,16 @@ using System.Threading;
 using System.Windows.Forms;
 using TimerCheckApp.enums;
 using TimerCheckApp.Extensions;
+using TimerCheckApp.Services;
+using TimerCheckApp.Services.Interfaces;
 using Point = OpenCvSharp.Point;
 namespace ConsoleApp1;
 public class ConsoleApp1
 {
-    static void Main(string[] args)
+    /// <summary>
+    /// 原始Main方法
+    /// </summary>
+    static void Main1(string[] args)
     {
         ConcurrentDictionary<string, string> arrTask = new()
         {
@@ -90,6 +96,111 @@ public class ConsoleApp1
         Console.WriteLine("完成...");
 
         Console.ReadKey();
+    }
+    
+    /// <summary>
+     /// 缓存服务示例 - 展示FileCacheService和MemoryCacheService的使用
+     /// </summary>
+     static void Main(string[] args)
+     {
+         Console.WriteLine("===== 缓存服务示例 =====\n");
+#if WPF
+    // WPF 专用代码
+    Console.WriteLine("当前是 WPF 应用程序");
+#else
+        // 其他环境代码
+        Console.WriteLine("非 WPF 环境");
+#endif
+        // 创建日志服务（缓存服务依赖）
+        ILogService logService = new LogService();
+         
+         // 创建内存缓存服务
+         Console.WriteLine("1. 创建内存缓存服务 (MemoryCacheService)...");
+         //ICacheService memoryCache = new MemoryCacheService(logService);
+         
+         // 创建文件缓存服务
+         Console.WriteLine("2. 创建文件缓存服务 (FileCacheService)...");
+         ICacheService fileCache = new FileCacheService(logService, "TestCache");
+         
+         // 测试内存缓存
+         //TestCacheService(memoryCache, "内存缓存");
+         
+         // 测试文件缓存
+         TestCacheService(fileCache, "文件缓存");
+         
+         
+         Console.WriteLine("\n按任意键退出...");
+         Console.ReadKey();
+     }
+    
+    /// <summary>
+     /// 测试缓存服务的通用方法
+     /// </summary>
+     /// <param name="cacheService">缓存服务实例</param>
+     /// <param name="cacheName">缓存名称（用于显示）</param>
+     private static void TestCacheService(ICacheService cacheService, string cacheName)
+     {
+         Console.WriteLine($"\n===== 测试{cacheName} =====");
+         
+         // 1. 设置字符串缓存
+         string stringKey = $"{cacheName}_test_string";
+         string stringValue = "这是一个测试字符串";
+         Console.WriteLine($"设置字符串缓存: {stringKey} = {stringValue}");
+         cacheService.Set(stringKey, stringValue);
+         
+         // 2. 设置对象缓存
+         string objectKey = $"{cacheName}_test_object";
+         var objectValue = new TestCacheObject
+         {
+             Id = 1,
+             Name = "测试对象",
+             CreateTime = DateTime.Now
+         };
+         Console.WriteLine($"设置对象缓存: {objectKey} = {objectValue.Name}");
+         cacheService.Set(objectKey, objectValue);
+         
+         // 3. 设置带过期时间的缓存
+         string expireKey = $"{cacheName}_test_expire";
+         string expireValue = "这个缓存将在5秒后过期";
+         Console.WriteLine($"设置带过期时间的缓存: {expireKey} = {expireValue} (5秒)");
+         cacheService.Set(expireKey, expireValue, TimeSpan.FromSeconds(5));
+         
+         // 4. 检查缓存是否存在
+         Console.WriteLine($"检查缓存是否存在: {stringKey} = {cacheService.Exists(stringKey)}");
+         Console.WriteLine($"检查缓存是否存在: 不存在的键 = {cacheService.Exists("not_exist")}");
+         
+         // 5. 获取缓存
+         string retrievedString = cacheService.Get<string>(stringKey);
+         Console.WriteLine($"获取字符串缓存: {stringKey} = {retrievedString}");
+         
+         var retrievedObject = cacheService.Get<TestCacheObject>(objectKey);
+         Console.WriteLine($"获取对象缓存: {objectKey} = {retrievedObject?.Name}, 创建时间: {retrievedObject?.CreateTime}");
+         
+         // 6. 等待过期缓存过期
+         Console.WriteLine("等待5秒让过期缓存失效...");
+         Thread.Sleep(5500);
+         string expiredValue = cacheService.Get<string>(expireKey);
+         Console.WriteLine($"获取过期缓存: {expireKey} = {(expiredValue == null ? "已过期" : expiredValue)}");
+         
+         // 7. 移除缓存
+         Console.WriteLine($"移除缓存: {stringKey}");
+         cacheService.Remove(stringKey);
+         Console.WriteLine($"检查缓存是否存在: {stringKey} = {cacheService.Exists(stringKey)}");
+         
+         // 8. 清空所有缓存
+         Console.WriteLine("清空所有缓存");
+         cacheService.Clear();
+         Console.WriteLine($"检查缓存是否存在: {objectKey} = {cacheService.Exists(objectKey)}");
+     }
+     
+    /// <summary>
+    /// 用于缓存测试的示例类
+    /// </summary>
+    private class TestCacheObject
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public DateTime CreateTime { get; set; }
     }
 
     /// <summary>
