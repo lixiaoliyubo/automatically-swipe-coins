@@ -7,11 +7,7 @@ using TimerCheckApp.Services.Interfaces;
 using AdvancedSharpAdbClient.Models;
 using AdvancedSharpAdbClient.DeviceCommands;
 using System.IO;
-using TimerCheckApp.Services;
-using TimerCheckApp.Services.Extensions;
-using TimerCheckApp.Models;
 using OpenCvSharp;
-using AdvancedSharpAdbClient;
 
 namespace TimerCheckApp.AdWatching;
 
@@ -56,163 +52,155 @@ public class DataAdWatching : IAdWatching
                         if (device.CurPage == AppPageEnum.DyAndKsAddKsJs)
                         {
                             // 刷短剧
-                            try
-                            {
+                            await HandleSlideUpPageInteractions(device, _device, text, cancellationToken);
 
-                                await HandleSlideUpPageInteractions(device, _device, text, cancellationToken);
-                                await Task.Delay(5000);
-                            }
-                            catch (Exception ex)
-                            {
-                                _logService.LogError($"自动化过程出错: {ex.Message}", device.Id);
-                            }
-
-                            await Task.Delay(2000);
-                            continue;
                         }
-                        #region 识别本文逻辑
-                        if (text.TextBlocks.Any(a => a.Text == "取消") && !text.TextBlocks.Any(a => a.Text == "打开消息通知"))
+                        else
                         {
-                            var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "取消");
-                            if (BoxPoint != null)
+                            #region 识别本文逻辑
+                            if (text.TextBlocks.Any(a => a.Text == "取消") && !text.TextBlocks.Any(a => a.Text == "打开消息通知"))
                             {
-                                await ClickAsync(device, _device, BoxPoint.BoxPoints, 1000, BoxPoint.Text);
-                                continue;
+                                var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "取消");
+                                if (BoxPoint != null)
+                                {
+                                    await ClickAsync(device, _device, BoxPoint.BoxPoints, 1000, BoxPoint.Text);
+                                    continue;
+                                }
                             }
-                        }
-                        else if (text.TextBlocks.Any(a => a.Text == "剧单") && text.TextBlocks.Any(a => a.Text == "首页") && text.TextBlocks.Any(a => a.Text == "福利") && text.TextBlocks.Any(a => a.Text == "我的"))
-                        {
-                            var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "剧场");
-                            if (BoxPoint != null)
+                            else if (text.TextBlocks.Any(a => a.Text == "剧单") && text.TextBlocks.Any(a => a.Text == "首页") && text.TextBlocks.Any(a => a.Text == "福利") && text.TextBlocks.Any(a => a.Text == "我的"))
                             {
-                                await ClickAsync(device, _device, BoxPoint.BoxPoints, 1000, BoxPoint.Text);
-                                continue;
+                                var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "剧场");
+                                if (BoxPoint != null)
+                                {
+                                    await ClickAsync(device, _device, BoxPoint.BoxPoints, 1000, BoxPoint.Text);
+                                    continue;
+                                }
                             }
-                        }
-                        else if (text.TextBlocks.Any(a => a.Text.EndsWith("万播放")))//3181.1万播放
-                        {
-                            var BoxPoints = text.TextBlocks.Where(a => a.Text.EndsWith("万播放")).ToList();
-                            if (BoxPoints.Count > 0)
+                            else if (text.TextBlocks.Any(a => a.Text.EndsWith("万播放")))//3181.1万播放
                             {
-                                var r = new Random().Next(0, BoxPoints.Count - 1);
-                                var BoxPoint = BoxPoints[r];
-                                await ClickAsync(device, _device, BoxPoint.BoxPoints, 0, BoxPoint.Text);
+                                var BoxPoints = text.TextBlocks.Where(a => a.Text.EndsWith("万播放")).ToList();
+                                if (BoxPoints.Count > 0)
+                                {
+                                    var r = new Random().Next(0, BoxPoints.Count - 1);
+                                    var BoxPoint = BoxPoints[r];
+                                    await ClickAsync(device, _device, BoxPoint.BoxPoints, 0, BoxPoint.Text);
+                                }
                             }
-                        }
-                        else if (text.TextBlocks.Any(a => a.Text.Contains("上滑继续观看短剧")))
-                        {
-                            var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text.Contains("上滑继续观看短剧"));
-                            if (BoxPoint != null)
+                            else if (text.TextBlocks.Any(a => a.Text.Contains("上滑继续观看短剧")))
                             {
-                                var pos = BoxPoint.BoxPoints.CalculateTextBlockCenter();
-                                await SwipeAsync(device, _device, 0, "上滑继续观看短剧", pos.X, pos.Y - 50, pos.X, pos.Y - 500, 200);
+                                var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text.Contains("上滑继续观看短剧"));
+                                if (BoxPoint != null)
+                                {
+                                    var pos = BoxPoint.BoxPoints.CalculateTextBlockCenter();
+                                    await SwipeAsync(device, _device, 0, "上滑继续观看短剧", pos.X, pos.Y - 50, pos.X, pos.Y - 500, 200);
+                                }
                             }
-                        }
-                        else if (text.TextBlocks.Any(a => a.Text.Contains("上滑继续看短剧")))
-                        {
-                            var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text.Contains("上滑继续看短剧"));
-                            if (BoxPoint != null)
+                            else if (text.TextBlocks.Any(a => a.Text.Contains("上滑继续看短剧")))
                             {
-                                var pos = BoxPoint.BoxPoints.CalculateTextBlockCenter();
-                                await SwipeAsync(device, _device, 0, "上滑继续看短剧", pos.X, pos.Y - 50, pos.X, pos.Y - 500, 200);
+                                var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text.Contains("上滑继续看短剧"));
+                                if (BoxPoint != null)
+                                {
+                                    var pos = BoxPoint.BoxPoints.CalculateTextBlockCenter();
+                                    await SwipeAsync(device, _device, 0, "上滑继续看短剧", pos.X, pos.Y - 50, pos.X, pos.Y - 500, 200);
+                                }
                             }
-                        }
-                        else if (text.TextBlocks.Any(a => a.Text.Contains("上滑继续观看视频")))
-                        {
-                            var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text.Contains("上滑继续观看视频"));
-                            if (BoxPoint != null)
+                            else if (text.TextBlocks.Any(a => a.Text.Contains("上滑继续观看视频")))
                             {
-                                var pos = BoxPoint.BoxPoints.CalculateTextBlockCenter();
-                                await SwipeAsync(device, _device, 0, "上滑继续观看视频", pos.X, pos.Y - 500, pos.X, pos.Y - 1000, 200);
+                                var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text.Contains("上滑继续观看视频"));
+                                if (BoxPoint != null)
+                                {
+                                    var pos = BoxPoint.BoxPoints.CalculateTextBlockCenter();
+                                    await SwipeAsync(device, _device, 0, "上滑继续观看视频", pos.X, pos.Y - 500, pos.X, pos.Y - 1000, 200);
+                                }
                             }
-                        }
-                        else if (text.TextBlocks.Any(a => a.Text.StartsWith("继续阅读下一页")))
-                        {
-                            var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text.StartsWith("继续阅读下一页"));
-                            if (BoxPoint != null)
+                            else if (text.TextBlocks.Any(a => a.Text.StartsWith("继续阅读下一页")))
                             {
-                                await ClickAsync(device, _device, BoxPoint.BoxPoints, 3000, BoxPoint.Text);
+                                var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text.StartsWith("继续阅读下一页"));
+                                if (BoxPoint != null)
+                                {
+                                    await ClickAsync(device, _device, BoxPoint.BoxPoints, 3000, BoxPoint.Text);
+                                }
                             }
-                        }
-                        else if (text.TextBlocks.Any(a => a.Text == "听" && a.BoxPoints.Any(x => x.Y > 900 && x.X > 300)))
-                        {
-                            var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "听");
-                            if (BoxPoint != null)
+                            else if (text.TextBlocks.Any(a => a.Text == "听" && a.BoxPoints.Any(x => x.Y > 900 && x.X > 300)))
                             {
-                                var pos = BoxPoint.BoxPoints.CalculateTextBlockCenter();
-                                await ClickAsync(device, _device, new List<OCRPoint>() { new OCRPoint(pos.X - 100, pos.Y) }, 0, BoxPoint.Text);
+                                var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "听");
+                                if (BoxPoint != null)
+                                {
+                                    var pos = BoxPoint.BoxPoints.CalculateTextBlockCenter();
+                                    await ClickAsync(device, _device, new List<OCRPoint>() { new OCRPoint(pos.X - 100, pos.Y) }, 0, BoxPoint.Text);
+                                }
                             }
-                        }
-                        else if (
-                            text.TextBlocks.Any(a => Regex.IsMatch(a.Text, @"^(\d{1,})/(\d{4,})$")) ||
-                            text.TextBlocks.Any(a => a.Text.EndsWith("点击关闭广告并退出小说")) ||
-                            text.TextBlocks.Any(a => a.Text.EndsWith("左滑开始阅读")))
-                        {
-                            await SwipeAsync(device, _device, new Random().Next(12000, 22000), "左滑看小说", device.Width - 100, device.Height - 100, device.Width - 500, device.Height - 100, 300);
-                        }
-                        else if (text.TextBlocks.Any(a => a.Text.StartsWith("看视频最高得")))
-                        {
-                            var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text.StartsWith("看视频最高得"));
-                            if (BoxPoint != null)
+                            else if (
+                                text.TextBlocks.Any(a => Regex.IsMatch(a.Text, @"^(\d{1,})/(\d{4,})$")) ||
+                                text.TextBlocks.Any(a => a.Text.EndsWith("点击关闭广告并退出小说")) ||
+                                text.TextBlocks.Any(a => a.Text.EndsWith("左滑开始阅读")))
                             {
-                                await ClickAsync(device, _device, BoxPoint.BoxPoints, 0, BoxPoint.Text);
+                                await SwipeAsync(device, _device, new Random().Next(12000, 22000), "左滑看小说", device.Width - 100, device.Height - 100, device.Width - 500, device.Height - 100, 300);
                             }
-                        }
-                        else if (text.TextBlocks.Any(a => a.Text == "领取成功"))
-                        {
-
-                            if (text.TextBlocks.Any(a => a.Text == "X" || a.Text == "x" || a.Text == "×"))
+                            else if (text.TextBlocks.Any(a => a.Text.StartsWith("看视频最高得")))
                             {
-                                var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "X" || a.Text == "x" || a.Text == "×");
+                                var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text.StartsWith("看视频最高得"));
                                 if (BoxPoint != null)
                                 {
                                     await ClickAsync(device, _device, BoxPoint.BoxPoints, 0, BoxPoint.Text);
                                 }
                             }
-                            else
+                            else if (text.TextBlocks.Any(a => a.Text == "领取成功"))
                             {
-                                var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text.StartsWith("领取成功"));
-                                if (BoxPoint != null)
+
+                                if (text.TextBlocks.Any(a => a.Text == "X" || a.Text == "x" || a.Text == "×"))
                                 {
-                                    await ClickAsync(device, _device, BoxPoint.BoxPoints, 0, BoxPoint.Text);
+                                    var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "X" || a.Text == "x" || a.Text == "×");
+                                    if (BoxPoint != null)
+                                    {
+                                        await ClickAsync(device, _device, BoxPoint.BoxPoints, 0, BoxPoint.Text);
+                                    }
+                                }
+                                else
+                                {
+                                    var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text.StartsWith("领取成功"));
+                                    if (BoxPoint != null)
+                                    {
+                                        await ClickAsync(device, _device, BoxPoint.BoxPoints, 0, BoxPoint.Text);
+                                    }
                                 }
                             }
-                        }
 
-                        //当上面没有操作时就执行下面
-                        if (!IsOperate)
-                        {
-                            #region 特殊页面
-                            if (text.TextBlocks.Any(a => a.Text.StartsWith("立即下载")) && text.TextBlocks.Any(a => a.Text == "侵权投诉"))
+                            //当上面没有操作时就执行下面
+                            if (!IsOperate)
                             {
-                                await ClickAsync(device, _device, null, 0, "返回-立即下载");
+                                #region 特殊页面
+                                if (text.TextBlocks.Any(a => a.Text.StartsWith("立即下载")) && text.TextBlocks.Any(a => a.Text == "侵权投诉"))
+                                {
+                                    await ClickAsync(device, _device, null, 0, "返回-立即下载");
+                                }
+                                else if (text.TextBlocks.Any(a => a.Text.StartsWith("说点什么")) || text.TextBlocks.Any(a => a.Text == "关注"))
+                                {
+                                    await ClickAsync(device, _device, null, 0, "返回-直播间返回");
+                                }
+                                #endregion
+
+                                #region 页面停留超时
+                                //else if (_deviceService.CurAdbClient.GetAppStatus(_device, packageName) != AdvancedSharpAdbClient.Models.AppStatus.Foreground)
+                                //{
+                                //    await StartAppAsync(device, _device, 3000);
+                                //}
+                                else if ((DateTime.Now - device.LastClickTime).TotalSeconds > 60)
+                                {
+                                    await SwipeAsync(device, _device, 1000, "返回-停留页面超过60秒", 100, 1000, 500, 1000, 200);
+                                    await ClickAsync(device, _device, null, 2000, "返回-停留页面超过60秒");
+                                }
+                                #endregion
                             }
-                            else if (text.TextBlocks.Any(a => a.Text.StartsWith("说点什么")) || text.TextBlocks.Any(a => a.Text == "关注"))
+
+                            if (_deviceService.GetCurrentApp(device.Id) != device.PackageName)
                             {
-                                await ClickAsync(device, _device, null, 0, "返回-直播间返回");
+                                //await StartAppAsync(device, _device, 10000);
                             }
+
                             #endregion
 
-                            #region 页面停留超时
-                            //else if (_deviceService.CurAdbClient.GetAppStatus(_device, packageName) != AdvancedSharpAdbClient.Models.AppStatus.Foreground)
-                            //{
-                            //    await StartAppAsync(device, _device, 3000);
-                            //}
-                            else if ((DateTime.Now - device.LastClickTime).TotalSeconds > 60)
-                            {
-                                await SwipeAsync(device, _device, 1000, "返回-停留页面超过60秒", 100, 1000, 500, 1000, 200);
-                                await ClickAsync(device, _device, null, 2000, "返回-停留页面超过60秒");
-                            }
-                            #endregion
                         }
-
-                        if (_deviceService.GetCurrentApp(device.Id) != device.PackageName)
-                        {
-                            //await StartAppAsync(device, _device, 10000);
-                        }
-
-                        #endregion
-
                         IsOperate = false;
                     }
                 }
@@ -267,7 +255,7 @@ public class DataAdWatching : IAdWatching
         }
 
         if (
-            (text.TextBlocks.Any(a => a.Text == "软件商店") && text.TextBlocks.Any(a => a.Text == "主题商店")) || 
+            (text.TextBlocks.Any(a => a.Text == "软件商店") && text.TextBlocks.Any(a => a.Text == "主题商店")) ||
             (text.TextBlocks.Any(a => a.Text == "华为商城") && text.TextBlocks.Any(a => a.Text == "应用市场"))
             )
         {
@@ -330,33 +318,36 @@ public class DataAdWatching : IAdWatching
         }
         else if (dateTime.Hour >= 6 && !arrTask.ContainsKey("快手"))
         {
-            _logService.LogInfo($"清理快手", device.Id);
-            _deviceService.CleanDeviceRunningApps(device.Id);
-            await Task.Delay(15000, cancellationToken);
             _logService.LogInfo($"打开快手", device.Id);
             _ = arrTask.TryAdd("快手", DateTime.Now.ToString());
-            await _deviceService.CurAdbClient.StartAppAsync(_device, PlatformType.Kuaishou.GetPackageName());
-            await Task.Delay(5000, cancellationToken);
+
+            _deviceService.CleanDeviceRunningApps(device.Id);
+            await Task.Delay(15000, cancellationToken);
+
+            device.PackageName = PlatformType.Kuaishou.GetPackageName();
+            await StartAppAsync(device, _device, 5000);
         }
         else if (dateTime.Hour >= 3 && !arrTask.ContainsKey("快手极速版"))
         {
-            _logService.LogInfo($"清理快手极速版", device.Id);
-            _deviceService.CleanDeviceRunningApps(device.Id);
-            await Task.Delay(15000, cancellationToken);
             _logService.LogInfo($"打开快手极速版", device.Id);
             _ = arrTask.TryAdd("快手极速版", DateTime.Now.ToString());
-            await _deviceService.CurAdbClient.StartAppAsync(_device, PlatformType.KuaishouJs.GetPackageName());
-            await Task.Delay(5000, cancellationToken);
+
+            _deviceService.CleanDeviceRunningApps(device.Id);
+            await Task.Delay(15000, cancellationToken);
+
+            device.PackageName = PlatformType.KuaishouJs.GetPackageName();
+            await StartAppAsync(device, _device, 5000);
         }
         else if (dateTime.Hour >= 0 && !arrTask.ContainsKey("抖音"))
         {
-            _logService.LogInfo($"清理抖音", device.Id);
-            _deviceService.CleanDeviceRunningApps(device.Id);
-            await Task.Delay(15000, cancellationToken);
             _logService.LogInfo($"打开抖音", device.Id);
             _ = arrTask.TryAdd("抖音", DateTime.Now.ToString());
-            await _deviceService.CurAdbClient.StartAppAsync(_device, PlatformType.Douyin.GetPackageName());
-            await Task.Delay(5000, cancellationToken);
+
+            _deviceService.CleanDeviceRunningApps(device.Id);
+            await Task.Delay(15000, cancellationToken);
+
+            device.PackageName = PlatformType.Douyin.GetPackageName();
+            await StartAppAsync(device, _device, 5000);
         }
         else if (text.TextBlocks.Any(a => a.Text == "我") && text.TextBlocks.Any(a => a.Text.StartsWith("首页")))
         {
@@ -381,8 +372,8 @@ public class DataAdWatching : IAdWatching
             int count = await _cacheService.GetAsync<int>($"DataAdWatching_{device.CurPage.ToString()}");
             count++;
             await _cacheService.SetAsync($"DataAdWatching_{device.CurPage.ToString()}", count);
-            if (count > 10) {
-
+            if (count > 10)
+            {
                 await _deviceService.PlayAudioAsync("error.wav");
                 await Task.Delay(10000, cancellationToken);
             }

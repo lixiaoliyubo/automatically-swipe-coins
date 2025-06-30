@@ -8,7 +8,6 @@ using AdvancedSharpAdbClient.Models;
 using AdvancedSharpAdbClient.DeviceCommands;
 using OpenCvSharp;
 using System.IO;
-using TimerCheckApp.Models;
 
 namespace TimerCheckApp.AdWatching;
 
@@ -944,13 +943,13 @@ public class KuaishouAdWatching : IAdWatching
                             {
                                 if (arrTask["上下滑动"].ToInt32() > 500)
                                 {
-                                   arrTask["上下滑动"] = $"{(arrTask["上下滑动"].ToInt32() - 100)}";
-                                   await SwipeAsync(device, _device, 3000, "在首页停留时间超过30秒自动下滑", 500, 900, 500, 1000, 200);
+                                   //arrTask["上下滑动"] = $"{(arrTask["上下滑动"].ToInt32() - 100)}";
+                                   //await SwipeAsync(device, _device, 3000, "在首页停留时间超过30秒自动下滑", 500, 900, 500, 1000, 200);
                                 }
                                 else
                                 {
-                                    arrTask["上下滑动"] = $"{(arrTask["上下滑动"].ToInt32() + 100)}";
-                                    await SwipeAsync(device, _device, 3000, "在首页停留时间超过30秒自动上滑", 500, 1000, 500, 900, 200);
+                                    //arrTask["上下滑动"] = $"{(arrTask["上下滑动"].ToInt32() + 100)}";
+                                    //await SwipeAsync(device, _device, 3000, "在首页停留时间超过30秒自动上滑", 500, 1000, 500, 900, 200);
                                 }
                                 continue;
                             }
@@ -1521,29 +1520,36 @@ public class KuaishouAdWatching : IAdWatching
         }
         else if (dateTime.Hour >= 5 && !arrTask.ContainsKey("支付宝"))
         {
-            _logService.LogInfo($"准备支付宝", device.Id);
+            _logService.LogInfo($"打开支付宝", device.Id);
+            _ = arrTask.TryAdd("支付宝", DateTime.Now.ToString());
+
             _deviceService.CleanDeviceRunningApps(device.Id);
             await Task.Delay(15000, cancellationToken);
-            await _deviceService.CurAdbClient.StartAppAsync(_device, PlatformType.AliPay.GetPackageName());
-            await Task.Delay(5000, cancellationToken);
+
+            device.PackageName = PlatformType.AliPay.GetPackageName();
+            await StartAppAsync(device, _device, 5000);
         }
         else if (dateTime.Hour >= 3 && !arrTask.ContainsKey("快手极速版"))
         {
-            _logService.LogInfo($"准备快手极速版", device.Id);
+            _logService.LogInfo($"打开快手极速版", device.Id);
+            _ = arrTask.TryAdd("快手极速版", DateTime.Now.ToString());
+
             _deviceService.CleanDeviceRunningApps(device.Id);
             await Task.Delay(15000, cancellationToken);
-            _ = arrTask.TryAdd("快手极速版", DateTime.Now.ToString());
-            await _deviceService.CurAdbClient.StartAppAsync(_device, PlatformType.KuaishouJs.GetPackageName());
-            await Task.Delay(5000, cancellationToken);
+
+            device.PackageName = PlatformType.KuaishouJs.GetPackageName();
+            await StartAppAsync(device, _device, 5000);
         }
         else if (dateTime.Hour >= 0 && !arrTask.ContainsKey("快手"))
         {
             _logService.LogInfo($"准备打开快手", device.Id);
+            _ = arrTask.TryAdd("快手", DateTime.Now.ToString());
+
             _deviceService.CleanDeviceRunningApps(device.Id);
             await Task.Delay(15000, cancellationToken);
-            _ = arrTask.TryAdd("快手", DateTime.Now.ToString());
-            await _deviceService.CurAdbClient.StartAppAsync(_device, PlatformType.Kuaishou.GetPackageName());
-            await Task.Delay(5000, cancellationToken);
+
+            device.PackageName = PlatformType.Kuaishou.GetPackageName();
+            await StartAppAsync(device, _device, 5000);
         }
         
         else if (

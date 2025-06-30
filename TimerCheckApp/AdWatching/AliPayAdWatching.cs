@@ -6,11 +6,6 @@ using TimerCheckApp.Services.Interfaces;
 using AdvancedSharpAdbClient.Models;
 using AdvancedSharpAdbClient.DeviceCommands;
 using System.Text.RegularExpressions;
-using System;
-using TimerCheckApp.Services.Extensions;
-using TimerCheckApp.Models;
-using OpenCvSharp;
-using System.IO;
 
 namespace TimerCheckApp.AdWatching;
 
@@ -194,11 +189,28 @@ public class AliPayAdWatching : IAdWatching
                                 await ClickAsync(device, _device, null, 2000, "返回-直播间");
                                 await ClickAsync(device, _device, null, 2000, "返回-直播间");
                             }
+                            else if ((DateTime.Now - device.LastClickTime).TotalSeconds > 60)
+                            {
+                                if (_deviceService.CurAdbClient.GetAppStatus(_device, device.PackageName) != AppStatus.Foreground)
+                                {
+                                    await StartAppAsync(device, _device, 3000);
+                                }
+                                else await ClickAsync(device, _device, null, 2000, "返回-停留页面超过60秒");
+                                continue;
+                            }
+                            else if ((DateTime.Now - device.LastClickTime).TotalSeconds > 30)
+                            {
+                                if (text.TextBlocks.Any(a => a.Text.StartsWith("说点什么")))
+                                {
+                                    await ClickAsync(device, _device, null, 2000, "返回-停留页面超过30秒");
+                                    continue;
+                                }
+                            }
+                            if (device.CurPage != AppPageEnum.MoneyHome)
+                            {
+                                //_deviceService.UpdateTaskData();
+                            }
                             #endregion
-                        }
-                        if (device.CurrentApp != device.PackageName)
-                        {
-                            //await StartAppAsync(device, _device, 10000);
                         }
                         #endregion
 
