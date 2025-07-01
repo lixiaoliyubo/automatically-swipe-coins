@@ -128,6 +128,7 @@ public class DouyinAdWatching : IAdWatching
                             await Task.Delay(2000);
                             continue;
                         }
+
                         #region 位置识别
                         if (text.TextBlocks.Any(a => a.Text == "天天预约领金币"))
                         {
@@ -538,6 +539,7 @@ public class DouyinAdWatching : IAdWatching
                         }
 
                         #endregion
+
                         if ((text.TextBlocks.Any(a => a.Text.StartsWith("金币收益")) && text.TextBlocks.Any(a => a.Text.Contains("现金收益") || a.Text == "详情")) || (text.TextBlocks.Any(a => a.Text.StartsWith("集音符") || a.Text.StartsWith("限时任务") || a.Text.StartsWith("日常任务")) && text.TextBlocks.Any(a => a.Text.Contains("已预约") || a.Text == "去领取")))
                         {
                             var currentTime = DateTime.Now.TimeOfDay;
