@@ -26,7 +26,6 @@ public class DouyinAdWatching : IAdWatching
     /// 当前是否有操作
     /// </summary>
     private bool IsOperate = false;
-    private int MaxY = 0;
 
 
     public ConcurrentDictionary<string, string> arrTask { get; set; } = new()
@@ -81,9 +80,7 @@ public class DouyinAdWatching : IAdWatching
         var stopwatch = Stopwatch.StartNew();
         int StopTimeSpan = 0;
         int AdTime = 0;
-        bool isSwipeTop = false;
         bool isCompele = false; //是否强制结束
-        bool isOthar = false; //是否进入番茄小说
         try
         {
             List<string> PagePosChange = new List<string>();
@@ -435,7 +432,6 @@ public class DouyinAdWatching : IAdWatching
                             var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text.StartsWith("去签到"));
                             if (BoxPoint != null)
                             {
-                                isOthar = true;
                                 await ClickAsync(device, _device, BoxPoint.BoxPoints, 3000, BoxPoint.Text);
                                 continue;
                             }
@@ -445,7 +441,6 @@ public class DouyinAdWatching : IAdWatching
                             var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text.StartsWith("签到领金币"));
                             if (BoxPoint != null)
                             {
-                                isOthar = true;
                                 await ClickAsync(device, _device, BoxPoint.BoxPoints, 3000, BoxPoint.Text);
                                 continue;
                             }
@@ -491,7 +486,6 @@ public class DouyinAdWatching : IAdWatching
                             var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "立即领取");
                             if (BoxPoint != null)
                             {
-                                isOthar = true;
                                 await ClickAsync(device, _device, BoxPoint.BoxPoints, 3000, BoxPoint.Text);
                                 continue;
                             }
@@ -546,11 +540,6 @@ public class DouyinAdWatching : IAdWatching
                         #endregion
                         if ((text.TextBlocks.Any(a => a.Text.StartsWith("金币收益")) && text.TextBlocks.Any(a => a.Text.Contains("现金收益") || a.Text == "详情")) || (text.TextBlocks.Any(a => a.Text.StartsWith("集音符") || a.Text.StartsWith("限时任务") || a.Text.StartsWith("日常任务")) && text.TextBlocks.Any(a => a.Text.Contains("已预约") || a.Text == "去领取")))
                         {
-                            isOthar = false;
-                            if (MaxY == 0)
-                            {
-                                MaxY = text.TextBlocks.Last().BoxPoints.CalculateTextBlockCenter().Y;
-                            }
                             var currentTime = DateTime.Now.TimeOfDay;
                             var key = mealTimes.FirstOrDefault(a => currentTime >= a.Value.start && currentTime < a.Value.end).Key;
                             #region 首页
