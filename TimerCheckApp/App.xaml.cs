@@ -123,6 +123,21 @@ namespace TimerCheckApp
         /// </summary>
         protected override void OnExit(ExitEventArgs e)
         {
+            try
+            {
+                // 清理MainViewModel资源
+                var mainViewModel = Services?.GetService<MainViewModel>();
+                mainViewModel?.Cleanup();
+                
+                // 清理其他资源
+                var logService = Services?.GetService<ILogService>();
+                logService?.LogInfo("应用程序正在退出", "System");
+            }
+            catch (Exception ex)
+            {
+                // 记录清理过程中的异常，但不阻止应用程序退出
+                Console.WriteLine($"清理资源时发生错误: {ex.Message}");
+            }
             
             base.OnExit(e);
         }

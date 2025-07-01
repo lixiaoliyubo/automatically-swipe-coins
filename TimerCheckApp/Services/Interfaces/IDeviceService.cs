@@ -75,6 +75,13 @@ namespace TimerCheckApp.Services.Interfaces
         /// </summary>
         /// <param name="fileName">音频文件名</param>
         Task PlayAudioAsync(string fileName);
+        
+        /// <summary>
+        /// 播放文本内容（文本转语音）
+        /// </summary>
+        /// <param name="text">要播放的文本内容</param>
+        /// <returns>播放任务</returns>
+        Task PlayTextAsync(string text);
 
         /// <summary>
         /// 停止所有音频播放

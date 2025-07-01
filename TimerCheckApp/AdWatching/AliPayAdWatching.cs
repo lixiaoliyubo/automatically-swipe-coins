@@ -356,10 +356,5 @@ public class AliPayAdWatching : IAdWatching
         // 线性反比
         int step = 500; // 每增加1个Value减少500ms
         return baseMax - (value - minValue) * step;
-
-        /* 或者使用非线性：
-        double decay = 1.0 / (1 + 0.1 * (value - minValue));
-        return (int)(baseMax * decay);
-        */
     }
 }

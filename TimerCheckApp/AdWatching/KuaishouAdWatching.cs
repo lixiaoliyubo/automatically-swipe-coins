@@ -1551,7 +1551,7 @@ public class KuaishouAdWatching : IAdWatching
         {
             await ClickAsync(device, _device, null, 2000, "返回-首页");
         }
-        else if (dateTime.Hour >= 5 && !arrTask.ContainsKey("支付宝"))
+        else if (dateTime.Hour >= 4 && !arrTask.ContainsKey("支付宝"))
         {
             _logService.LogInfo($"打开支付宝", device.Id);
             _ = arrTask.TryAdd("支付宝", DateTime.Now.ToString());
@@ -1562,7 +1562,7 @@ public class KuaishouAdWatching : IAdWatching
             device.PackageName = PlatformType.AliPay.GetPackageName();
             await StartAppAsync(device, _device, 5000);
         }
-        else if (dateTime.Hour >= 3 && !arrTask.ContainsKey("快手极速版"))
+        else if (dateTime.Hour >= 2 && !arrTask.ContainsKey("快手极速版"))
         {
             _logService.LogInfo($"打开快手极速版", device.Id);
             _ = arrTask.TryAdd("快手极速版", DateTime.Now.ToString());
@@ -1584,14 +1584,27 @@ public class KuaishouAdWatching : IAdWatching
             device.PackageName = PlatformType.Kuaishou.GetPackageName();
             await StartAppAsync(device, _device, 5000);
         }
-        
+        else if (text.TextBlocks.Any(a => a.Text == "明日可领"))
+        {
+            _logService.LogInfo("完成支付宝刷视频", device.Id);
+            _deviceService.StopDeviceCheck(device);
+        }
+
         else if (
             (text.TextBlocks.Any(a => a.Text == "首页" || a.Text == "我") && text.TextBlocks.Any(a => a.Text == "去赚钱" || a.Text == "精选")) ||
             (text.TextBlocks.Any(a => Regex.IsMatch(a.Text, @"^([\d-\.]+)元$")) && text.TextBlocks.Any(a => a.Text == "关注" || a.Text == "视频" || a.Text == "发现"))
             )
         {
             await _cacheService.RemoveAsync($"KuaishouAdWatching_{device.CurPage.ToString()}");
-            var r = new Random().Next(5000, 15000);
+
+
+            int Max = 15000;
+            var m = Regex.Match(text.Text, @"(\d{1,2})/(\d{1,2})支");
+            if (m.Success)
+            {
+                Max = GetDynamicMax(m.Groups[2].Value.ToInt());
+            }
+            var r = new Random().Next(5000, Max);
             if (!text.TextBlocks.Any(a => a.Text == "点击进入直播间"))
             {
                 await Task.Delay(r, cancellationToken);
@@ -1619,6 +1632,18 @@ public class KuaishouAdWatching : IAdWatching
         }
     }
 
+    private int GetDynamicMax(int value, int baseMax = 15000)
+    {
+        const int minValue = 5;
+        const int maxValue = 15;
+
+        // 确保value在5~20之间
+        value = Math.Clamp(value, minValue, maxValue);
+
+        // 线性反比
+        int step = 500; // 每增加1个Value减少500ms
+        return baseMax - (value - minValue) * step;
+    }
 
     /// <summary>
     /// 执行点击操作

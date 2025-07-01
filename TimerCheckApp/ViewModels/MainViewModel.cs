@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Threading;
 using System.Windows.Controls;
 using System.Windows.Threading;
 using TimerCheckApp.Services.Interfaces;
@@ -20,7 +21,9 @@ public partial class MainViewModel : ObservableObject
     private readonly ILogService _logService;
     private readonly DispatcherTimer _refreshTimer;
     private readonly DispatcherTimer _dailyCleanupTimer;
+    private readonly DispatcherTimer _nightlyDeviceCheckTimer;
     private readonly IWebSocketService _webSocketService;
+    private CancellationTokenSource? _nightlyDeviceCheckCts;
 
     #endregion
 
@@ -101,6 +104,12 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private bool _isFlyoutOpen;
 
+    /// <summary>
+    /// 是否启用夜间设备检测（0点到8点）
+    /// </summary>
+    [ObservableProperty]
+    private bool _enableNightlyDeviceCheck = true;
+
 
     #endregion
 
@@ -168,6 +177,16 @@ public partial class MainViewModel : ObservableObject
 
         // 初始加载设备
         RefreshDevicesCommand.Execute(null);
+        
+        // 初始化夜间设备检测定时器
+        _nightlyDeviceCheckTimer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromSeconds(10)
+        };
+        _nightlyDeviceCheckTimer.Tick += NightlyDeviceCheck_Tick;
+        
+        // 启动夜间设备检测
+        StartNightlyDeviceCheck();
     }
 
     #endregion
@@ -193,6 +212,104 @@ public partial class MainViewModel : ObservableObject
         {
             _logService.LogInfo("执行每日清理任务", "System");
             CleanupAllCommand.Execute(null);
+            
+            // 0点时启动夜间设备检测
+            if (EnableNightlyDeviceCheck && !_nightlyDeviceCheckTimer.IsEnabled)
+            {
+                StartNightlyDeviceCheck();
+            }
+        }
+    }
+    
+    /// <summary>
+    /// 夜间设备检测定时器事件
+    /// </summary>
+    private void NightlyDeviceCheck_Tick(object? sender, EventArgs e)
+    {
+        // 检查是否在0点到8点之间
+        var now = DateTime.Now;
+        if (now.Hour >= 0 && now.Hour < 8)
+        {
+            CheckAndStartDevices();
+        }
+        else
+        {
+            // 不在指定时间范围内，停止定时器
+            _nightlyDeviceCheckTimer.Stop();
+            _logService.LogInfo("已退出夜间设备检测时间段，停止检测", "System");
+        }
+    }
+    
+    /// <summary>
+    /// 检查并启动未运行的设备
+    /// </summary>
+    private async void CheckAndStartDevices()
+    {
+        if (!EnableNightlyDeviceCheck || Devices.Count == 0)
+        {
+            return;
+        }
+        
+        // 检查是否有设备未运行
+        var nonRunningDevices = Devices.Where(d => !d.IsRunning).ToList();
+        if (nonRunningDevices.Count > 0)
+        {
+            string message = $"夜间检测到{nonRunningDevices.Count}个设备未运行，等待启动...";
+            _logService.LogWarning(message, "System");
+            
+            // 播放文本提示
+            await _deviceService.PlayTextAsync(message);
+            
+            // 等待语音播放完成
+            await Task.Delay(5000);
+            
+            //foreach (var device in nonRunningDevices)
+            //{
+            //    _logService.LogInfo($"启动设备: {device.Name} ({device.Id})", "System");
+            //    StartDeviceCheck(device);
+            //}
+
+        }
+    }
+    
+    /// <summary>
+    /// 启动夜间设备检测
+    /// </summary>
+    private void StartNightlyDeviceCheck()
+    {
+        if (!EnableNightlyDeviceCheck)
+        {
+            return;
+        }
+        
+        var now = DateTime.Now;
+        // 只在0点到8点之间启动定时器
+        if (now.Hour >= 0 && now.Hour < 8)
+        {
+            if (!_nightlyDeviceCheckTimer.IsEnabled)
+            {
+                _nightlyDeviceCheckTimer.Start();
+                _logService.LogInfo("启动夜间设备检测（0点到8点，每10秒检测一次）", "System");
+                
+                // 立即执行一次检查
+                CheckAndStartDevices();
+            }
+        }
+        else
+        {
+            _logService.LogInfo("当前不在夜间设备检测时间段（0点到8点），将在下次进入该时间段时自动启动", "System");
+        }
+    }
+    
+    /// <summary>
+    /// 停止夜间设备检测
+    /// </summary>
+    private void StopNightlyDeviceCheck()
+    {
+        if (_nightlyDeviceCheckTimer.IsEnabled)
+        {
+            _nightlyDeviceCheckTimer.Stop();
+            _logService.LogInfo("停止夜间设备检测", "System");
         }
     }
 
@@ -204,6 +321,21 @@ public partial class MainViewModel : ObservableObject
         if (value != null && !ShowAllLogs)
         {
             Logs = _logService.GetLogs(value.Id);
+        }
+    }
+    
+    /// <summary>
+    /// 夜间设备检测启用状态变更处理
+    /// </summary>
+    partial void OnEnableNightlyDeviceCheckChanged(bool value)
+    {
+        if (value)
+        {
+            StartNightlyDeviceCheck();
+        }
+        else
+        {
+            StopNightlyDeviceCheck();
         }
     }
 
@@ -665,6 +797,46 @@ public partial class MainViewModel : ObservableObject
         {
             _logService.LogError($"发送指针事件失败: {ex.Message}", string.Empty);
         }
+    }
+
+    #endregion
+
+    #region 资源清理
+
+    /// <summary>
+    /// 清理资源
+    /// </summary>
+    public void Cleanup()
+    {
+        // 停止所有定时器
+        if (_refreshTimer != null && _refreshTimer.IsEnabled)
+        {
+            _refreshTimer.Stop();
+        }
+        
+        if (_dailyCleanupTimer != null && _dailyCleanupTimer.IsEnabled)
+        {
+            _dailyCleanupTimer.Stop();
+        }
+        
+        // 停止夜间设备检测
+        StopNightlyDeviceCheck();
+        
+        // 取消任何正在进行的操作
+        if (_nightlyDeviceCheckCts != null)
+        {
+            _nightlyDeviceCheckCts.Cancel();
+            _nightlyDeviceCheckCts.Dispose();
+            _nightlyDeviceCheckCts = null;
+        }
+        
+        // 断开WebSocket连接
+        if (IsWebSocketConnected)
+        {
+            _webSocketService.Disconnect();
+        }
+        
+        _logService.LogInfo("应用资源已清理", "System");
     }
 
     #endregion

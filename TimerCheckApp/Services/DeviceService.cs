@@ -16,7 +16,7 @@ namespace TimerCheckApp.Services;
 public class DeviceService : IDeviceService, IDisposable
 {
     #region 字段
-
+    private int runTaskCount = 0;
     private PaddleOCREngine _ocrEngine;
     private readonly AdbClient _adbClient;
     private readonly AdbServer _adbServer;
@@ -496,6 +496,16 @@ public class DeviceService : IDeviceService, IDisposable
     public async Task PlayAudioAsync(string fileName)
     {
         await _audioService.PlayAsync(fileName);
+    }
+    
+    /// <summary>
+    /// 播放文本内容（文本转语音）
+    /// </summary>
+    /// <param name="text">要播放的文本内容</param>
+    /// <returns>播放任务</returns>
+    public async Task PlayTextAsync(string text)
+    {
+        await _audioService.PlayTextAsync(text);
     }
 
     /// <summary>

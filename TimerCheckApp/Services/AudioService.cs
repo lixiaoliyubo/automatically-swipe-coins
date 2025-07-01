@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Media;
+using System.Speech.Synthesis;
 using System.Threading.Tasks;
 using TimerCheckApp.Services.Interfaces;
 
@@ -14,6 +15,7 @@ namespace TimerCheckApp.Services
         private readonly ILogService _logService;
         private readonly string _audioFolderPath;
         private SoundPlayer _soundPlayer;
+        private SpeechSynthesizer _speechSynthesizer;
 
         /// <summary>
         /// 构造函数
@@ -29,6 +31,9 @@ namespace TimerCheckApp.Services
             
             // 初始化音频播放器
             _soundPlayer = new SoundPlayer();
+            
+            // 初始化语音合成器
+            _speechSynthesizer = new SpeechSynthesizer();
         }
 
         /// <summary>
@@ -95,7 +100,12 @@ namespace TimerCheckApp.Services
         {
             try
             {
+                // 停止音频播放
                 _soundPlayer.Stop();
+                
+                // 停止语音合成
+                _speechSynthesizer.SpeakAsyncCancelAll();
+                
                 _logService.LogInfo("停止所有音频播放", "System");
             }
             catch (Exception ex)
@@ -123,6 +133,38 @@ namespace TimerCheckApp.Services
         {
             string filePath = GetAudioFilePath(fileName);
             return File.Exists(filePath);
+        }
+        
+        /// <summary>
+        /// 播放文本内容（文本转语音）
+        /// </summary>
+        /// <param name="text">要播放的文本内容</param>
+        /// <returns>播放任务</returns>
+        public async Task PlayTextAsync(string text)
+        {
+            try
+            {
+                await Task.Run(() =>
+                {
+                    try
+                    {
+                        // 停止当前正在播放的音频
+                        _soundPlayer.Stop();
+                        
+                        // 使用语音合成器播放文本
+                        _speechSynthesizer.SpeakAsync(text);
+                        _logService.LogInfo($"播放文本: {text}", "System");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logService.LogError($"播放文本失败: {ex.Message}", "System");
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logService.LogError($"播放文本异常: {ex.Message}", "System");
+            }
         }
     }
 }
