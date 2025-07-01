@@ -23,7 +23,6 @@ public partial class MainViewModel : ObservableObject
     private readonly ILogService _logService;
     private readonly ICacheService _cacheService;
     private readonly DispatcherTimer _refreshTimer;
-    private readonly DispatcherTimer _dailyCleanupTimer;
     private readonly DispatcherTimer _nightlyDeviceCheckTimer;
     private readonly IWebSocketService _webSocketService;
     private CancellationTokenSource? _nightlyDeviceCheckCts;
@@ -152,33 +151,6 @@ public partial class MainViewModel : ObservableObject
         _refreshTimer.Tick += RefreshDevices_Tick;
         _refreshTimer.Start();
 
-        // 设置每日清理定时器 - 优化检查间隔
-        // 计算到下一个整点的时间
-        var now = DateTime.Now;
-        var nextHour = now.Date.AddHours(now.Hour + 1);
-        var initialDelay = nextHour - now;
-
-        _dailyCleanupTimer = new DispatcherTimer
-        {
-            // 每小时检查一次，而不是每分钟
-            Interval = TimeSpan.FromHours(1)
-        };
-        _dailyCleanupTimer.Tick += DailyCleanup_Tick;
-
-        // 使用单次触发的定时器来对齐到整点
-        var alignmentTimer = new DispatcherTimer
-        {
-            Interval = initialDelay
-        };
-        alignmentTimer.Tick += (s, e) =>
-        {
-            alignmentTimer.Stop();
-            _dailyCleanupTimer.Start();
-            // 立即执行一次检查
-            DailyCleanup_Tick(null, EventArgs.Empty);
-        };
-        alignmentTimer.Start();
-
         // 初始加载设备
         RefreshDevicesCommand.Execute(null);
         
@@ -205,25 +177,7 @@ public partial class MainViewModel : ObservableObject
         RefreshDevicesCommand.Execute(null);
     }
 
-    /// <summary>
-    /// 每日清理定时器事件
-    /// </summary>
-    private void DailyCleanup_Tick(object? sender, EventArgs e)
-    {
-        var now = DateTime.Now;
-        // 每天凌晨0点执行清理
-        if (now.Hour == 0)
-        {
-            _logService.LogInfo("执行每日清理任务", "System");
-            CleanupAllCommand.Execute(null);
-            
-            // 0点时启动夜间设备检测
-            if (EnableNightlyDeviceCheck && !_nightlyDeviceCheckTimer.IsEnabled)
-            {
-                StartNightlyDeviceCheck();
-            }
-        }
-    }
+
     
     /// <summary>
     /// 夜间设备检测定时器事件
@@ -234,6 +188,13 @@ public partial class MainViewModel : ObservableObject
         var now = DateTime.Now;
         if (now.Hour >= 0 && now.Hour < 8)
         {
+            // 如果是0点，执行每日清理任务
+            if (now.Hour == 0 && now.Minute == 0)
+            {
+                _logService.LogInfo("执行每日清理任务", "System");
+                CleanupAllCommand.Execute(null);
+            }
+            
             CheckAndStartDevices();
         }
         else
@@ -829,11 +790,6 @@ public partial class MainViewModel : ObservableObject
         if (_refreshTimer != null && _refreshTimer.IsEnabled)
         {
             _refreshTimer.Stop();
-        }
-        
-        if (_dailyCleanupTimer != null && _dailyCleanupTimer.IsEnabled)
-        {
-            _dailyCleanupTimer.Stop();
         }
         
         // 停止夜间设备检测
