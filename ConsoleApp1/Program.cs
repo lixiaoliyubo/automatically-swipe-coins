@@ -39,7 +39,6 @@ public class ConsoleApp1
     {
         const int minValue = 5;
         const int maxValue = 20;
-
         // 确保value在5~20之间
         value = Math.Clamp(value, minValue, maxValue);
 

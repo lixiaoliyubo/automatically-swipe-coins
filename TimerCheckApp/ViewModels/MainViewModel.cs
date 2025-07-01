@@ -6,7 +6,9 @@ using System.Text.Json;
 using System.Threading;
 using System.Windows.Controls;
 using System.Windows.Threading;
+using SqlSugar;
 using TimerCheckApp.Services.Interfaces;
+using ICacheService = TimerCheckApp.Services.Interfaces.ICacheService;
 
 namespace TimerCheckApp.ViewModels;
 
@@ -19,6 +21,7 @@ public partial class MainViewModel : ObservableObject
 
     private readonly IDeviceService _deviceService;
     private readonly ILogService _logService;
+    private readonly ICacheService _cacheService;
     private readonly DispatcherTimer _refreshTimer;
     private readonly DispatcherTimer _dailyCleanupTimer;
     private readonly DispatcherTimer _nightlyDeviceCheckTimer;
@@ -121,10 +124,11 @@ public partial class MainViewModel : ObservableObject
     /// <param name="deviceService">设备服务</param>
     /// <param name="logService">日志服务</param>
     /// <param name="webSocketService">WebSocket服务</param>
-    public MainViewModel(IDeviceService deviceService, ILogService logService, IWebSocketService webSocketService)
+    public MainViewModel(IDeviceService deviceService, ILogService logService, ICacheService cacheService,  IWebSocketService webSocketService)
     {
         _deviceService = deviceService;
         _logService = logService;
+        _cacheService = cacheService;
         _webSocketService = webSocketService;
         _logs = _logService.LogEntries;
         _logsText = _logService.LogsText;
@@ -251,23 +255,34 @@ public partial class MainViewModel : ObservableObject
         }
         
         // 检查是否有设备未运行
-        var nonRunningDevices = Devices.Where(d => !d.IsRunning).ToList();
-        if (nonRunningDevices.Count > 0)
+        var nonRunningDevices = Devices.Where(d => !d.IsRunning);
+        if (nonRunningDevices.Count() > 0)
         {
-            string message = $"夜间检测到{nonRunningDevices.Count}个设备未运行，等待启动...";
+            int count = await _cacheService.GetAsync<int>($"CheckAndStartDevices");
+            count++;
+            await _cacheService.SetAsync($"CheckAndStartDevices", count);
+
+
+            string message = $"夜间检测到{nonRunningDevices.Count()}个设备未运行，等待启动...";
             _logService.LogWarning(message, "System");
-            
+
             // 播放文本提示
             await _deviceService.PlayTextAsync(message);
             
             // 等待语音播放完成
             await Task.Delay(5000);
-            
-            //foreach (var device in nonRunningDevices)
-            //{
-            //    _logService.LogInfo($"启动设备: {device.Name} ({device.Id})", "System");
-            //    StartDeviceCheck(device);
-            //}
+
+            var now = DateTime.Now;
+            if (now.Hour >= 0 && now.Hour < 8 && count > 30)
+            {
+                await _cacheService.RemoveAsync($"CheckAndStartDevices");
+                foreach (var device in nonRunningDevices)
+                {
+                    _logService.LogInfo($"启动设备: {device.Name} ({device.Id})", "System");
+                    StartDeviceCheck(device);
+                }
+                
+            }
 
         }
     }
@@ -374,6 +389,8 @@ public partial class MainViewModel : ObservableObject
         // 连接状态变更事件
         _webSocketService.ConnectionStatusChanged += WebSocketConnectionStatusChanged;
         _webSocketService.MessageReceived += WebSocketMessageReceived;
+
+
     }
 
 
