@@ -46,7 +46,7 @@ namespace TimerCheckApp.Models
             InitialTime = DateTime.Now;
             UpdateTime = DateTime.Now;
         }
-
+        /*
         /// <summary>
         /// 更新任务值
         /// </summary>
@@ -108,6 +108,6 @@ namespace TimerCheckApp.Models
         public bool IsNotEmptyOrNull()
         {
             return !string.IsNullOrEmpty(Value);
-        }
+        }*/
     }
 }

@@ -47,7 +47,7 @@ namespace TimerCheckApp.AdWatching
         public void UpdateTask(string taskName, string value)
         {
             var task = GetTask(taskName);
-            task.UpdateValue(value);
+            //task.UpdateValue(value);
         }
 
         /// <summary>
@@ -75,7 +75,7 @@ namespace TimerCheckApp.AdWatching
             {
                 if (!excludeTaskNames.Contains(task.Name))
                 {
-                    task.UpdateValue(string.Empty);
+                   // task.UpdateValue(string.Empty);
                 }
             }
         }

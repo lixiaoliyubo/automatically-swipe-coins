@@ -145,7 +145,12 @@ public class AliPayAdWatching : IAdWatching
                             }
                             else
                             {
-                                var r = new Random().Next(5000, 15000); 
+                                int Max = 15000;
+                                var m = Regex.Match(text.Text, @"(\d{1,2})/(\d{1,2})支");
+                                if (m.Success) {
+                                    Max = GetDynamicMax(m.Groups[2].Value.ToInt());
+                                }
+                                var r = new Random().Next(5000, Max); 
                                 if (!text.TextBlocks.Any(a => a.Text == "点击进入直播间"))
                                 {
                                     await Task.Delay(r, cancellationToken);
@@ -339,5 +344,22 @@ public class AliPayAdWatching : IAdWatching
         {
             await Task.Delay(delay);
         }
+    }
+    private int GetDynamicMax(int value, int baseMax = 15000)
+    {
+        const int minValue = 5;
+        const int maxValue = 15;
+
+        // 确保value在5~20之间
+        value = Math.Clamp(value, minValue, maxValue);
+
+        // 线性反比
+        int step = 500; // 每增加1个Value减少500ms
+        return baseMax - (value - minValue) * step;
+
+        /* 或者使用非线性：
+        double decay = 1.0 / (1 + 0.1 * (value - minValue));
+        return (int)(baseMax * decay);
+        */
     }
 }

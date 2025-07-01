@@ -30,10 +30,28 @@ using TimerCheckApp.enums;
 using TimerCheckApp.Extensions;
 using TimerCheckApp.Services;
 using TimerCheckApp.Services.Interfaces;
+using Yuandl.ThemeUI.Controls;
 using Point = OpenCvSharp.Point;
 namespace ConsoleApp1;
 public class ConsoleApp1
 {
+    static int GetDynamicMax(int value, int baseMax = 15000)
+    {
+        const int minValue = 5;
+        const int maxValue = 20;
+
+        // 确保value在5~20之间
+        value = Math.Clamp(value, minValue, maxValue);
+
+        // 线性反比
+        int step = 500; // 每增加1个Value减少500ms
+        return baseMax - (value - minValue) * step;
+
+        /* 或者使用非线性：
+        double decay = 1.0 / (1 + 0.1 * (value - minValue));
+        return (int)(baseMax * decay);
+        */
+    }
     /// <summary>
     /// 原始Main方法
     /// </summary>
@@ -103,7 +121,8 @@ public class ConsoleApp1
      /// </summary>
      static void Main(string[] args)
      {
-         Console.WriteLine("===== 缓存服务示例 =====\n");
+        int BaseMax = GetDynamicMax(18); 
+        Console.WriteLine("===== 缓存服务示例 =====\n");
 #if WPF
     // WPF 专用代码
     Console.WriteLine("当前是 WPF 应用程序");
