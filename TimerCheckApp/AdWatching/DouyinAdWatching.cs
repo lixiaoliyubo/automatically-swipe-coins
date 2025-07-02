@@ -49,7 +49,6 @@ public class DouyinAdWatching : IAdWatching
         new TaskItem("听书赚金币"),
         new TaskItem("上下滑动")
     };
-    ConcurrentDictionary<string, string> IAdWatching.arrTask { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
     private readonly ConcurrentDictionary<string, (TimeSpan start, TimeSpan end)> mealTimes = new()
     {
@@ -149,7 +148,7 @@ public class DouyinAdWatching : IAdWatching
                         {
                             device.CurPage = AppPageEnum.ZaoAnXiaoDao;
                         }
-                        else if(text.TextBlocks.Any(a => a.Text == "已暂停") && text.TextBlocks.Any(a => a.Text == "金币" || a.Text == "已到账"))
+                        else if (text.TextBlocks.Any(a => a.Text == "已暂停") && text.TextBlocks.Any(a => a.Text == "金币" || a.Text == "已到账"))
                         {
                             device.CurPage = AppPageEnum.AppointVideo;
                         }
@@ -673,15 +672,18 @@ public class DouyinAdWatching : IAdWatching
                             #endregion
 
                             #region 看广告赚金币
-                            if (device.CurPage == AppPageEnum.MoneyHome && AdTime > 0 && text.TextBlocks.Any(a => a.Text.StartsWith("看广告赚金币")) && (DateTime.Now - arrTask.GetTaskItemValue("看广告赚金币").ToDateTime(DateTime.Now.AddMinutes(-25))).TotalMinutes >= AdTime)
+                            if (device.CurPage == AppPageEnum.MoneyHome && AdTime > 0 && text.TextBlocks.Any(a => a.Text.StartsWith("看广告赚金币")))
                             {
-                                var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text.StartsWith("看广告赚金币"));
-                                if (BoxPoint != null)
+                                if ((DateTime.Now - arrTask.GetTaskItemValue("看广告赚金币").ToDateTime(DateTime.Now.AddMinutes(-25))).TotalMinutes >= AdTime)
                                 {
-                                    device.CurPage = AppPageEnum.ViewAdMoney;
-                                    PagePosChange.Add("看广告赚金币");
-                                    arrTask.UpdateTaskItem("看广告赚金币", $"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}");
-                                    await ClickAsync(device, _device, BoxPoint.BoxPoints, 3000, BoxPoint.Text);
+                                    var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text.StartsWith("看广告赚金币"));
+                                    if (BoxPoint != null)
+                                    {
+                                        device.CurPage = AppPageEnum.ViewAdMoney;
+                                        PagePosChange.Add("看广告赚金币");
+                                        arrTask.UpdateTaskItem("看广告赚金币", $"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}");
+                                        await ClickAsync(device, _device, BoxPoint.BoxPoints, 3000, BoxPoint.Text);
+                                    }
                                 }
                             }
                             #endregion
@@ -703,16 +705,19 @@ public class DouyinAdWatching : IAdWatching
                             #endregion
 
                             #region 看指定视频得金币
-                            if (device.CurPage == AppPageEnum.MoneyHome && text.TextBlocks.Any(a => Regex.IsMatch(a.Text, @"(看|刷)指定视频(得|赚)(金币|音符)")) && (DateTime.Now - arrTask.GetTaskItemValue("看指定视频得金币").GetArray().ToDateTime(DateTime.Now.AddMinutes(-22))).TotalMinutes > 20)
+                            if (device.CurPage == AppPageEnum.MoneyHome && text.TextBlocks.Any(a => Regex.IsMatch(a.Text, @"(看|刷)指定视频(得|赚)(金币|音符)")))
                             {
-                                var BoxPoint = text.TextBlocks.FirstOrDefault(a => Regex.IsMatch(a.Text, @"(看|刷)指定视频(得|赚)(金币|音符)"));
-                                if (BoxPoint != null)
+                                if ((DateTime.Now - arrTask.GetTaskArrayLast("看指定视频得金币").ToDateTime(DateTime.Now.AddMinutes(-22))).TotalMinutes > 20)
                                 {
-                                    device.CurPage = AppPageEnum.AppointVideo;
-                                    PagePosChange.Add("看指定视频得金币");
-                                    arrTask.UpdateTaskItem("看指定视频得金币", $"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}");
-                                    await ClickAsync(device, _device, BoxPoint.BoxPoints, 3000, BoxPoint.Text);
-                                    continue;
+                                    var BoxPoint = text.TextBlocks.FirstOrDefault(a => Regex.IsMatch(a.Text, @"(看|刷)指定视频(得|赚)(金币|音符)"));
+                                    if (BoxPoint != null)
+                                    {
+                                        device.CurPage = AppPageEnum.AppointVideo;
+                                        PagePosChange.Add("看指定视频得金币");
+                                        arrTask.UpdateTaskItem("看指定视频得金币", $"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}");
+                                        await ClickAsync(device, _device, BoxPoint.BoxPoints, 3000, BoxPoint.Text);
+                                        continue;
+                                    }
                                 }
                             }
                             #endregion
@@ -1092,7 +1097,7 @@ public class DouyinAdWatching : IAdWatching
                                     {
                                         await Task.Delay(30000);
                                     }
-                                    else if (text.TextBlocks.Any(a => a.Text == "赚钱")|| text.TextBlocks.Any(a => a.Text == "首页"))
+                                    else if (text.TextBlocks.Any(a => a.Text == "赚钱") || text.TextBlocks.Any(a => a.Text == "首页"))
                                     {
                                         var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "赚钱");
                                         if (BoxPoint != null)

@@ -65,21 +65,71 @@ public static class TaskExtensions
         return false;
     }
     /// <summary>
-    /// 更新指定任务的值
+    /// 检查指定任务的值数组是否包含指定值
     /// </summary>
     /// <param name="arrTask">任务列表</param>
     /// <param name="taskName">任务名称</param>
-    /// <param name="taskValue">新的任务值</param>
-    /// <returns>如果更新成功则返回true；如果任务不存在则返回false</returns>
-    public static bool UpdateTaskItem(this List<TaskItem> arrTask, string taskName, string taskValue)
+    /// <param name="defaultValue">默认值</param>
+    /// <returns>如果任务存在且其值数组包含指定值，则返回string；否则返回null</returns>
+    public static string? GetTaskArrayLast(this List<TaskItem> arrTask, string taskName, string? defaultValue = null)
     {
-        var taskOpenBox = arrTask.GetTaskItem(taskName);
-        if (taskOpenBox != null)
+        var model = arrTask.FirstOrDefault(t => t.Name == taskName);
+
+        return model?.Value.GetArray().LastOrDefault() ?? defaultValue;
+    }
+    /// <summary>
+    /// 更新任务项
+    /// </summary>
+    /// <param name="arrTask">任务列表</param>
+    /// <param name="taskName">任务名称</param>
+    /// <param name="value">任务值</param>
+    /// <returns>是否更新成功</returns>
+    public static bool UpdateTaskItem(this List<TaskItem> arrTask, string taskName, string value)
+    {
+        if (arrTask == null) return false;
+
+        var taskItem = arrTask.FirstOrDefault(t => t.Name == taskName);
+        if (taskItem != null)
         {
-            taskOpenBox.Value = taskValue;
-            taskOpenBox.UpdateTime = DateTime.Now;
+            taskItem.Value = value;
+            taskItem.UpdateTime = DateTime.Now;
             return true;
+        }
+        else
+        {
+            arrTask.Add(new TaskItem(taskName, value));
+            return true;
+        }
+    }
+
+    /// <summary>
+    /// 检查任务列表是否包含指定任务
+    /// </summary>
+    /// <param name="arrTask">任务列表</param>
+    /// <param name="taskName">任务名称</param>
+    /// <returns>是否包含任务</returns>
+    public static bool ContainsTaskItem(this List<TaskItem> arrTask, string taskName)
+    {
+        if (arrTask == null) return false;
+        return arrTask.Any(t => t.Name == taskName);
+    }
+    
+    /// <summary>
+    /// 移除任务项
+    /// </summary>
+    /// <param name="arrTask">任务列表</param>
+    /// <param name="taskName">任务名称</param>
+    /// <returns>是否移除成功</returns>
+    public static bool RemoveTaskItem(this List<TaskItem> arrTask, string taskName)
+    {
+        if (arrTask == null) return false;
+
+        var taskItem = arrTask.FirstOrDefault(t => t.Name == taskName);
+        if (taskItem != null)
+        {
+            return arrTask.Remove(taskItem);
         }
         return false;
     }
+
 }

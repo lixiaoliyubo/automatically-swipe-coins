@@ -1,5 +1,6 @@
 using TimerCheckApp.enums;
 using System.Collections.Concurrent;
+using TimerCheckApp.Models;
 
 namespace TimerCheckApp.AdWatching
 {
@@ -15,7 +16,7 @@ namespace TimerCheckApp.AdWatching
         /// <returns>异步任务</returns>
         public Task AutomateAdWatching(DeviceModel device, CancellationToken cancellationToken);
 
-        public ConcurrentDictionary<string, string> arrTask { get; set; }
+        public List<TaskItem> arrTask { get; set; }
 
     }
 }

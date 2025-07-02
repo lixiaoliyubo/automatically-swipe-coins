@@ -316,10 +316,10 @@ public class DataAdWatching : IAdWatching
                 await ClickAsync(device, _device, BoxPoint.BoxPoints, 2000, BoxPoint.Text);
             }
         }
-        else if (dateTime.Hour >= 6 && !arrTask.ContainsKey("快手"))
+        else if (dateTime.Hour >= 6 && !arrTask.ContainsTaskItem("快手"))
         {
             _logService.LogInfo($"打开快手", device.Id);
-            _ = arrTask.TryAdd("快手", DateTime.Now.ToString());
+            _ = arrTask.UpdateTaskItem("快手", DateTime.Now.ToString());
 
             _deviceService.CleanDeviceRunningApps(device.Id);
             await Task.Delay(15000, cancellationToken);
@@ -327,10 +327,10 @@ public class DataAdWatching : IAdWatching
             device.PackageName = PlatformType.Kuaishou.GetPackageName();
             await StartAppAsync(device, _device, 5000);
         }
-        else if (dateTime.Hour >= 4 && !arrTask.ContainsKey("快手极速版") && dateTime.Hour < 6)
+        else if (dateTime.Hour >= 4 && !arrTask.ContainsTaskItem("快手极速版") && dateTime.Hour < 6)
         {
             _logService.LogInfo($"打开快手极速版", device.Id);
-            _ = arrTask.TryAdd("快手极速版", DateTime.Now.ToString());
+            _ = arrTask.UpdateTaskItem("快手极速版", DateTime.Now.ToString());
 
             _deviceService.CleanDeviceRunningApps(device.Id);
             await Task.Delay(15000, cancellationToken);
@@ -338,10 +338,10 @@ public class DataAdWatching : IAdWatching
             device.PackageName = PlatformType.KuaishouJs.GetPackageName();
             await StartAppAsync(device, _device, 5000);
         }
-        else if (dateTime.Hour >= 0 && !arrTask.ContainsKey("抖音") && dateTime.Hour < 4)
+        else if (dateTime.Hour >= 0 && !arrTask.ContainsTaskItem("抖音") && dateTime.Hour < 4)
         {
             _logService.LogInfo($"打开抖音", device.Id);
-            _ = arrTask.TryAdd("抖音", DateTime.Now.ToString());
+            _ = arrTask.UpdateTaskItem("抖音", DateTime.Now.ToString());
 
             _deviceService.CleanDeviceRunningApps(device.Id);
             await Task.Delay(15000, cancellationToken);
