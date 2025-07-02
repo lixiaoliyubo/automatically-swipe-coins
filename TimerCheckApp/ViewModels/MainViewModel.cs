@@ -1,10 +1,6 @@
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.IO;
-using System.Linq;
 using System.Text.Json;
-using System.Threading;
-using System.Windows.Controls;
 using System.Windows.Threading;
 using SqlSugar;
 using TimerCheckApp.Services.Interfaces;
@@ -129,16 +125,11 @@ public partial class MainViewModel : ObservableObject
         _logService = logService;
         _cacheService = cacheService;
         _webSocketService = webSocketService;
-        _logs = _logService.LogEntries;
         _logsText = _logService.LogsText;
         _webSocketLogsText = _logService.WebSocketLogsText;
         _screenshotSavePath = Path.Combine(Path.GetTempPath(), "Screenshots");
         Directory.CreateDirectory(_screenshotSavePath);
         SystemColor = ApplicationAccentColorManager.GetSystemAccent();
-
-        // 订阅日志服务的属性变更事件
-        ((INotifyPropertyChanged)_logService).PropertyChanged += LogService_PropertyChanged;
-
 
         // 注册WebSocket事件
         RegisterWebSocketEvents();
@@ -315,28 +306,6 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    /// <summary>
-    /// 日志服务属性变更事件处理
-    /// </summary>
-    private void LogService_PropertyChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName == nameof(ILogService.LogsText))
-        {
-            if (ShowAllLogs)
-            {
-                LogsText = _logService.LogsText;
-            }
-            else
-            {
-                Logs = _logService.GetLogs(SelectedDevice.Id);
-                LogsText = _logService.GenerateLogText(Logs);
-            }
-        }
-        else if (e.PropertyName == nameof(ILogService.WebSocketLogsText))
-        {
-            WebSocketLogsText = _logService.WebSocketLogsText;
-        }
-    }
 
     /// <summary>
     /// 注册WebSocket事件
@@ -591,7 +560,7 @@ public partial class MainViewModel : ObservableObject
     private void ViewAllLogs()
     {
         ShowAllLogs = true;
-        Logs = _logService.LogEntries;
+        //Logs = _logService.LogEntries;
     }
 
     #endregion
