@@ -1,43 +1,26 @@
 using NLog;
 using NLog.Config;
 using NLog.Targets;
-using System;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.IO;
 using System.Text;
-using System.Linq;
-using TimerCheckApp.Models;
 using TimerCheckApp.Services.Interfaces;
 
-#if WPF
-using System.Windows;
-#endif
 
 namespace TimerCheckApp.Services;
 /// <summary>
 /// 日志服务实现
 /// </summary>
-public class LogService : ILogService, INotifyPropertyChanged
+public class LogService : ILogService
 {
+    /// <summary>
+    /// 日志条目添加事件
+    /// </summary>
+    public event EventHandler<LogEntry> LogEntryAdded;
     private readonly Logger _logger;
     private readonly ObservableCollection<LogEntry> _logEntries = new();
     private readonly ObservableCollection<LogEntry> _webSocketLogEntries = new();
     private const int MaxLogEntries = 1000;
-
-    /// <summary>
-    /// 属性变更事件
-    /// </summary>
-    public event PropertyChangedEventHandler PropertyChanged;
-
-    /// <summary>
-    /// 触发属性变更通知
-    /// </summary>
-    /// <param name="propertyName">属性名称</param>
-    protected virtual void OnPropertyChanged(string propertyName)
-    {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-    }
 
     /// <summary>
     /// 日志文本，用于在TextBox中显示，从设备日志条目生成
@@ -79,10 +62,6 @@ public class LogService : ILogService, INotifyPropertyChanged
         return $"[{entry.Timestamp:HH:mm:ss}] [{entry.Level}] [{entry.DeviceId}] {entry.Message}";
     }
 
-    /// <summary>
-    /// 日志条目集合
-    /// </summary>
-    public ObservableCollection<LogEntry> LogEntries => _logEntries;
 
     /// <summary>
     /// 构造函数
@@ -183,23 +162,6 @@ public class LogService : ILogService, INotifyPropertyChanged
         }
         AddLogEntry("Error", message, deviceId, isWebSocketLog);
     }
-    /// <summary>
-    /// 在UI线程上执行操作（WPF环境）或直接执行操作（非WPF环境）
-    /// </summary>
-    /// <param name="action">要执行的操作</param>
-    private void ExecuteOnUIThread(Action action)
-    {
-#if WPF
-        // 在WPF环境中，检查App.Current是否为null
-        if (Application.Current != null)
-        {
-            Application.Current.Dispatcher.InvokeAsync(action);
-            return;
-        }
-#endif
-        // 在非WPF环境中或App.Current为null时，直接执行操作
-        action();
-    }
 
     /// <summary>
     /// 添加日志条目到集合
@@ -210,55 +172,48 @@ public class LogService : ILogService, INotifyPropertyChanged
     /// <param name="isWebSocketLog">是否为WebSocket日志</param>
     private void AddLogEntry(string level, string message, string deviceId, bool isWebSocketLog = false)
     {
-        try
+        // 创建新日志条目
+        var logEntry = new LogEntry(level, message, deviceId);
+
+        // 根据日志类型添加到相应的集合
+        if (isWebSocketLog)
         {
-            ExecuteOnUIThread(() =>
+            _webSocketLogEntries.Add(logEntry);
+
+            // 限制WebSocket日志条目数量
+            //while (_webSocketLogEntries.Count > MaxLogEntries)
+            //{
+            //    _webSocketLogEntries.RemoveAt(0);
+            //}
+            if (_webSocketLogEntries.Count > MaxLogEntries)
             {
-                // 创建新日志条目
-                var logEntry = new LogEntry(level, message, deviceId);
 
-                // 根据日志类型添加到相应的集合
-                if (isWebSocketLog)
-                {
-                    _webSocketLogEntries.Add(logEntry);
-
-                    // 限制WebSocket日志条目数量
-                    //while (_webSocketLogEntries.Count > MaxLogEntries)
-                    //{
-                    //    _webSocketLogEntries.RemoveAt(0);
-                    //}
-                    if (_webSocketLogEntries.Count > MaxLogEntries) {
-
-                        _webSocketLogEntries.Clear();
-                    }
-                    // 触发WebSocket日志文本变更通知
-                    OnPropertyChanged(nameof(WebSocketLogsText));
-                }
-                else
-                {
-                    _logEntries.Add(logEntry);
-
-                    // 限制设备日志条目数量
-                    //while (_logEntries.Count > MaxLogEntries)
-                    //{
-                    //    _logEntries.RemoveAt(0);
-                    //}
-                    if (_logEntries.Count > MaxLogEntries)
-                    {
-
-                        _logEntries.Clear();
-                    }
-
-                    // 触发设备日志文本变更通知
-                    OnPropertyChanged(nameof(LogsText));
-                }
-            });
+                _webSocketLogEntries.Clear();
+            }
+            // 触发WebSocket日志文本变更通知
+            LogEntryAdded?.Invoke(new { IsWebSocket = isWebSocketLog, Items = WebSocketLogsText, }, logEntry);
         }
-        catch (Exception ex)
+        else
         {
-            // 记录异常到文件，避免UI线程异常导致程序崩溃
-            _logger.Error($"添加日志条目时发生异常: {ex.Message}");
+            _logEntries.Add(logEntry);
+
+            // 限制设备日志条目数量
+            //while (_logEntries.Count > MaxLogEntries)
+            //{
+            //    _logEntries.RemoveAt(0);
+            //}
+            if (_logEntries.Count > MaxLogEntries)
+            {
+
+                _logEntries.Clear();
+            }
+
+            // 触发设备日志文本变更通知
+            LogEntryAdded?.Invoke(new { IsWebSocket = isWebSocketLog, Items = LogsText, }, logEntry);
         }
+
+        // 触发日志条目添加事件
+        LogEntryAdded?.Invoke(this, logEntry);
     }
 
     /// <summary>
@@ -268,19 +223,16 @@ public class LogService : ILogService, INotifyPropertyChanged
     /// </summary>
     public void ClearLogs(string deviceId = "", bool isWebSocketLog = false)
     {
-        ExecuteOnUIThread(() =>
+        if (isWebSocketLog)
         {
-            if (isWebSocketLog)
-            {
-                _webSocketLogEntries.Clear();
-                OnPropertyChanged(nameof(WebSocketLogsText));
-            }
-            else
-            {
-                _logEntries.Clear();
-                OnPropertyChanged(nameof(LogsText));
-            }
-        });
+            _webSocketLogEntries.Clear();
+            LogEntryAdded?.Invoke(new { IsWebSocket = isWebSocketLog, Items = WebSocketLogsText, }, new LogEntry() { DeviceId = deviceId });
+        }
+        else
+        {
+            _logEntries.Clear();
+            LogEntryAdded?.Invoke(new { IsWebSocket = isWebSocketLog, Items = LogsText, }, new LogEntry() { DeviceId = deviceId });
+        }
         _logger.Info("设备日志已清理");
     }
 
@@ -290,7 +242,7 @@ public class LogService : ILogService, INotifyPropertyChanged
     /// <param name="deviceId">设备ID</param>
     /// <param name="isWebSocketLog">是否为WebSocket日志，默认为false（设备日志）</param>
     /// <returns>设备日志集合</returns>
-    public ObservableCollection<LogEntry> GetLogs(string deviceId="", bool isWebSocketLog = false)
+    public ObservableCollection<LogEntry> GetLogs(string deviceId = "", bool isWebSocketLog = false)
     {
         var deviceLogs = new ObservableCollection<LogEntry>();
 
