@@ -8,9 +8,9 @@ namespace TimerCheckApp.Services.Interfaces;
 public interface ILogService
 {
     /// <summary>
-    /// 日志条目集合
+    /// 日志条目添加事件
     /// </summary>
-    ObservableCollection<LogEntry> LogEntries { get; }
+    event EventHandler<LogEntry> LogEntryAdded;
 
     /// <summary>
     /// 日志文本，用于在TextBox中显示

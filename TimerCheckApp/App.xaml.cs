@@ -25,7 +25,7 @@ namespace TimerCheckApp
         /// <summary>
         /// Gets the <see cref="IServiceProvider"/> instance to resolve application services.
         /// </summary>
-        private IServiceProvider Services { get; }
+        public IServiceProvider Services { get; }
         public App()
         {
             // 创建必要的目录
