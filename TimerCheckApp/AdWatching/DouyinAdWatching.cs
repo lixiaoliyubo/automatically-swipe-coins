@@ -579,7 +579,7 @@ public class DouyinAdWatching : AdWatchingBase
                             }
 
                             #region 天天领金币
-                            if (device.CurPage == AppPageEnum.MoneyHome && arrTask.GetTaskEmptyOrNull("天天领金币"))
+                            if (device.CurPage == AppPageEnum.MoneyHome && !arrTask.GetTaskEmptyOrNull("天天领金币"))
                             {
                                 var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text.StartsWith("天天领金币"));
                                 if (BoxPoint != null)
@@ -594,7 +594,7 @@ public class DouyinAdWatching : AdWatchingBase
                             #endregion
 
                             #region 一键领金币
-                            if (device.CurPage == AppPageEnum.MoneyHome && arrTask.GetTaskEmptyOrNull("一键领金币"))
+                            if (device.CurPage == AppPageEnum.MoneyHome && !arrTask.GetTaskEmptyOrNull("一键领金币"))
                             {
                                 var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text.StartsWith("一键领金币") || a.Text.EndsWith("一键领金币"));
                                 if (BoxPoint != null)
@@ -676,7 +676,7 @@ public class DouyinAdWatching : AdWatchingBase
                             #endregion
 
                             #region 早安小岛
-                            if (device.CurPage == AppPageEnum.MoneyHome && arrTask.GetTaskEmptyOrNull("早安小岛"))
+                            if (device.CurPage == AppPageEnum.MoneyHome && !arrTask.GetTaskEmptyOrNull("早安小岛"))
                             {
                                 var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text.StartsWith("早安小岛"));
                                 if (BoxPoint != null)

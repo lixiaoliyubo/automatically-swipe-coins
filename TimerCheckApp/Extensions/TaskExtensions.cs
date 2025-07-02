@@ -24,7 +24,7 @@ public static class TaskExtensions
     /// <returns>如果任务存在且值不为空，则返回true；否则返回false</returns>
     public static bool GetTaskEmptyOrNull(this List<TaskItem> arrTask, string taskName)
     {
-        return arrTask.Any(t => t.Name == taskName && t.Value.IsNotEmptyOrNull());
+        return arrTask.Any(t => t.Name == taskName && !t.Value.IsNotEmptyOrNull());
     }
     /// <summary>
     /// 根据任务名称获取任务值
