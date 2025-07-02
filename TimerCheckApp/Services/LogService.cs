@@ -2,14 +2,11 @@ using NLog;
 using NLog.Config;
 using NLog.Targets;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Text;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using TimerCheckApp.Models;
 using TimerCheckApp.Services.Interfaces;
 
@@ -18,58 +15,15 @@ using System.Windows;
 #endif
 
 namespace TimerCheckApp.Services;
-
 /// <summary>
-/// 日志消息类型
+/// 日志服务实现
 /// </summary>
-public enum LogMessageType
-{
-    Info,
-    Warning,
-    Error
-}
-
-/// <summary>
-/// 日志消息
-/// </summary>
-public class LogMessage
-{
-    public LogMessageType Type { get; set; }
-    public string Message { get; set; }
-    public string DeviceId { get; set; }
-    public bool IsWebSocketLog { get; set; }
-    public DateTime Timestamp { get; set; }
-
-    public LogMessage(LogMessageType type, string message, string deviceId, bool isWebSocketLog)
-    {
-        Type = type;
-        Message = message;
-        DeviceId = deviceId;
-        IsWebSocketLog = isWebSocketLog;
-        Timestamp = DateTime.Now;
-    }
-}
-
-/// <summary>
-/// 日志服务实现 - 使用消息队列和发布订阅模式
-/// </summary>
-public class LogService : ILogService, INotifyPropertyChanged, IDisposable
+public class LogService : ILogService, INotifyPropertyChanged
 {
     private readonly Logger _logger;
     private readonly ObservableCollection<LogEntry> _logEntries = new();
     private readonly ObservableCollection<LogEntry> _webSocketLogEntries = new();
     private const int MaxLogEntries = 1000;
-    
-    // 日志消息队列
-    private readonly BlockingCollection<LogMessage> _logQueue = new(new ConcurrentQueue<LogMessage>());
-    
-    // 日志处理线程
-    private readonly Thread _logProcessingThread;
-    private readonly CancellationTokenSource _cancellationTokenSource = new();
-    
-    // 日志更新事件
-    public event EventHandler<string> LogsTextUpdated;
-    public event EventHandler<string> WebSocketLogsTextUpdated;
 
     /// <summary>
     /// 属性变更事件
@@ -88,12 +42,12 @@ public class LogService : ILogService, INotifyPropertyChanged, IDisposable
     /// <summary>
     /// 日志文本，用于在TextBox中显示，从设备日志条目生成
     /// </summary>
-    public string LogsText { get; private set; } = string.Empty;
+    public string LogsText => GenerateLogText(_logEntries);
 
     /// <summary>
     /// WebSocket日志文本，用于在TextBox中显示，从WebSocket日志条目生成
     /// </summary>
-    public string WebSocketLogsText { get; private set; } = string.Empty;
+    public string WebSocketLogsText => GenerateLogText(_webSocketLogEntries);
 
     /// <summary>
     /// 从日志条目集合生成日志文本
@@ -136,144 +90,6 @@ public class LogService : ILogService, INotifyPropertyChanged, IDisposable
     public LogService()
     {
         _logger = InitializeLogger();
-        
-        // 初始化日志文本
-        LogsText = GenerateLogText(_logEntries);
-        WebSocketLogsText = GenerateLogText(_webSocketLogEntries);
-        
-        // 启动日志处理线程
-        _logProcessingThread = new Thread(ProcessLogQueue)
-        {
-            IsBackground = true,
-            Name = "LogProcessingThread"
-        };
-        _logProcessingThread.Start();
-    }
-    
-    /// <summary>
-    /// 处理日志队列的方法，在后台线程中运行
-    /// </summary>
-    private void ProcessLogQueue()
-    {
-        try
-        {
-            while (!_cancellationTokenSource.Token.IsCancellationRequested)
-            {
-                // 从队列中取出日志消息（阻塞操作，直到有新消息或被取消）
-                if (_logQueue.TryTake(out LogMessage logMessage, 100, _cancellationTokenSource.Token))
-                {
-                    ProcessLogMessage(logMessage);
-                }
-            }
-        }
-        catch (OperationCanceledException)
-        {
-            // 线程被取消，正常退出
-        }
-        catch (Exception ex)
-        {
-            // 记录异常，但不中断线程
-            _logger.Error($"日志处理线程异常: {ex.Message}");
-        }
-    }
-    
-    /// <summary>
-    /// 处理单个日志消息
-    /// </summary>
-    /// <param name="logMessage">日志消息</param>
-    private void ProcessLogMessage(LogMessage logMessage)
-    {
-        try
-        {
-            // 根据日志类型记录到NLog
-            string logPrefix = logMessage.IsWebSocketLog ? $"[WebSocket][{logMessage.DeviceId}]" : $"[{logMessage.DeviceId}]";
-            string fullMessage = $"{logPrefix} {logMessage.Message}";
-            
-            switch (logMessage.Type)
-            {
-                case LogMessageType.Info:
-                    _logger.Info(fullMessage);
-                    break;
-                case LogMessageType.Warning:
-                    _logger.Warn(fullMessage);
-                    break;
-                case LogMessageType.Error:
-                    _logger.Error(fullMessage);
-                    break;
-            }
-            
-            // 创建日志条目
-            var logEntry = new LogEntry(
-                logMessage.Type.ToString(), 
-                logMessage.Message, 
-                logMessage.DeviceId)
-            {
-                Timestamp = logMessage.Timestamp
-            };
-            
-            // 在UI线程上更新集合和文本
-            UpdateLogCollections(logEntry, logMessage.IsWebSocketLog);
-        }
-        catch (Exception ex)
-        {
-            // 记录异常，但不中断处理
-            _logger.Error($"处理日志消息异常: {ex.Message}");
-        }
-    }
-    
-    /// <summary>
-    /// 更新日志集合和文本
-    /// </summary>
-    /// <param name="logEntry">日志条目</param>
-    /// <param name="isWebSocketLog">是否为WebSocket日志</param>
-    private void UpdateLogCollections(LogEntry logEntry, bool isWebSocketLog)
-    {
-        ExecuteOnUIThread(() =>
-        {
-            // 根据日志类型添加到相应的集合
-            if (isWebSocketLog)
-            {
-                _webSocketLogEntries.Add(logEntry);
-                
-                // 限制WebSocket日志条目数量
-                if (_webSocketLogEntries.Count > MaxLogEntries)
-                {
-                    // 移除最旧的条目而不是清空集合
-                    for (int i = 0; i < _webSocketLogEntries.Count - MaxLogEntries; i++)
-                    {
-                        _webSocketLogEntries.RemoveAt(0);
-                    }
-                }
-                
-                // 更新WebSocket日志文本
-                WebSocketLogsText = GenerateLogText(_webSocketLogEntries);
-                
-                // 触发WebSocket日志文本变更通知
-                OnPropertyChanged(nameof(WebSocketLogsText));
-                WebSocketLogsTextUpdated?.Invoke(this, WebSocketLogsText);
-            }
-            else
-            {
-                _logEntries.Add(logEntry);
-                
-                // 限制设备日志条目数量
-                if (_logEntries.Count > MaxLogEntries)
-                {
-                    // 移除最旧的条目而不是清空集合
-                    for (int i = 0; i < _logEntries.Count - MaxLogEntries; i++)
-                    {
-                        _logEntries.RemoveAt(0);
-                    }
-                }
-                
-                // 更新设备日志文本
-                LogsText = GenerateLogText(_logEntries);
-                
-                // 触发设备日志文本变更通知
-                OnPropertyChanged(nameof(LogsText));
-                LogsTextUpdated?.Invoke(this, LogsText);
-            }
-        });
     }
 
     /// <summary>
@@ -319,8 +135,15 @@ public class LogService : ILogService, INotifyPropertyChanged, IDisposable
     /// <param name="isWebSocketLog">是否为WebSocket日志，默认为false（设备日志）</param>
     public void LogInfo(string message, string deviceId, bool isWebSocketLog = false)
     {
-        // 将日志消息添加到队列中，而不是直接处理
-        _logQueue.Add(new LogMessage(LogMessageType.Info, message, deviceId, isWebSocketLog));
+        if (isWebSocketLog)
+        {
+            _logger.Info($"[WebSocket][{deviceId}] {message}");
+        }
+        else
+        {
+            _logger.Info($"[{deviceId}] {message}");
+        }
+        AddLogEntry("Info", message, deviceId, isWebSocketLog);
     }
 
     /// <summary>
@@ -331,8 +154,15 @@ public class LogService : ILogService, INotifyPropertyChanged, IDisposable
     /// <param name="isWebSocketLog">是否为WebSocket日志，默认为false（设备日志）</param>
     public void LogWarning(string message, string deviceId, bool isWebSocketLog = false)
     {
-        // 将日志消息添加到队列中，而不是直接处理
-        _logQueue.Add(new LogMessage(LogMessageType.Warning, message, deviceId, isWebSocketLog));
+        if (isWebSocketLog)
+        {
+            _logger.Warn($"[WebSocket][{deviceId}] {message}");
+        }
+        else
+        {
+            _logger.Warn($"[{deviceId}] {message}");
+        }
+        AddLogEntry("Warning", message, deviceId, isWebSocketLog);
     }
 
     /// <summary>
@@ -343,8 +173,15 @@ public class LogService : ILogService, INotifyPropertyChanged, IDisposable
     /// <param name="isWebSocketLog">是否为WebSocket日志，默认为false（设备日志）</param>
     public void LogError(string message, string deviceId, bool isWebSocketLog = false)
     {
-        // 将日志消息添加到队列中，而不是直接处理
-        _logQueue.Add(new LogMessage(LogMessageType.Error, message, deviceId, isWebSocketLog));
+        if (isWebSocketLog)
+        {
+            _logger.Error($"[WebSocket][{deviceId}] {message}");
+        }
+        else
+        {
+            _logger.Error($"[{deviceId}] {message}");
+        }
+        AddLogEntry("Error", message, deviceId, isWebSocketLog);
     }
     /// <summary>
     /// 在UI线程上执行操作（WPF环境）或直接执行操作（非WPF环境）
@@ -364,7 +201,65 @@ public class LogService : ILogService, INotifyPropertyChanged, IDisposable
         action();
     }
 
-    // AddLogEntry方法已被移除，使用消息队列和ProcessLogMessage方法代替
+    /// <summary>
+    /// 添加日志条目到集合
+    /// </summary>
+    /// <param name="level">日志级别</param>
+    /// <param name="message">日志消息</param>
+    /// <param name="deviceId">设备ID</param>
+    /// <param name="isWebSocketLog">是否为WebSocket日志</param>
+    private void AddLogEntry(string level, string message, string deviceId, bool isWebSocketLog = false)
+    {
+        try
+        {
+            ExecuteOnUIThread(() =>
+            {
+                // 创建新日志条目
+                var logEntry = new LogEntry(level, message, deviceId);
+
+                // 根据日志类型添加到相应的集合
+                if (isWebSocketLog)
+                {
+                    _webSocketLogEntries.Add(logEntry);
+
+                    // 限制WebSocket日志条目数量
+                    //while (_webSocketLogEntries.Count > MaxLogEntries)
+                    //{
+                    //    _webSocketLogEntries.RemoveAt(0);
+                    //}
+                    if (_webSocketLogEntries.Count > MaxLogEntries) {
+
+                        _webSocketLogEntries.Clear();
+                    }
+                    // 触发WebSocket日志文本变更通知
+                    OnPropertyChanged(nameof(WebSocketLogsText));
+                }
+                else
+                {
+                    _logEntries.Add(logEntry);
+
+                    // 限制设备日志条目数量
+                    //while (_logEntries.Count > MaxLogEntries)
+                    //{
+                    //    _logEntries.RemoveAt(0);
+                    //}
+                    if (_logEntries.Count > MaxLogEntries)
+                    {
+
+                        _logEntries.Clear();
+                    }
+
+                    // 触发设备日志文本变更通知
+                    OnPropertyChanged(nameof(LogsText));
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            // 记录异常到文件，避免UI线程异常导致程序崩溃
+            _logger.Error($"添加日志条目时发生异常: {ex.Message}");
+        }
+    }
 
     /// <summary>
     /// 清理设备日志记录
@@ -378,48 +273,15 @@ public class LogService : ILogService, INotifyPropertyChanged, IDisposable
             if (isWebSocketLog)
             {
                 _webSocketLogEntries.Clear();
-                WebSocketLogsText = string.Empty;
                 OnPropertyChanged(nameof(WebSocketLogsText));
-                WebSocketLogsTextUpdated?.Invoke(this, WebSocketLogsText);
             }
             else
             {
                 _logEntries.Clear();
-                LogsText = string.Empty;
                 OnPropertyChanged(nameof(LogsText));
-                LogsTextUpdated?.Invoke(this, LogsText);
             }
         });
-        
-        // 记录清理日志
-        LogInfo("日志已清理", deviceId, isWebSocketLog);
-    }
-    
-    /// <summary>
-    /// 释放资源
-    /// </summary>
-    public void Dispose()
-    {
-        try
-        {
-            // 取消日志处理线程
-            _cancellationTokenSource.Cancel();
-            
-            // 等待线程结束，但最多等待1秒
-            if (_logProcessingThread.IsAlive)
-            {
-                _logProcessingThread.Join(1000);
-            }
-            
-            // 清空日志队列
-            _logQueue.CompleteAdding();
-            _logQueue.Dispose();
-            _cancellationTokenSource.Dispose();
-        }
-        catch (Exception ex)
-        {
-            _logger.Error($"释放日志服务资源时发生异常: {ex.Message}");
-        }
+        _logger.Info("设备日志已清理");
     }
 
     /// <summary>

@@ -136,7 +136,8 @@ public partial class MainViewModel : ObservableObject
         Directory.CreateDirectory(_screenshotSavePath);
         SystemColor = ApplicationAccentColorManager.GetSystemAccent();
 
-        // 不再需要订阅日志服务的属性变更事件，因为我们使用发布订阅模式直接在View中处理日志更新
+        // 订阅日志服务的属性变更事件
+        ((INotifyPropertyChanged)_logService).PropertyChanged += LogService_PropertyChanged;
 
 
         // 注册WebSocket事件
@@ -314,7 +315,28 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    // LogService_PropertyChanged方法已移除，使用发布订阅模式直接在View中处理日志更新
+    /// <summary>
+    /// 日志服务属性变更事件处理
+    /// </summary>
+    private void LogService_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(ILogService.LogsText))
+        {
+            if (ShowAllLogs)
+            {
+                LogsText = _logService.LogsText;
+            }
+            else
+            {
+                Logs = _logService.GetLogs(SelectedDevice.Id);
+                LogsText = _logService.GenerateLogText(Logs);
+            }
+        }
+        else if (e.PropertyName == nameof(ILogService.WebSocketLogsText))
+        {
+            WebSocketLogsText = _logService.WebSocketLogsText;
+        }
+    }
 
     /// <summary>
     /// 注册WebSocket事件
@@ -558,7 +580,7 @@ public partial class MainViewModel : ObservableObject
         {
             ShowAllLogs = false;
             Logs = _logService.GetLogs(device.Id);
-            // 不再需要手动设置LogsText，由日志服务通过事件通知View更新
+            LogsText = _logService.GenerateLogText(Logs);
         }
     }
 
@@ -570,7 +592,6 @@ public partial class MainViewModel : ObservableObject
     {
         ShowAllLogs = true;
         Logs = _logService.LogEntries;
-        // 不再需要手动设置LogsText，由日志服务通过事件通知View更新
     }
 
     #endregion
