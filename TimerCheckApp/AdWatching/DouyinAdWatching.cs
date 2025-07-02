@@ -17,54 +17,41 @@ namespace TimerCheckApp.AdWatching;
 /// <summary>
 /// 抖音广告观看自动化实现
 /// </summary>
-public class DouyinAdWatching : IAdWatching
+public class DouyinAdWatching : AdWatchingBase
 {
-    private readonly ILogService _logService;
-    private readonly IDeviceService _deviceService;
-    private readonly ICacheService _cacheService;
-    private readonly ISqlSugarService _sqlSugarService;
-    /// <summary>
-    /// 当前是否有操作
-    /// </summary>
-    private bool IsOperate = false;
-
-
-    public List<TaskItem> arrTask { get; set; } = new()
-    {
-        new TaskItem("吃饭打卡赚金币"),
-        new TaskItem("天天领金币"),
-        new TaskItem("预约领金币"),
-        new TaskItem("一键领音符"),
-        new TaskItem("一键领金币"),
-        new TaskItem("看广告赚金币"),
-        new TaskItem("看指定视频得金币"),
-        new TaskItem("限时任务赚音符"),
-        new TaskItem("赚钱首页"),
-        new TaskItem("看直播开宝箱"),
-        new TaskItem("做任务领奖励"),
-        new TaskItem("开宝箱得金币"),
-        new TaskItem("逛街赚钱"),
-        new TaskItem("签到"),
-        new TaskItem("早安小岛"),
-        new TaskItem("听书赚金币"),
-        new TaskItem("上下滑动")
-    };
-
-    private readonly ConcurrentDictionary<string, (TimeSpan start, TimeSpan end)> mealTimes = new()
-    {
-        ["早餐"] = (TimeSpan.Parse("05:00"), TimeSpan.Parse("09:00")),
-        ["午餐"] = (TimeSpan.Parse("11:00"), TimeSpan.Parse("14:00")),
-        ["晚餐"] = (TimeSpan.Parse("17:00"), TimeSpan.Parse("20:00")),
-        ["夜宵"] = (TimeSpan.Parse("21:00"), TimeSpan.Parse("23:59"))
-    };
-
-
     public DouyinAdWatching(ILogService logService, IDeviceService deviceService, ICacheService cacheService, ISqlSugarService sqlSugarService)
+        : base(logService, deviceService, cacheService, sqlSugarService)
     {
-        _logService = logService;
-        _deviceService = deviceService;
-        _cacheService = cacheService;
-        _sqlSugarService = sqlSugarService;
+        // 初始化特定于抖音的任务列表
+        arrTask = new()
+        {
+            new TaskItem("吃饭打卡赚金币"),
+            new TaskItem("天天领金币"),
+            new TaskItem("预约领金币"),
+            new TaskItem("一键领音符"),
+            new TaskItem("一键领金币"),
+            new TaskItem("看广告赚金币"),
+            new TaskItem("看指定视频得金币"),
+            new TaskItem("限时任务赚音符"),
+            new TaskItem("赚钱首页"),
+            new TaskItem("看直播开宝箱"),
+            new TaskItem("做任务领奖励"),
+            new TaskItem("开宝箱得金币"),
+            new TaskItem("逛街赚钱"),
+            new TaskItem("签到"),
+            new TaskItem("早安小岛"),
+            new TaskItem("听书赚金币"),
+            new TaskItem("上下滑动")
+        };
+        
+        // 初始化特定于抖音的用餐时间
+        mealTimes = new()
+        {
+            ["早餐"] = (TimeSpan.Parse("05:00"), TimeSpan.Parse("09:00")),
+            ["午餐"] = (TimeSpan.Parse("11:00"), TimeSpan.Parse("14:00")),
+            ["晚餐"] = (TimeSpan.Parse("17:00"), TimeSpan.Parse("20:00")),
+            ["夜宵"] = (TimeSpan.Parse("21:00"), TimeSpan.Parse("23:59"))
+        };
     }
 
     /// <summary>
@@ -72,7 +59,7 @@ public class DouyinAdWatching : IAdWatching
     /// </summary>
     /// <param name="device">设备模型</param>
     /// <param name="cancellationToken">取消令牌</param>
-    public async Task AutomateAdWatching(DeviceModel device, CancellationToken cancellationToken)
+    public override async Task AutomateAdWatching(DeviceModel device, CancellationToken cancellationToken)
     {
         var _device = new DeviceData { Serial = device.Id };
         // 重置任务状态
@@ -1217,7 +1204,8 @@ public class DouyinAdWatching : IAdWatching
                                 {
                                     if (_deviceService.CurAdbClient.GetAppStatus(_device, device.PackageName) != AppStatus.Foreground)
                                     {
-                                        await StartAppAsync(device, _device, 3000);
+                                        await StartAppAsync(device, device.PackageName);
+                                        await Task.Delay(3000);
                                     }
                                     else await ClickAsync(device, _device, null, 2000, "返回-停留页面超过60秒");
                                     continue;
@@ -1681,106 +1669,6 @@ public class DouyinAdWatching : IAdWatching
         return true;
     }
 
-    /// <summary>
-    /// 执行点击操作
-    /// </summary>
-    /// <param name="points">点击坐标</param>
-    /// <param name="delay">延迟时间</param>
-    /// <param name="text">点击文本描述</param>
-    /// <returns>异步任务</returns>
-    private async Task ClickAsync(DeviceModel device, DeviceData deviceData, List<OCRPoint>? points = null, int delay = 0, string text = "")
-    {
-        IsOperate = true;
-        device.LastClickTime = DateTime.Now;
-
-        // 检查是否重复点击
-        //if (lastClickInfo.IsSameClick(points, text))
-        //{
-        //    _logService.LogInfo($"跳过重复点击：{text}");
-        //    return;
-        //}
-        if (points != null)
-        {
-            _logService.LogInfo($"位置：{device.CurPage}{device.CurPage.GetDescription()}，点击了：{text}", device.Id);
-            if (points.Count == 1)
-            {
-                System.Drawing.Point center = new System.Drawing.Point() { X = points[0].X, Y = points[0].Y };
-                await _deviceService.CurAdbClient.ClickAsync(deviceData, center);
-            }
-            else
-            {
-                System.Drawing.Point center = points.CalculateTextBlockCenter();
-                await _deviceService.CurAdbClient.ClickAsync(deviceData, center);
-            }
-        }
-        else
-        {
-            _logService.LogInfo($"位置：{device.CurPage}{device.CurPage.GetDescription()}，点击了：{text}", device.Id);
-            await _deviceService.CurAdbClient.ClickBackButtonAsync(deviceData);
-        }
-
-        if (delay > 0)
-        {
-            await Task.Delay(delay);
-        }
-    }
-
-    /// <summary>
-    /// 执行滑动操作
-    /// </summary>
-    /// <param name="delay">延迟时间</param>
-    /// <param name="text">滑动文本描述</param>
-    /// <param name="startX">起始X坐标</param>
-    /// <param name="startY">起始Y坐标</param>
-    /// <param name="endX">结束X坐标</param>
-    /// <param name="endY">结束Y坐标</param>
-    /// <param name="duration">持续时间</param>
-    /// <param name="duration">持续时间</param>
-    /// <returns>异步任务</returns>
-    private async Task SwipeAsync(DeviceModel device, DeviceData deviceData, int delay, string text, int startX, int startY, int endX, int endY, int duration)
-    {
-        IsOperate = true;
-        device.LastClickTime = DateTime.Now;//.ToString("yyyy-MM-dd HH:mm:ss")
-        _logService.LogInfo($"位置：{device.CurPage}{device.CurPage.GetDescription()}，滑动了：{text}", device.Id);
-        await _deviceService.CurAdbClient.SwipeAsync(deviceData, new System.Drawing.Point(startX, startY), new System.Drawing.Point(endX, endY), duration);
-
-        if (delay > 0)
-        {
-            await Task.Delay(delay);
-        }
-    }
-
-    /// <summary>
-    /// 运行App
-    /// </summary>
-    /// <param name="delay"></param>
-    /// <returns></returns>
-    private async Task StartAppAsync(DeviceModel device, DeviceData deviceData, int delay = 0)
-    {
-        IsOperate = true;
-        device.LastClickTime = DateTime.Now;
-        await _deviceService.CurAdbClient.StartAppAsync(deviceData, device.PackageName);
-        if (delay > 0)
-        {
-            await Task.Delay(delay);
-        }
-    }
-
-    /// <summary>
-    /// 返回首页
-    /// </summary>
-    /// <param name="delay"></param>
-    private async Task ClickHomeButtonAsync(DeviceModel device, DeviceData deviceData, int delay = 0)
-    {
-        IsOperate = true;
-        device.LastClickTime = DateTime.Now;
-        _logService.LogInfo($"位置：{device.CurPage}{device.CurPage.GetDescription()}，点击返回首页", device.Id);
-        await _deviceService.CurAdbClient.ClickHomeButtonAsync(deviceData);
-
-        if (delay > 0)
-        {
-            await Task.Delay(delay);
-        }
-    }
+    // 辅助方法已移至基类 AdWatchingBase
 
 }
