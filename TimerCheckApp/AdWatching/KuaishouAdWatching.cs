@@ -1529,12 +1529,12 @@ public class KuaishouAdWatching : IAdWatching
             _ = arrTask.Remove("支付宝", out _);
             await Task.Delay(5000, cancellationToken);
         }
-        else if (isDesktop && dateTime.Hour >= 3)
+        else if (isDesktop && dateTime.Hour >= 3 && dateTime.Hour < 5)
         {
             _ = arrTask.Remove("快手极速版", out _);
             await Task.Delay(5000, cancellationToken);
         }
-        else if (isDesktop && dateTime.Hour >= 0)
+        else if (isDesktop && dateTime.Hour >= 0 && dateTime.Hour < 3)
         {
             _ = arrTask.Remove("快手", out _);
             await Task.Delay(5000, cancellationToken);
@@ -1551,7 +1551,7 @@ public class KuaishouAdWatching : IAdWatching
         {
             await ClickAsync(device, _device, null, 2000, "返回-首页");
         }
-        else if (dateTime.Hour >= 4 && !arrTask.ContainsKey("支付宝"))
+        else if (dateTime.Hour >= 5 && !arrTask.ContainsKey("支付宝"))
         {
             _logService.LogInfo($"打开支付宝", device.Id);
             _ = arrTask.TryAdd("支付宝", DateTime.Now.ToString());
@@ -1560,9 +1560,9 @@ public class KuaishouAdWatching : IAdWatching
             await Task.Delay(15000, cancellationToken);
 
             device.PackageName = PlatformType.AliPay.GetPackageName();
-            await StartAppAsync(device, _device, 5000);
+            await StartAppAsync(device, _device, 10000);
         }
-        else if (dateTime.Hour >= 2 && !arrTask.ContainsKey("快手极速版"))
+        else if (dateTime.Hour >= 3 && dateTime.Hour < 5 && !arrTask.ContainsKey("快手极速版"))
         {
             _logService.LogInfo($"打开快手极速版", device.Id);
             _ = arrTask.TryAdd("快手极速版", DateTime.Now.ToString());
@@ -1571,9 +1571,9 @@ public class KuaishouAdWatching : IAdWatching
             await Task.Delay(15000, cancellationToken);
 
             device.PackageName = PlatformType.KuaishouJs.GetPackageName();
-            await StartAppAsync(device, _device, 5000);
+            await StartAppAsync(device, _device, 10000);
         }
-        else if (dateTime.Hour >= 0 && !arrTask.ContainsKey("快手"))
+        else if (dateTime.Hour >= 0 && dateTime.Hour < 3 && !arrTask.ContainsKey("快手"))
         {
             _logService.LogInfo($"准备打开快手", device.Id);
             _ = arrTask.TryAdd("快手", DateTime.Now.ToString());
@@ -1582,7 +1582,7 @@ public class KuaishouAdWatching : IAdWatching
             await Task.Delay(15000, cancellationToken);
 
             device.PackageName = PlatformType.Kuaishou.GetPackageName();
-            await StartAppAsync(device, _device, 5000);
+            await StartAppAsync(device, _device, 10000);
         }
         else if (text.TextBlocks.Any(a => a.Text == "明日可领"))
         {
@@ -1624,6 +1624,22 @@ public class KuaishouAdWatching : IAdWatching
         {
             await ClickAsync(device, _device, null, 3000, "返回到刷视频");
         }
+        else if (device.PackageName == PlatformType.AliPay.GetPackageName() && text.TextBlocks.Any(a => a.Text == "视频") && text.TextBlocks.Any(a => a.Text == "我的") && !text.TextBlocks.Any(a => a.Text == "发现"))
+        {
+            var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "视频");
+            if (BoxPoint != null)
+            {
+                await ClickAsync(device, _device, BoxPoint.BoxPoints, 3000, BoxPoint.Text);
+            }
+        }
+        //else if ((device.PackageName == PlatformType.Kuaishou.GetPackageName() || device.PackageName == PlatformType.KuaishouJs.GetPackageName()) && text.TextBlocks.Any(a => a.Text == "视频") && text.TextBlocks.Any(a => a.Text == "我的") && !text.TextBlocks.Any(a => a.Text == "发现"))
+        //{
+        //    var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "视频");
+        //    if (BoxPoint != null)
+        //    {
+        //        await ClickAsync(device, _device, BoxPoint.BoxPoints, 3000, BoxPoint.Text);
+        //    }
+        //}
         else
         {
             int count = await _cacheService.GetAsync<int>($"KuaishouAdWatching_{device.CurPage.ToString()}");

@@ -243,12 +243,12 @@ public class DataAdWatching : IAdWatching
             _ = arrTask.Remove("快手", out _);
             await Task.Delay(5000, cancellationToken);
         }
-        else if (isDesktop && dateTime.Hour >= 4)
+        else if (isDesktop && dateTime.Hour >= 4 && dateTime.Hour < 6)
         {
             _ = arrTask.Remove("快手极速版", out _);
             await Task.Delay(5000, cancellationToken);
         }
-        else if (isDesktop && dateTime.Hour >= 0)
+        else if (isDesktop && dateTime.Hour >= 0 && dateTime.Hour < 4)
         {
             _ = arrTask.Remove("抖音", out _);
             await Task.Delay(5000, cancellationToken);
@@ -327,7 +327,7 @@ public class DataAdWatching : IAdWatching
             device.PackageName = PlatformType.Kuaishou.GetPackageName();
             await StartAppAsync(device, _device, 5000);
         }
-        else if (dateTime.Hour >= 3 && !arrTask.ContainsKey("快手极速版"))
+        else if (dateTime.Hour >= 4 && !arrTask.ContainsKey("快手极速版") && dateTime.Hour < 6)
         {
             _logService.LogInfo($"打开快手极速版", device.Id);
             _ = arrTask.TryAdd("快手极速版", DateTime.Now.ToString());
@@ -338,7 +338,7 @@ public class DataAdWatching : IAdWatching
             device.PackageName = PlatformType.KuaishouJs.GetPackageName();
             await StartAppAsync(device, _device, 5000);
         }
-        else if (dateTime.Hour >= 0 && !arrTask.ContainsKey("抖音"))
+        else if (dateTime.Hour >= 0 && !arrTask.ContainsKey("抖音") && dateTime.Hour < 4)
         {
             _logService.LogInfo($"打开抖音", device.Id);
             _ = arrTask.TryAdd("抖音", DateTime.Now.ToString());
