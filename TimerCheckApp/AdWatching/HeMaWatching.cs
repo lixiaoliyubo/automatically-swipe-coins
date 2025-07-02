@@ -20,11 +20,10 @@ public class HeMaWatching : IAdWatching
     private readonly ICacheService _cacheService;
     private readonly ISqlSugarService _sqlSugarService;
     private bool IsOperate = false;
-    public ConcurrentDictionary<string, string> arrTask { get; set; } = new()
+    public List<TaskItem> arrTask { get; set; } = new()
     {
-        ["任务"] = string.Empty,
-        ["开宝箱"] = string.Empty,
-
+        new TaskItem("任务"),
+        new TaskItem("开宝箱")
     };
     private ConcurrentDictionary<string, (TimeSpan start, TimeSpan end)> mealTimes = new()
     {
@@ -46,13 +45,7 @@ public class HeMaWatching : IAdWatching
     public async Task AutomateAdWatching(DeviceModel device, CancellationToken cancellationToken)
     {
         var _device = new DeviceData { Serial = device.Id };
-        foreach (var key in arrTask.Keys)
-        {
-            if (key != "切换账号")
-            {
-                arrTask[key] = string.Empty;
-            }
-        }
+        arrTask.ResetTaskStatus();
         int StopTimeSpan = 0;
         int MaxY = 0;
         OCRPoint? closePos = null;
@@ -407,7 +400,7 @@ public class HeMaWatching : IAdWatching
                         {
                             device.CurPage = AppPageEnum.GuangJie;
                             PagePosChange.Add("逛街赚钱");
-                            arrTask["逛街赚钱"] = $"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}";
+                            arrTask.UpdateTaskItem("逛街赚钱", $"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}");
                             // 执行小幅度上滑
                             await SwipeAsync(device, _device, 4000, "逛街得金币", 500, 1500, 500, 500, 200);
                             // 执行小幅度下滑
@@ -494,9 +487,12 @@ public class HeMaWatching : IAdWatching
                                 if (PagePosChange.Count > 0 && Last != null)
                                 {
                                     _logService.LogWarning("页面没有跳转，清空重试", device.Id);
-                                    var array = arrTask[Last].GetArray().ToList();
-                                    array.RemoveAt(array.Count - 1);
-                                    arrTask[Last] = string.Join("|", array);
+                                    var array = arrTask.GetTaskItemValue(Last).GetArray().ToList();
+                                    if (array.Count > 0)
+                                    {
+                                        array.RemoveAt(array.Count - 1);
+                                    }
+                                    arrTask.UpdateTaskItem(Last, string.Join("|", array));
                                     PagePosChange.Clear();
                                 }
                             }
@@ -521,14 +517,14 @@ public class HeMaWatching : IAdWatching
                                     continue;
                                 }
                             }
-                            else if (!text.TextBlocks.Any(a => a.Text == "去领取") && text.TextBlocks.Any(a => a.Text == "开宝箱") && (DateTime.Now - arrTask["开宝箱"].ToDateTime(DateTime.Now.AddMinutes(-11))).TotalMinutes > 10)
+                            else if (!text.TextBlocks.Any(a => a.Text == "去领取") && text.TextBlocks.Any(a => a.Text == "开宝箱") && (DateTime.Now - arrTask.GetTaskItemValue("开宝箱").ToDateTime(DateTime.Now.AddMinutes(-11))).TotalMinutes > 10)
                             {
                                 var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "开宝箱");
                                 if (BoxPoint != null)
                                 {
                                     device.CurPage = AppPageEnum.OpenTreasure;
                                     PagePosChange.Add("开宝箱");
-                                    arrTask["开宝箱"] = $"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}";
+                                    arrTask.UpdateTaskItem("开宝箱", $"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}");
                                     await ClickAsync(device, _device, BoxPoint.BoxPoints, 3000, BoxPoint.Text);
                                     continue;
                                 }
@@ -600,7 +596,7 @@ public class HeMaWatching : IAdWatching
                             {
                                 if (text.TextBlocks.Any(a => a.Text.Trim() == "首页") && text.TextBlocks.Any(a => a.Text.Trim() == "福利") && text.TextBlocks.Any(a => a.Text.Trim() == "我的"))
                                 {
-                                    string[] values = arrTask["任务"].GetArray();
+                                    string[] values = arrTask.GetTaskItemValue("任务").GetArray();
 
                                     var recentCount = values.Count(x => (DateTime.Now - DateTime.ParseExact(x, "yyyy-MM-dd HH:mm:ss", null)).TotalMinutes <= 5);
                                     if (recentCount >= 15)
@@ -608,7 +604,7 @@ public class HeMaWatching : IAdWatching
                                         var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text.Contains("视频"));
                                         if (BoxPoint != null)
                                         {
-                                            arrTask["任务"] = string.Format("{0}|{1}", string.Join("|", values), $"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}");
+                                            arrTask.UpdateTaskItem("任务", string.Format("{0}|{1}", string.Join("|", values), $"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}"));
                                             await ClickAsync(device, _device, BoxPoint.BoxPoints, 3000, BoxPoint.Text);
                                         }
                                     }

@@ -8,6 +8,7 @@ using AdvancedSharpAdbClient.Models;
 using AdvancedSharpAdbClient.DeviceCommands;
 using System.IO;
 using OpenCvSharp;
+using TimerCheckApp.Models;
 
 namespace TimerCheckApp.AdWatching;
 
@@ -21,9 +22,8 @@ public class DataAdWatching : IAdWatching
     private readonly ICacheService _cacheService;
     private readonly ISqlSugarService _sqlSugarService;
     private bool IsOperate = false;
-    public ConcurrentDictionary<string, string> arrTask { get; set; } = new()
+    public List<TaskItem> arrTask { get; set; } = new()
     {
-
     };
 
     public DataAdWatching(ILogService logService, IDeviceService deviceService, ICacheService cacheService, ISqlSugarService sqlSugarService)
@@ -240,17 +240,17 @@ public class DataAdWatching : IAdWatching
 
         if (isDesktop && dateTime.Hour >= 6)
         {
-            _ = arrTask.Remove("快手", out _);
+            _ = arrTask.RemoveTaskItem("快手");
             await Task.Delay(5000, cancellationToken);
         }
         else if (isDesktop && dateTime.Hour >= 4 && dateTime.Hour < 6)
         {
-            _ = arrTask.Remove("快手极速版", out _);
+            _ = arrTask.RemoveTaskItem("快手极速版");
             await Task.Delay(5000, cancellationToken);
         }
         else if (isDesktop && dateTime.Hour >= 0 && dateTime.Hour < 4)
         {
-            _ = arrTask.Remove("抖音", out _);
+            _ = arrTask.RemoveTaskItem("抖音");
             await Task.Delay(5000, cancellationToken);
         }
 

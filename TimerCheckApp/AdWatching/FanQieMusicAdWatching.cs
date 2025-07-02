@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using TimerCheckApp.Services.Interfaces;
 using AdvancedSharpAdbClient.Models;
 using AdvancedSharpAdbClient.DeviceCommands;
+using TimerCheckApp.Models;
 
 namespace TimerCheckApp.AdWatching;
 
@@ -20,19 +21,18 @@ public class FanQieMusicAdWatching : IAdWatching
     private readonly ISqlSugarService _sqlSugarService;
     private bool IsOperate = false;
     
-    public ConcurrentDictionary<string, string> arrTask { get; set; } = new()
+    public List<TaskItem> arrTask { get; set; } = new()
     {
-        ["喝水打卡领金币"] = string.Empty,
-        ["每日三餐补贴"] = string.Empty,
-        ["任务赚"] = string.Empty,
-        ["百度智慧回答"] = string.Empty,
-        ["搜索领金币"] = string.Empty,
-        ["阅读赚金币"] = string.Empty,
-        ["逛商城赚金币"] = string.Empty,
-        ["看视频文章领金币"] = string.Empty,
-        ["每日签到领现金"] = string.Empty,
-        ["看看广告领金币奖励"] = string.Empty,
-
+        new TaskItem("喝水打卡领金币"),
+        new TaskItem("每日三餐补贴"),
+        new TaskItem("任务赚"),
+        new TaskItem("百度智慧回答"),
+        new TaskItem("搜索领金币"),
+        new TaskItem("阅读赚金币"),
+        new TaskItem("逛商城赚金币"),
+        new TaskItem("看视频文章领金币"),
+        new TaskItem("每日签到领现金"),
+        new TaskItem("看看广告领金币奖励")
     };
     private ConcurrentDictionary<string, (TimeSpan start, TimeSpan end)> mealTimes = new()
     {
@@ -54,13 +54,8 @@ public class FanQieMusicAdWatching : IAdWatching
     public async Task AutomateAdWatching(DeviceModel device, CancellationToken cancellationToken)
     {
         var _device = new DeviceData { Serial = device.Id };
-        foreach (var key in arrTask.Keys)
-        {
-            if (key != "切换账号")
-            {
-                arrTask[key] = string.Empty;
-            }
-        }
+        // 重置任务状态
+        arrTask.ResetTaskStatus();
         int StopTimeSpan = 0;
         int MaxY = 0;
         try
@@ -345,9 +340,12 @@ public class FanQieMusicAdWatching : IAdWatching
                                 if (PagePosChange.Count > 0 && Last != null)
                                 {
                                     _logService.LogWarning("页面没有跳转，清空重试", device.Id);
-                                    var array = arrTask[Last].GetArray().ToList();
-                                    array.RemoveAt(array.Count - 1);
-                                    arrTask[Last] = string.Join("|", array);
+                                    var array = arrTask.GetTaskItemValue(Last).GetArray().ToList();
+                                    if (array.Count > 0)
+                                    {
+                                        array.RemoveAt(array.Count - 1);
+                                    }
+                                    arrTask.UpdateTaskItem(Last, string.Join("|", array));
                                     PagePosChange.Clear();
                                 }
                             }
@@ -412,14 +410,14 @@ public class FanQieMusicAdWatching : IAdWatching
 
 
                             #region 阅读赚金币
-                            if (device.CurPage == AppPageEnum.MoneyHome && (DateTime.Now - arrTask["阅读赚金币"].ToDateTime(DateTime.Now.AddMinutes(-25))).TotalMinutes >= 20)
+                            if (device.CurPage == AppPageEnum.MoneyHome && (DateTime.Now - arrTask.GetTaskItemValue("阅读赚金币").ToDateTime(DateTime.Now.AddMinutes(-25))).TotalMinutes >= 20)
                             {
                                 var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text.StartsWith("阅读赚金币"));
                                 if (BoxPoint != null)
                                 {
                                     device.CurPage = AppPageEnum.ReadLoad;
                                     PagePosChange.Add("阅读赚金币");
-                                    arrTask["阅读赚金币"] = $"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}";
+                                    arrTask.UpdateTaskItem("阅读赚金币", $"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}");
                                     await ClickAsync(device, _device, BoxPoint.BoxPoints, 3000, BoxPoint.Text);
                                     continue;
 

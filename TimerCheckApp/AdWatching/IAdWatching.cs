@@ -16,7 +16,5 @@ namespace TimerCheckApp.AdWatching
         /// <returns>异步任务</returns>
         public Task AutomateAdWatching(DeviceModel device, CancellationToken cancellationToken);
 
-        public List<TaskItem> arrTask { get; set; }
-
     }
 }

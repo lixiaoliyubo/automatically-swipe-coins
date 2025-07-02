@@ -21,9 +21,9 @@ public class HongGuoWatching : IAdWatching
     private readonly ISqlSugarService _sqlSugarService;
     private bool IsOperate = false;
 
-    public ConcurrentDictionary<string, string> arrTask { get; set; } = new()
+    public List<TaskItem> arrTask { get; set; } = new()
     {
-
+        // 初始化任务列表，可以根据需要添加任务项
     };
     private ConcurrentDictionary<string, (TimeSpan start, TimeSpan end)> mealTimes = new()
     {
@@ -45,17 +45,10 @@ public class HongGuoWatching : IAdWatching
     public async Task AutomateAdWatching(DeviceModel device, CancellationToken cancellationToken)
     {
         var _device = new DeviceData { Serial = device.Id };
-        foreach (var key in arrTask.Keys)
-        {
-            if (key != "切换账号")
-            {
-                arrTask[key] = string.Empty;
-            }
-        }
+        arrTask.ResetTaskStatus();
         int StopTimeSpan = 0;
         int MaxY = 0;
         bool isSwipeTop = false;
-        bool isCompele = false; //是否强制结束
         try
         {
             List<string> PagePosChange = new List<string>();
@@ -78,7 +71,6 @@ public class HongGuoWatching : IAdWatching
                                 {
                                     var pos = BoxPoint.BoxPoints.CalculateTextBlockCenter();
                                     await SwipeAsync(device, _device, 0, "上滑继续观看短剧", pos.X, pos.Y - 50, pos.X, pos.Y - 500, 200);
-                                    isCompele = true;
                                 }
                             }
                             else if (text.TextBlocks.Any(a => a.Text.Contains("上滑继续看短剧")))
@@ -345,7 +337,6 @@ public class HongGuoWatching : IAdWatching
                                 var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "X" || a.Text == "x" || a.Text == "×");
                                 if (BoxPoint != null)
                                 {
-                                    isCompele = true;
                                     await ClickAsync(device, _device, BoxPoint.BoxPoints, 3000, BoxPoint.Text);
                                     continue;
                                 }
@@ -454,9 +445,12 @@ public class HongGuoWatching : IAdWatching
                                 if (PagePosChange.Count > 0 && Last != null)
                                 {
                                     _logService.LogWarning("页面没有跳转，清空重试", device.Id);
-                                    var array = arrTask[Last].GetArray().ToList();
-                                    array.RemoveAt(array.Count - 1);
-                                    arrTask[Last] = string.Join("|", array);
+                                    var array = arrTask.GetTaskItemValue(Last).GetArray().ToList();
+                                    if (array.Count > 0)
+                                    {
+                                        array.RemoveAt(array.Count - 1);
+                                    }
+                                    arrTask.UpdateTaskItem(Last, string.Join("|", array));
                                     PagePosChange.Clear();
                                 }
                                 else

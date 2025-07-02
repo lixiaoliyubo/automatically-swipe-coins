@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using TimerCheckApp.Services.Interfaces;
 using AdvancedSharpAdbClient.Models;
 using AdvancedSharpAdbClient.DeviceCommands;
+using TimerCheckApp.Models;
 
 namespace TimerCheckApp.AdWatching;
 
@@ -20,10 +21,9 @@ public class FanQieNovelAdWatching : IAdWatching
     private readonly ISqlSugarService _sqlSugarService;
     private bool IsOperate = false;
 
-    public ConcurrentDictionary<string, string> arrTask { get; set; } = new()
+    public List<TaskItem> arrTask { get; set; } = new()
     {
-        ["看广告领金币"] = string.Empty,
-
+        new TaskItem("看广告领金币")
     };
     private ConcurrentDictionary<string, (TimeSpan start, TimeSpan end)> mealTimes = new()
     {
@@ -45,13 +45,8 @@ public class FanQieNovelAdWatching : IAdWatching
     public async Task AutomateAdWatching(DeviceModel device, CancellationToken cancellationToken)
     {
         var _device = new DeviceData { Serial = device.Id };
-        foreach (var key in arrTask.Keys)
-        {
-            if (key != "切换账号")
-            {
-                arrTask[key] = string.Empty;
-            }
-        }
+        // 重置任务状态
+        arrTask.ResetTaskStatus();
         int StopTimeSpan = 0;
         int MaxY = 0;
         bool isSwipeTop = false;
@@ -265,9 +260,12 @@ public class FanQieNovelAdWatching : IAdWatching
                                 if (PagePosChange.Count > 0 && Last != null)
                                 {
                                     _logService.LogWarning("页面没有跳转，清空重试", device.Id);
-                                    var array = arrTask[Last].GetArray().ToList();
-                                    array.RemoveAt(array.Count - 1);
-                                    arrTask[Last] = string.Join("|", array);
+                                    var array = arrTask.GetTaskItemValue(Last).GetArray().ToList();
+                                    if (array.Count > 0)
+                                    {
+                                        array.RemoveAt(array.Count - 1);
+                                    }
+                                    arrTask.UpdateTaskItem(Last, string.Join("|", array));
                                     PagePosChange.Clear();
                                 }
                             }

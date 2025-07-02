@@ -23,22 +23,22 @@ public class XiGuaWatching : IAdWatching
     private int MaxY = 0;
     private ConcurrentDictionary<string, string> PageChange = new();
 
-    public ConcurrentDictionary<string, string> arrTask { get; set; } = new()
+    public List<TaskItem> arrTask { get; set; } = new()
     {
-        ["吃饭打卡赚金币"] = string.Empty,
-        ["天天领金币"] = string.Empty,
-        ["预约领金币"] = string.Empty,
-        ["一键领音符"] = string.Empty,
-        ["一键领金币"] = string.Empty,
-        ["看广告赚金币"] = string.Empty,
-        ["看指定视频得金币"] = string.Empty,
-        ["限时任务赚音符"] = string.Empty,
-        ["赚钱首页"] = string.Empty,
-        ["做任务领奖励"] = string.Empty,
-        ["开宝箱得金币"] = string.Empty,
-        ["逛街赚金币"] = string.Empty,
-        ["签到"] = string.Empty,
-        ["切换账号"] = "星月飞天"
+        new TaskItem("吃饭打卡赚金币"),
+        new TaskItem("天天领金币"),
+        new TaskItem("预约领金币"),
+        new TaskItem("一键领音符"),
+        new TaskItem("一键领金币"),
+        new TaskItem("看广告赚金币"),
+        new TaskItem("看指定视频得金币"),
+        new TaskItem("限时任务赚音符"),
+        new TaskItem("赚钱首页"),
+        new TaskItem("做任务领奖励"),
+        new TaskItem("开宝箱得金币"),
+        new TaskItem("逛街赚金币"),
+        new TaskItem("签到"),
+        new TaskItem("切换账号", "星月飞天")
     };
     private ConcurrentDictionary<string, (TimeSpan start, TimeSpan end)> mealTimes = new()
     {
@@ -60,13 +60,9 @@ public class XiGuaWatching : IAdWatching
     public async Task AutomateAdWatching(DeviceModel device, CancellationToken cancellationToken)
     {
         var _device = new DeviceData { Serial = device.Id };
-        foreach (var key in arrTask.Keys)
-        {
-            if (key != "切换账号")
-            {
-                arrTask[key] = string.Empty;
-            }
-        }
+
+        // 重置任务状态
+        arrTask.ResetTaskStatus();
         int StopTimeSpan = 0;
         int AdTime = 0;
         bool isSwipeTop = false;
@@ -484,9 +480,12 @@ public class XiGuaWatching : IAdWatching
                                 if (PagePosChange.Count > 0 && Last != null)
                                 {
                                     _logService.LogWarning("页面没有跳转，清空重试", device.Id);
-                                    var array = arrTask[Last].GetArray().ToList();
-                                    array.RemoveAt(array.Count - 1);
-                                    arrTask[Last] = string.Join("|", array);
+                                    var array = arrTask.GetTaskItemValue(Last).GetArray().ToList();
+                                    if (array.Count > 0)
+                                    {
+                                        array.RemoveAt(array.Count - 1);
+                                    }
+                                    arrTask.UpdateTaskItem(Last, string.Join("|", array));
                                     PagePosChange.Clear();
                                 }
                                 else
@@ -511,14 +510,14 @@ public class XiGuaWatching : IAdWatching
                             }
 
                             #region 天天领金币
-                            if (device.CurPage == AppPageEnum.MoneyHome && arrTask["天天领金币"].IsNotEmptyOrNull())
+                            if (device.CurPage == AppPageEnum.MoneyHome && arrTask.GetTaskEmptyOrNull("天天领金币"))
                             {
                                 var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text.StartsWith("天天领金币"));
                                 if (BoxPoint != null)
                                 {
                                     device.CurPage = AppPageEnum.DayMoney;
                                     PagePosChange.Add("天天领金币");
-                                    arrTask["天天领金币"] = $"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}";
+                                    arrTask.UpdateTaskItem("天天领金币", $"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}");
                                     await ClickAsync(device, _device, BoxPoint.BoxPoints, 3000, BoxPoint.Text);
 
                                 }
@@ -526,14 +525,14 @@ public class XiGuaWatching : IAdWatching
                             #endregion
 
                             #region 一键领金币
-                            if (device.CurPage == AppPageEnum.MoneyHome && arrTask["一键领金币"].IsNotEmptyOrNull())
+                            if (device.CurPage == AppPageEnum.MoneyHome && arrTask.GetTaskEmptyOrNull("一键领金币"))
                             {
                                 var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text.StartsWith("一键领金币") || a.Text.EndsWith("一键领金币"));
                                 if (BoxPoint != null)
                                 {
                                     device.CurPage = AppPageEnum.OneClickMoney;
                                     PagePosChange.Add("一键领金币");
-                                    arrTask["一键领金币"] = $"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}";
+                                    arrTask.UpdateTaskItem("一键领金币", $"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}");
                                     await ClickAsync(device, _device, BoxPoint.BoxPoints, 3000, BoxPoint.Text);
 
                                 }
@@ -548,7 +547,7 @@ public class XiGuaWatching : IAdWatching
                                 {
                                     PagePosChange.Add(BoxPoint.Text);
                                     device.CurPage = AppPageEnum.OpenTreasure;
-                                    arrTask["开宝箱得金币"] = $"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}";
+                                    arrTask.UpdateTaskItem("开宝箱得金币", $"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}");
                                     await ClickAsync(device, _device, BoxPoint.BoxPoints, 3000, BoxPoint.Text);
                                 }
                             }
@@ -562,7 +561,7 @@ public class XiGuaWatching : IAdWatching
                                 {
                                     device.CurPage = AppPageEnum.GuangJie;
                                     PagePosChange.Add("逛街赚金币");
-                                    arrTask["逛街赚金币"] = $"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}";
+                                    arrTask.UpdateTaskItem("逛街赚金币", $"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}");
                                     await ClickAsync(device, _device, BoxPoint.BoxPoints, 3000, BoxPoint.Text);
                                 }
                             }
@@ -570,15 +569,15 @@ public class XiGuaWatching : IAdWatching
 
                             #region 吃饭打卡赚金币
                             //早餐：05:00-09:00、午餐：11:00-14:00 、晚餐：17:00-20:00 、夜宵：21:00-24:00、
-                            if (device.CurPage == AppPageEnum.MoneyHome && (!arrTask["吃饭打卡赚金币"].GetArray().Contains(key) && mealTimes.Any(a => currentTime >= a.Value.start && currentTime < a.Value.end) && text.TextBlocks.Any(a => a.Text.Contains("吃饭打卡赚金币"))))
+                            if (device.CurPage == AppPageEnum.MoneyHome && (!arrTask.GetTaskArrayContains("吃饭打卡赚金币", key) && mealTimes.Any(a => currentTime >= a.Value.start && currentTime < a.Value.end) && text.TextBlocks.Any(a => a.Text.Contains("吃饭打卡赚金币"))))
                             {
-                                var array = arrTask["吃饭打卡赚金币"].GetArray().ToList();
+                                var array = arrTask.GetTaskItemValue("吃饭打卡赚金币").GetArray().ToList();
                                 var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text.Contains("吃饭打卡赚金币"));
                                 if (BoxPoint != null)
                                 {
                                     device.CurPage = AppPageEnum.Dining;
                                     array.Add(key);
-                                    arrTask["吃饭打卡赚金币"] = string.Join("|", array);
+                                    arrTask.UpdateTaskItem("吃饭打卡赚金币", string.Join("|", array));
                                     PagePosChange.Add("吃饭打卡赚金币");
                                     await ClickAsync(device, _device, BoxPoint.BoxPoints, 3000, BoxPoint.Text);
                                 }
@@ -586,28 +585,28 @@ public class XiGuaWatching : IAdWatching
                             #endregion
 
                             #region 看广告赚金币
-                            if (device.CurPage == AppPageEnum.MoneyHome && AdTime > 0 && text.TextBlocks.Any(a => a.Text.StartsWith("看广告赚金币")) && (DateTime.Now - arrTask["看广告赚金币"].ToDateTime(DateTime.Now.AddMinutes(-25))).TotalMinutes >= AdTime)
+                            if (device.CurPage == AppPageEnum.MoneyHome && AdTime > 0 && text.TextBlocks.Any(a => a.Text.StartsWith("看广告赚金币")) && (DateTime.Now - arrTask.GetTaskItemValue("看广告赚金币").ToDateTime(DateTime.Now.AddMinutes(-25))).TotalMinutes >= AdTime)
                             {
                                 var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text.StartsWith("看广告赚金币"));
                                 if (BoxPoint != null)
                                 {
                                     device.CurPage = AppPageEnum.ViewAdMoney;
                                     PagePosChange.Add("看广告赚金币");
-                                    arrTask["看广告赚金币"] = $"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}";
+                                    arrTask.UpdateTaskItem("看广告赚金币", $"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}");
                                     await ClickAsync(device, _device, BoxPoint.BoxPoints, 3000, BoxPoint.Text);
                                 }
                             }
                             #endregion
 
                             #region 早安小岛
-                            if (device.CurPage == AppPageEnum.MoneyHome && arrTask["早安小岛"].IsNotEmptyOrNull())
+                            if (device.CurPage == AppPageEnum.MoneyHome && arrTask.GetTaskEmptyOrNull("早安小岛"))
                             {
                                 var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text.StartsWith("早安小岛"));
                                 if (BoxPoint != null)
                                 {
                                     device.CurPage = AppPageEnum.ZaoAnXiaoDao;
                                     PagePosChange.Add("早安小岛");
-                                    arrTask["早安小岛"] = $"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}";
+                                    arrTask.UpdateTaskItem("早安小岛", $"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}");
                                     await ClickAsync(device, _device, BoxPoint.BoxPoints, 3000, BoxPoint.Text);
 
                                 }
@@ -615,14 +614,14 @@ public class XiGuaWatching : IAdWatching
                             #endregion
 
                             #region 看指定视频得金币
-                            if (device.CurPage == AppPageEnum.MoneyHome && text.TextBlocks.Any(a => Regex.IsMatch(a.Text, "看指定视频得(金币|音符)")) && (DateTime.Now - arrTask["看指定视频得金币"].ToDateTime(DateTime.Now.AddMinutes(-22))).TotalMinutes > 20)
+                            if (device.CurPage == AppPageEnum.MoneyHome && text.TextBlocks.Any(a => Regex.IsMatch(a.Text, "看指定视频得(金币|音符)")) && (DateTime.Now - arrTask.GetTaskItemValue("看指定视频得金币").ToDateTime(DateTime.Now.AddMinutes(-22))).TotalMinutes > 20)
                             {
                                 var BoxPoint = text.TextBlocks.FirstOrDefault(a => Regex.IsMatch(a.Text, "看指定视频得(金币|音符)"));
                                 if (BoxPoint != null)
                                 {
                                     device.CurPage = AppPageEnum.AppointVideo;
                                     PagePosChange.Add("看指定视频得金币");
-                                    arrTask["看指定视频得金币"] = $"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}";
+                                    arrTask.UpdateTaskItem("看指定视频得金币", $"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}");
                                     await ClickAsync(device, _device, BoxPoint.BoxPoints, 3000, BoxPoint.Text);
                                 }
                             }
@@ -941,7 +940,7 @@ public class XiGuaWatching : IAdWatching
                             {
                                 if (text.TextBlocks.Any(a => a.Text.Trim() == "首页") && text.TextBlocks.Any(a => a.Text.Trim() == "消息") && text.TextBlocks.Any(a => a.Text.Trim() == "我"))
                                 {
-                                    string[] values = arrTask["赚钱首页"].GetArray();
+                                    string[] values = arrTask.GetTaskItemValue("赚钱首页").GetArray();
 
                                     var recentCount = values.Count(x => (DateTime.Now - DateTime.ParseExact(x, "yyyy-MM-dd HH:mm:ss", null)).TotalMinutes <= 5);
                                     if (recentCount >= 15)
@@ -949,7 +948,7 @@ public class XiGuaWatching : IAdWatching
                                         var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text.Contains("赚钱"));
                                         if (BoxPoint != null)
                                         {
-                                            arrTask["赚钱首页"] = string.Format("{0}|{1}", string.Join("|", values), $"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}");
+                                            arrTask.UpdateTaskItem("赚钱首页", string.Format("{0}|{1}", string.Join("|", values), $"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}"));
                                             await ClickAsync(device, _device, BoxPoint.BoxPoints, 3000, BoxPoint.Text);
                                         }
                                     }

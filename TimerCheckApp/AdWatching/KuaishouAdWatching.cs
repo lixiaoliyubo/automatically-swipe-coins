@@ -52,6 +52,8 @@ public class KuaishouAdWatching : IAdWatching
     {
 
         var _device = new DeviceData { Serial = device.Id };
+        // 重置任务状态
+        arrTask.ResetTaskStatus();
         try
         {
             int StopTimeSpan = 0;
@@ -1427,7 +1429,7 @@ public class KuaishouAdWatching : IAdWatching
                                 PagePosChange.Clear();
                                 #region 看视频赚金币
 
-                                DateTime startTime = arrTask.GetTaskItem("看视频赚金币").ToDateTime();
+                                DateTime startTime = DateTime.TryParse(arrTask.GetTaskItemValue("看视频赚金币"), out var parsedTime) ? parsedTime : DateTime.Now.AddMinutes(-30);
                                 DateTime endTime = DateTime.Now;
 
                                 if ((endTime - startTime).TotalMinutes > 30)

@@ -1,7 +1,6 @@
 using TimerCheckApp.enums;
 using TimerCheckApp.Extensions;
 using PaddleOCRSharp;
-using System.Collections.Concurrent;
 using TimerCheckApp.Services.Interfaces;
 using AdvancedSharpAdbClient.Models;
 using AdvancedSharpAdbClient.DeviceCommands;
@@ -19,9 +18,9 @@ public class AliPayAdWatching : IAdWatching
     private readonly ICacheService _cacheService;
     private readonly ISqlSugarService _sqlSugarService;
     private bool IsOperate = false;
-    public ConcurrentDictionary<string, string> arrTask { get; set; } = new()
+    public List<TaskItem> arrTask { get; set; } = new()
     {
-
+        // 支付宝相关任务可以在这里添加
     };
 
     public AliPayAdWatching(ILogService logService, IDeviceService deviceService, ICacheService cacheService, ISqlSugarService sqlSugarService)
@@ -138,7 +137,7 @@ public class AliPayAdWatching : IAdWatching
                             {
                                 // 如果是凌晨00:01-04:00且当前在支付宝1中，返回桌面并打开普通支付宝
                                 _logService.LogInfo("凌晨时段检测到支付宝1，准备切换到普通支付宝", device.Id);
-                                arrTask.TryAdd("支付宝1", DateTime.Now.ToString());
+                                arrTask.UpdateTaskItem("支付宝1", DateTime.Now.ToString());
                                 _deviceService.CleanDeviceRunningApps(device.Id);
                                 await Task.Delay(15000, cancellationToken);
                                 continue;
