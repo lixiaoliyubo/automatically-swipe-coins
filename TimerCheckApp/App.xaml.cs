@@ -132,6 +132,9 @@ namespace TimerCheckApp
                 // 清理其他资源
                 var logService = Services?.GetService<ILogService>();
                 logService?.LogInfo("应用程序正在退出", "System");
+                
+                // 释放LogService资源
+                (logService as IDisposable)?.Dispose();
             }
             catch (Exception ex)
             {

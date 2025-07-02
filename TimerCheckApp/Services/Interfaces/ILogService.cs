@@ -1,3 +1,4 @@
+using System;
 using System.Collections.ObjectModel;
 
 namespace TimerCheckApp.Services.Interfaces;
@@ -5,7 +6,7 @@ namespace TimerCheckApp.Services.Interfaces;
 /// <summary>
 /// 日志服务接口
 /// </summary>
-public interface ILogService
+public interface ILogService : IDisposable
 {
     /// <summary>
     /// 日志条目集合
