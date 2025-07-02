@@ -551,7 +551,7 @@ public class KuaishouAdWatching : IAdWatching
                         #endregion
 
                         #region 页面层
-                        else if (text.TextBlocks.Any(a => a.Text == "精选") && text.TextBlocks.Any(a => a.Text == "我"))
+                        else if (text.TextBlocks.Any(a => a.Text == "精选") && text.TextBlocks.Any(a => a.Text == "我") && !text.TextBlocks.Any(a => a.Text == "去领取"))
                         {
                             if (text.TextBlocks.Any(a => a.Text == "点击进入直播间"))
                             {
@@ -583,7 +583,7 @@ public class KuaishouAdWatching : IAdWatching
                                 }
                             }
                         }
-                        else if (device.CurPage != AppPageEnum.KSShopMall && text.TextBlocks.Any(a => a.Text == "首页") && text.TextBlocks.Any(a => a.Text == "去赚钱") && !text.TextBlocks.Any(a => a.Text == "任务中心") && text.TextBlocks.Any(a => a.Text == "发现" || a.Text == "关注"))
+                        else if (device.CurPage != AppPageEnum.KSShopMall && !text.TextBlocks.Any(a => a.Text == "去领取") && text.TextBlocks.Any(a => a.Text == "首页") && text.TextBlocks.Any(a => a.Text == "去赚钱") && !text.TextBlocks.Any(a => a.Text == "任务中心") && text.TextBlocks.Any(a => a.Text == "发现" || a.Text == "关注"))
                         {
                             var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "去赚钱");
                             if (BoxPoint != null)
@@ -685,7 +685,7 @@ public class KuaishouAdWatching : IAdWatching
                         {
                             device.CurPage = AppPageEnum.ViewLive;
                         }
-                        else if (text.TextBlocks.Any(a => a.Text.Contains("每日打卡任务") || a.Text.Contains("请使用原设备")))
+                        else if (text.TextBlocks.Any(a => a.Text.Contains("每日打卡任务") || a.Text.Contains("请使用原设备") || a.Text.Contains("当前设备已绑定账号") || a.Text.Contains("打卡任务白拿好礼")))
                         {
                             device.CurPage = AppPageEnum.DayClockIn;
                         }
@@ -697,9 +697,13 @@ public class KuaishouAdWatching : IAdWatching
                         {
                             device.CurPage = AppPageEnum.ViewLive;
                         }
+                        else if (text.TextBlocks.Any(a => a.Text == "商城") && text.TextBlocks.Any(a => a.Text == "去领取" || a.Text == "我的订单"))
+                        {
+                            device.CurPage = AppPageEnum.KSShopMall;
+                        }
                         #endregion
 
-                        if (text.TextBlocks.Any(a => a.Text.Contains("任务中心")) || (text.TextBlocks.Any(a => a.Text.StartsWith("金币")) && text.TextBlocks.Any(a => a.Text.StartsWith("现金"))))
+                        if (text.TextBlocks.Any(a => a.Text.Contains("任务中心")) || text.TextBlocks.Any(a => a.Text.Contains("金币") && a.Text.Contains("现金")) || (text.TextBlocks.Any(a => a.Text.StartsWith("金币")) && text.TextBlocks.Any(a => a.Text.StartsWith("现金"))))
                         {
 
                             #region 首页
