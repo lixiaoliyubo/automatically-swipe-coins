@@ -10,7 +10,7 @@ public interface ILogService
     /// <summary>
     /// 日志条目添加事件
     /// </summary>
-    event EventHandler<LogEntry> LogEntryAdded;
+    event EventHandler<LogEntry> LogPropertyChanged;
 
     /// <summary>
     /// 日志文本，用于在TextBox中显示
@@ -22,6 +22,12 @@ public interface ILogService
     /// </summary>
     string WebSocketLogsText { get; }
 
+    /// <summary>
+    /// 格式化日志条目为文本
+    /// </summary>
+    /// <param name="entry">日志条目</param>
+    /// <returns>格式化后的文本</returns>
+    string FormatLogEntry(LogEntry entry);
     /// <summary>
     /// 从日志条目集合生成日志文本
     /// </summary>

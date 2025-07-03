@@ -67,3 +67,30 @@ Properties
 - 设备需要开启USB调试模式并授权连接
 - 首次连接设备时可能需要在设备上确认授权请求
 - 截图和日志文件会保存在应用程序目录下的Screenshots和Logs文件夹中
+
+## 代码规范
+
+### 属性注释格式
+
+项目中的属性和字段应使用以下格式进行注释：
+
+```csharp
+/// <summary> 
+/// 注释 
+/// </summary> 
+public 类型 名称 {get;set;}
+```
+
+示例：
+
+```csharp
+/// <summary> 
+/// 设备ID 
+/// </summary> 
+public string DeviceId {get;set;}
+
+/// <summary> 
+/// 设备是否在线 
+/// </summary> 
+public bool IsOnline {get;set;}
+```

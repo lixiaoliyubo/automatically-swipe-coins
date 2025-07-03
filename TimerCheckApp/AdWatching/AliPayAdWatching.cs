@@ -167,7 +167,7 @@ public class AliPayAdWatching : AdWatchingBase
                         {
                             #region 非首页
 
-                            if (text.TextBlocks.Any(a => a.Text.StartsWith("说点什么") || a.Text == "立即关注"|| a.Text == "已关闭评论" || a.Text.Contains("更多直播") || a.Text == "粉丝团"))// || text.TextBlocks.Any(a => a.Text == "关注")
+                            if (text.TextBlocks.Any(a => a.Text.StartsWith("说点什么") || a.Text == "立即关注"|| a.Text == "已关闭评论" || a.Text.Contains("更多直播") || a.Text.Contains("欢迎各位小伙伴来到直播间") ||a.Text == "粉丝团" ||a.Text == "分享直播间"))// || text.TextBlocks.Any(a => a.Text == "关注")
                             {
                                 await ClickAsync(device, _device, null, 3000, "返回到刷视频");
                                 continue;

@@ -3,7 +3,9 @@ using NLog.Config;
 using NLog.Targets;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Text;
+using TimerCheckApp.Models;
 using TimerCheckApp.Services.Interfaces;
 
 
@@ -16,11 +18,12 @@ public class LogService : ILogService
     /// <summary>
     /// 日志条目添加事件
     /// </summary>
-    public event EventHandler<LogEntry> LogEntryAdded;
+    public event EventHandler<LogEntry> LogPropertyChanged;
     private readonly Logger _logger;
     private readonly ObservableCollection<LogEntry> _logEntries = new();
     private readonly ObservableCollection<LogEntry> _webSocketLogEntries = new();
     private const int MaxLogEntries = 1000;
+    
 
     /// <summary>
     /// 日志文本，用于在TextBox中显示，从设备日志条目生成
@@ -40,7 +43,9 @@ public class LogService : ILogService
     public string GenerateLogText(ObservableCollection<LogEntry> entries)
     {
         var sb = new StringBuilder();
-        foreach (var entry in entries)
+        // 创建集合的副本进行遍历，避免并发修改异常
+        var entriesCopy = entries.ToList();
+        foreach (var entry in entriesCopy)
         {
             sb.AppendLine(FormatLogEntry(entry));
         }
@@ -57,7 +62,7 @@ public class LogService : ILogService
     /// </summary>
     /// <param name="entry">日志条目</param>
     /// <returns>格式化后的文本</returns>
-    private string FormatLogEntry(LogEntry entry)
+    public string FormatLogEntry(LogEntry entry)
     {
         return $"[{entry.Timestamp:HH:mm:ss}] [{entry.Level}] [{entry.DeviceId}] {entry.Message}";
     }
@@ -69,6 +74,7 @@ public class LogService : ILogService
     public LogService()
     {
         _logger = InitializeLogger();
+        
     }
 
     /// <summary>
@@ -172,8 +178,8 @@ public class LogService : ILogService
     /// <param name="isWebSocketLog">是否为WebSocket日志</param>
     private void AddLogEntry(string level, string message, string deviceId, bool isWebSocketLog = false)
     {
-        // 创建新日志条目
-        var logEntry = new LogEntry(level, message, deviceId);
+        // 创建新日志条目，并设置IsWebSocketLog属性
+        var logEntry = new LogEntry(level, message, deviceId, isWebSocketLog);
 
         // 根据日志类型添加到相应的集合
         if (isWebSocketLog)
@@ -181,39 +187,22 @@ public class LogService : ILogService
             _webSocketLogEntries.Add(logEntry);
 
             // 限制WebSocket日志条目数量
-            //while (_webSocketLogEntries.Count > MaxLogEntries)
-            //{
-            //    _webSocketLogEntries.RemoveAt(0);
-            //}
             if (_webSocketLogEntries.Count > MaxLogEntries)
             {
-
                 _webSocketLogEntries.Clear();
             }
-            // 触发WebSocket日志文本变更通知
-            LogEntryAdded?.Invoke(new { IsWebSocket = isWebSocketLog, Items = WebSocketLogsText, }, logEntry);
         }
         else
         {
             _logEntries.Add(logEntry);
 
             // 限制设备日志条目数量
-            //while (_logEntries.Count > MaxLogEntries)
-            //{
-            //    _logEntries.RemoveAt(0);
-            //}
             if (_logEntries.Count > MaxLogEntries)
             {
-
                 _logEntries.Clear();
             }
-
-            // 触发设备日志文本变更通知
-            LogEntryAdded?.Invoke(new { IsWebSocket = isWebSocketLog, Items = LogsText, }, logEntry);
         }
-
-        // 触发日志条目添加事件
-        LogEntryAdded?.Invoke(this, logEntry);
+        LogPropertyChanged?.Invoke(this, logEntry);
     }
 
     /// <summary>
@@ -226,13 +215,14 @@ public class LogService : ILogService
         if (isWebSocketLog)
         {
             _webSocketLogEntries.Clear();
-            LogEntryAdded?.Invoke(new { IsWebSocket = isWebSocketLog, Items = WebSocketLogsText, }, new LogEntry() { DeviceId = deviceId });
         }
         else
         {
             _logEntries.Clear();
-            LogEntryAdded?.Invoke(new { IsWebSocket = isWebSocketLog, Items = LogsText, }, new LogEntry() { DeviceId = deviceId });
         }
+        // 创建一个新的LogEntry，并设置IsWebSocketLog属性
+        var logEntry = new LogEntry() { DeviceId = deviceId, IsWebSocketLog = isWebSocketLog };
+        LogPropertyChanged?.Invoke(this, logEntry);
         _logger.Info("设备日志已清理");
     }
 

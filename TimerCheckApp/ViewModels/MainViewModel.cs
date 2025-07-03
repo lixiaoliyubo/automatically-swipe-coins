@@ -39,29 +39,12 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private DeviceModel? _selectedDevice;
 
-    /// <summary>
-    /// 日志列表
-    /// </summary>
-    [ObservableProperty]
-    private ObservableCollection<LogEntry> _logs;
 
     /// <summary>
     /// 是否显示所有日志
     /// </summary>
     [ObservableProperty]
     private bool _showAllLogs = true;
-
-    /// <summary>
-    /// 日志文本，用于在TextBox中显示
-    /// </summary>
-    [ObservableProperty]
-    private string _logsText;
-
-    /// <summary>
-    /// WebSocket日志文本，用于在TextBox中显示
-    /// </summary>
-    [ObservableProperty]
-    private string _webSocketLogsText;
 
     /// <summary>
     /// WebSocket连接状态
@@ -125,8 +108,6 @@ public partial class MainViewModel : ObservableObject
         _logService = logService;
         _cacheService = cacheService;
         _webSocketService = webSocketService;
-        _logsText = _logService.LogsText;
-        _webSocketLogsText = _logService.WebSocketLogsText;
         _screenshotSavePath = Path.Combine(Path.GetTempPath(), "Screenshots");
         Directory.CreateDirectory(_screenshotSavePath);
         SystemColor = ApplicationAccentColorManager.GetSystemAccent();
@@ -277,17 +258,6 @@ public partial class MainViewModel : ObservableObject
         {
             _nightlyDeviceCheckTimer.Stop();
             _logService.LogInfo("停止夜间设备检测", "System");
-        }
-    }
-
-    /// <summary>
-    /// 选中设备变更处理
-    /// </summary>
-    partial void OnSelectedDeviceChanged(DeviceModel? value)
-    {
-        if (value != null && !ShowAllLogs)
-        {
-            Logs = _logService.GetLogs(value.Id);
         }
     }
     
@@ -548,8 +518,6 @@ public partial class MainViewModel : ObservableObject
         if (device != null)
         {
             ShowAllLogs = false;
-            Logs = _logService.GetLogs(device.Id);
-            LogsText = _logService.GenerateLogText(Logs);
         }
     }
 

@@ -16,7 +16,6 @@ namespace TimerCheckApp.Services;
 public class DeviceService : IDeviceService, IDisposable
 {
     #region 字段
-    private int runTaskCount = 0;
     private PaddleOCREngine _ocrEngine;
     private readonly AdbClient _adbClient;
     private readonly AdbServer _adbServer;

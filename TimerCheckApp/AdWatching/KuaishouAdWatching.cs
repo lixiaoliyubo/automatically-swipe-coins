@@ -1656,7 +1656,7 @@ public class KuaishouAdWatching : AdWatchingBase
                 await SwipeAsync(device, _device, 0, "滑动刷视频", 300, 1000, 300, 600, 400);
             }
         }
-        else if (text.TextBlocks.Any(a => a.Text.StartsWith("说点什么") || a.Text == "立即关注" || a.Text == "已关闭评论" || a.Text.Contains("更多直播") || a.Text == "粉丝团"))// || text.TextBlocks.Any(a => a.Text == "关注")
+        else if(text.TextBlocks.Any(a => a.Text.StartsWith("说点什么") || a.Text == "立即关注" || a.Text == "已关闭评论" || a.Text.Contains("更多直播") || a.Text.Contains("欢迎各位小伙伴来到直播间") || a.Text == "粉丝团" || a.Text == "分享直播间"))// || text.TextBlocks.Any(a => a.Text == "关注")
         {
             await ClickAsync(device, _device, null, 3000, "返回到刷视频");
         }
@@ -1668,14 +1668,6 @@ public class KuaishouAdWatching : AdWatchingBase
                 await ClickAsync(device, _device, BoxPoint.BoxPoints, 3000, BoxPoint.Text);
             }
         }
-        //else if ((device.PackageName == PlatformType.Kuaishou.GetPackageName() || device.PackageName == PlatformType.KuaishouJs.GetPackageName()) && text.TextBlocks.Any(a => a.Text == "视频") && text.TextBlocks.Any(a => a.Text == "我的") && !text.TextBlocks.Any(a => a.Text == "发现"))
-        //{
-        //    var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "视频");
-        //    if (BoxPoint != null)
-        //    {
-        //        await ClickAsync(device, _device, BoxPoint.BoxPoints, 3000, BoxPoint.Text);
-        //    }
-        //}
         else
         {
             int count = await _cacheService.GetAsync<int>($"KuaishouAdWatching_{device.CurPage.ToString()}");
