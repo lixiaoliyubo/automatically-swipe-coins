@@ -7,6 +7,7 @@ using AdvancedSharpAdbClient.DeviceCommands;
 using System.Text.RegularExpressions;
 using System.Collections.Concurrent;
 using TimerCheckApp.Models;
+using System.Diagnostics;
 
 namespace TimerCheckApp.AdWatching;
 
@@ -115,11 +116,16 @@ public class AliPayAdWatching : AdWatchingBase
                         #region 页面层面
 
                         else if (
+                            text.TextBlocks.Any(a => a.Text == "明日可领") ||
                             text.TextBlocks.Any(a => Regex.IsMatch(a.Text, @"^([\d-\.]+)元$")) || text.TextBlocks.Any(a => a.Text.Contains("上滑继续看视频")) || text.TextBlocks.Any(a => a.Text == "不喜欢") || text.TextBlocks.Any(a => a.Text == "点击进入直播间" || a.Text == "点击进人直播间") || 
                             (text.TextBlocks.Any(a => Regex.IsMatch(a.Text, @"^(\d+)/(\d+)$")) && text.TextBlocks.Any(a => a.Text == "关注") && !text.TextBlocks.Any(a => a.Text.Contains("更多直播"))) ||
                             (text.TextBlocks.Any(a => a.Text == "关注" && a.BoxPoints.Max(x => x.X) > 500) && text.TextBlocks.Any(a => a.Text == "发现"))
                             )
                         {
+
+                            //var BoxPointx = text.TextBlocks.FirstOrDefault(a => Regex.IsMatch(a.Text, @"^@([\s\S]+)$"));
+                            //var posx = BoxPointx.BoxPoints.CalculateTextBlockCenter();
+                            //Debug.WriteLine($"设备：{_device.Serial},位置：X={BoxPointx.BoxPoints.OrderBy(a => a.X).FirstOrDefault().X},Y={BoxPointx.BoxPoints.OrderByDescending(a => a.X).FirstOrDefault().Y}");
                             if (text.TextBlocks.Any(a => a.Text.Contains("我的红包")))
                             {
                                 var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "我的红包");
