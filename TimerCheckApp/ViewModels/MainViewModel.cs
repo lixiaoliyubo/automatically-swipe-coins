@@ -539,15 +539,11 @@ public partial class MainViewModel : ObservableObject
     /// 滚动到日志末尾命令
     /// </summary>
     [RelayCommand]
-    private void ScrollToEnd(object dataGrid)
+    private void ScrollToEnd(object control)
     {
-        if (dataGrid is Yuandl.ThemeUI.Controls.DataGrid grid && grid.Items.Count > 0)
+        if (control is System.Windows.Controls.TextBox textBox)
         {
-            grid.ScrollIntoView(grid.Items[grid.Items.Count - 1]);
-        }
-        else if (dataGrid is System.Windows.Controls.DataGrid standardGrid && standardGrid.Items.Count > 0)
-        {
-            standardGrid.ScrollIntoView(standardGrid.Items[standardGrid.Items.Count - 1]);
+            textBox.ScrollToEnd();
         }
     }
 

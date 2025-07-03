@@ -48,9 +48,9 @@ namespace TimerCheckApp.Extensions
         /// </summary>
         private void AssociatedObject_TextChanged(object sender, TextChangedEventArgs e)
         {
-            if (ScrollCommand != null && ScrollCommand.CanExecute(null))
+            if (ScrollCommand != null && ScrollCommand.CanExecute(AssociatedObject))
             {
-                ScrollCommand.Execute(null);
+                ScrollCommand.Execute(AssociatedObject);
             }
             else
             {

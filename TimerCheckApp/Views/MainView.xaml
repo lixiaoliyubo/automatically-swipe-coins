@@ -118,7 +118,7 @@
                                      AcceptsReturn="True"
                                      IsReadOnly="True"
                                      TextWrapping="Wrap"
-                                     VerticalScrollBarVisibility="Auto"
+                                     VerticalScrollBarVisibility="Visible"
                                      FontFamily="Consolas"
                                      ScrollViewer.VerticalScrollBarVisibility="Visible">
                                 <b:Interaction.Behaviors>
