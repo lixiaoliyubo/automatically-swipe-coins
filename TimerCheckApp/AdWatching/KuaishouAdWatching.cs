@@ -1558,8 +1558,21 @@ public class KuaishouAdWatching : AdWatchingBase
     {
         bool isDesktop = false;
         DateTime dateTime = DateTime.Now;
+        //最后滑动时间
+        DateTime KsData_LastTime = await _cacheService.GetAsync<DateTime>($"KsData_LastTime");
+        //检查非首页次数
+        int KsData_NotHome = await _cacheService.GetAsync<int>($"KsData_NotHome");
 
-        DateTime KsData_LastTime  = await _cacheService.GetAsync<DateTime>($"KsData_LastTime");
+
+        if (!text.TextBlocks.Any(a => Regex.IsMatch(a.Text, @"^@([\s\S]{4,})$")))
+        {
+            KsData_NotHome++;
+            await _cacheService.SetAsync($"KsData_NotHome", KsData_NotHome);
+        }
+        else if (KsData_NotHome > 0)
+        {
+            await _cacheService.SetAsync($"KsData_NotHome", 0);
+        }
         if (text.TextBlocks.Any(a => a.Text == "快手极速版") && text.TextBlocks.Any(a => a.Text == "快手"))
         {
             isDesktop = true;
@@ -1590,6 +1603,11 @@ public class KuaishouAdWatching : AdWatchingBase
         else if (text.TextBlocks.Any(a => a.Text == "任务中心" || a.Text.StartsWith("说点什么")))
         {
             await ClickAsync(device, _device, null, 2000, "返回-首页");
+        }
+        else if (KsData_NotHome > 10)
+        {
+            await _deviceService.PlayTextAsync($"黄彩霞,检测到非首页{KsData_NotHome}次,快过来看看");
+            await Task.Delay(10000, cancellationToken);
         }
         else if (KsData_LastTime != DateTime.MinValue && (dateTime - KsData_LastTime.ToDateTime()).TotalMinutes >= 5)
         {
@@ -1659,7 +1677,7 @@ public class KuaishouAdWatching : AdWatchingBase
                 Max = GetDynamicMax(m.Groups[2].Value.ToInt());
             }
             var r = new Random().Next(5000, Max);
-            if (!text.TextBlocks.Any(a => a.Text == "点击进入直播间"))
+            if (!text.TextBlocks.Any(a => a.Text == "点击进入直播间" || a.Text.Contains("上滑继续观看视频")))
             {
                 await Task.Delay(r, cancellationToken);
             }
@@ -1679,6 +1697,7 @@ public class KuaishouAdWatching : AdWatchingBase
         }
         else
         {
+            //检查未操作次数
             int count = await _cacheService.GetAsync<int>($"KsData_Count");
             count++;
             await _cacheService.SetAsync($"KsData_Count", count);

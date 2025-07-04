@@ -142,7 +142,7 @@ public class DeviceService : IDeviceService, IDisposable
                     deviceModel.Width = sizeReceiver.width;
                     deviceModel.Height = sizeReceiver.height;
                 }
-                if (DateTime.Now.Hour > 0 && DateTime.Now.Hour < 9)
+                if (DateTime.Now.Hour >= 0 && DateTime.Now.Hour < 9)
                 {
                     deviceModel.CurPlatform =  enums.PlatformType.Kuaishou;
                     deviceModel.CurPage =  enums.AppPageEnum.Data;
