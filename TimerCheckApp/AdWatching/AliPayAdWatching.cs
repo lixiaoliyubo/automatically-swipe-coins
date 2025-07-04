@@ -147,7 +147,7 @@ public class AliPayAdWatching : AdWatchingBase
                             }
                             else
                             {
-                                int Max = 15000;
+                                int Max = 10000;
                                 var m = Regex.Match(text.Text, @"(\d{1,2})/(\d{1,2})支");
                                 if (m.Success) {
                                     Max = GetDynamicMax(m.Groups[2].Value.ToInt());
