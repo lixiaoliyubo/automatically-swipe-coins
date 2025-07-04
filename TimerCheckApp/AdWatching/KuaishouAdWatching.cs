@@ -1555,6 +1555,8 @@ public class KuaishouAdWatching : AdWatchingBase
     {
         bool isDesktop = false;
         DateTime dateTime = DateTime.Now;
+
+        DateTime KsData_LastTime  = await _cacheService.GetAsync<DateTime>($"KsData_LastTime");
         if (text.TextBlocks.Any(a => a.Text == "快手极速版") && text.TextBlocks.Any(a => a.Text == "快手"))
         {
             isDesktop = true;
@@ -1586,10 +1588,15 @@ public class KuaishouAdWatching : AdWatchingBase
         {
             await ClickAsync(device, _device, null, 2000, "返回-首页");
         }
+        else if (KsData_LastTime != DateTime.MinValue && (dateTime - KsData_LastTime.ToDateTime()).TotalMinutes >= 5)
+        {
+            await _deviceService.PlayTextAsync($"黄彩霞,刷视频出现已停止{(dateTime - KsData_LastTime.ToDateTime()).TotalMinutes}分钟,快过来看看");
+            await Task.Delay(10000, cancellationToken);
+        }
         else if (dateTime.Hour >= 5 && dateTime.Hour < 9 && !arrTask.GetTaskEmptyOrNull("支付宝"))
         {
             _logService.LogInfo($"打开支付宝", device.Id);
-            _ = arrTask.UpdateTaskItem("支付宝", DateTime.Now.ToString());
+            _ = arrTask.UpdateTaskItem("支付宝", dateTime.ToString());
 
             _deviceService.CleanDeviceRunningApps(device.Id);
             await Task.Delay(15000, cancellationToken);
@@ -1601,7 +1608,7 @@ public class KuaishouAdWatching : AdWatchingBase
         else if (dateTime.Hour >= 3 && dateTime.Hour < 5 && !arrTask.GetTaskEmptyOrNull("快手极速版"))
         {
             _logService.LogInfo($"打开快手极速版", device.Id);
-            _ = arrTask.UpdateTaskItem("快手极速版", DateTime.Now.ToString());
+            _ = arrTask.UpdateTaskItem("快手极速版", dateTime.ToString());
 
             _deviceService.CleanDeviceRunningApps(device.Id);
             await Task.Delay(15000, cancellationToken);
@@ -1613,7 +1620,7 @@ public class KuaishouAdWatching : AdWatchingBase
         else if (dateTime.Hour >= 0 && dateTime.Hour < 3 && !arrTask.GetTaskEmptyOrNull("快手"))
         {
             _logService.LogInfo($"准备打开快手", device.Id);
-            _ = arrTask.UpdateTaskItem("快手", DateTime.Now.ToString());
+            _ = arrTask.UpdateTaskItem("快手", dateTime.ToString());
 
             _deviceService.CleanDeviceRunningApps(device.Id);
             await Task.Delay(15000, cancellationToken);
@@ -1639,7 +1646,8 @@ public class KuaishouAdWatching : AdWatchingBase
             (device.PackageName == PlatformType.AliPay.GetPackageName() && text.TextBlocks.Any(a => Regex.IsMatch(a.Text, @"^([\d-\.]+)元$")) && text.TextBlocks.Any(a => a.Text == "关注" || a.Text == "视频" || a.Text == "发现"))
             )
         {
-            await _cacheService.RemoveAsync($"KuaishouAdWatching_{device.CurPage.ToString()}");
+            await _cacheService.RemoveAsync($"KsData_Count");
+            await _cacheService.SetAsync($"KsData_LastTime", dateTime);
 
             int Max = 13000;
             var m = Regex.Match(text.Text, @"(\d{1,2})/(\d{1,2})支");
@@ -1677,12 +1685,12 @@ public class KuaishouAdWatching : AdWatchingBase
         }
         else
         {
-            int count = await _cacheService.GetAsync<int>($"KuaishouAdWatching_{device.CurPage.ToString()}");
+            int count = await _cacheService.GetAsync<int>($"KsData_Count");
             count++;
-            await _cacheService.SetAsync($"KuaishouAdWatching_{device.CurPage.ToString()}", count);
+            await _cacheService.SetAsync($"KsData_Count", count);
             if (count > 10)
             {
-                await _deviceService.PlayTextAsync("黄彩霞,出现未识别的错误");
+                await _deviceService.PlayTextAsync("黄彩霞,出现未识别的错误,快过来看看");
                 await Task.Delay(10000, cancellationToken);
             }
         }

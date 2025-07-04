@@ -228,6 +228,7 @@ public class DataAdWatching : AdWatchingBase
     {
         bool isDesktop = false;
         DateTime dateTime = DateTime.Now;
+        DateTime Data_LastTime = await _cacheService.GetAsync<DateTime>($"KsData_LastTime");
         if (text.TextBlocks.Any(a => a.Text.Contains("抖音极速版")) && text.TextBlocks.Any(a => a.Text.Contains("快手极速版")))
         {
             isDesktop = true;
@@ -255,6 +256,11 @@ public class DataAdWatching : AdWatchingBase
             )
         {
             await SwipeAsync(device, _device, 2000, "左滑", 500, 500, 100, 500, 400);
+        }
+        else if (Data_LastTime != DateTime.MinValue && (dateTime - Data_LastTime.ToDateTime()).TotalMinutes >= 5)
+        {
+            await _deviceService.PlayTextAsync($"黄彩霞,刷视频出现已停止{(dateTime - Data_LastTime.ToDateTime()).TotalMinutes}分钟,快过来看看");
+            await Task.Delay(10000, cancellationToken);
         }
         else if (text.TextBlocks.Any(a => a.Text == "看视频领取"))
         {
@@ -349,6 +355,7 @@ public class DataAdWatching : AdWatchingBase
         }
         else if (text.TextBlocks.Any(a => a.Text == "我") && text.TextBlocks.Any(a => a.Text.StartsWith("首页")))
         {
+            await _cacheService.SetAsync($"Data_LastTime", dateTime);
             await _cacheService.RemoveAsync($"DataAdWatching_{device.CurPage.ToString()}");
             var r = new Random().Next(5000, 15000);
             if (!text.TextBlocks.Any(a => a.Text == "点击进入直播间"))
