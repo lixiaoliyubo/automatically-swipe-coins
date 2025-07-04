@@ -228,7 +228,7 @@ public class DataAdWatching : AdWatchingBase
     {
         bool isDesktop = false;
         DateTime dateTime = DateTime.Now;
-        DateTime Data_LastTime = await _cacheService.GetAsync<DateTime>($"KsData_LastTime");
+        DateTime Data_LastTime = await _cacheService.GetAsync<DateTime>($"KsData_LastTime_{device.Id}");
         if (text.TextBlocks.Any(a => a.Text.Contains("抖音极速版")) && text.TextBlocks.Any(a => a.Text.Contains("快手极速版")))
         {
             isDesktop = true;
@@ -355,8 +355,8 @@ public class DataAdWatching : AdWatchingBase
         }
         else if (text.TextBlocks.Any(a => a.Text == "我") && text.TextBlocks.Any(a => a.Text.StartsWith("首页")))
         {
-            await _cacheService.SetAsync($"Data_LastTime", dateTime);
-            await _cacheService.RemoveAsync($"DataAdWatching_{device.CurPage.ToString()}");
+            await _cacheService.SetAsync($"Data_LastTime_{device.Id}", dateTime);
+            await _cacheService.RemoveAsync($"DataAdWatching_{device.Id}");
             var r = new Random().Next(5000, 15000);
             if (!text.TextBlocks.Any(a => a.Text == "点击进入直播间"))
             {
@@ -366,9 +366,9 @@ public class DataAdWatching : AdWatchingBase
         }
         else
             {
-                int count = await _cacheService.GetAsync<int>($"DataAdWatching_{device.CurPage.ToString()}");
+                int count = await _cacheService.GetAsync<int>($"DataAdWatching_{device.Id}");
                 count++;
-                await _cacheService.SetAsync($"DataAdWatching_{device.CurPage.ToString()}", count);
+                await _cacheService.SetAsync($"DataAdWatching_{device.Id}", count);
                 if (count > 10)
                 {
                     await _deviceService.PlayTextAsync("黄彩霞,出现未识别的错误");

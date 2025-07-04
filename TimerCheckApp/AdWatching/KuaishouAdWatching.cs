@@ -8,6 +8,7 @@ using AdvancedSharpAdbClient.Models;
 using AdvancedSharpAdbClient.DeviceCommands;
 using OpenCvSharp;
 using System.IO;
+using System.Diagnostics;
 
 namespace TimerCheckApp.AdWatching;
 
@@ -1174,10 +1175,10 @@ public class KuaishouAdWatching : AdWatchingBase
                                 }
                                 else if (text.TextBlocks.Any(a => a.Text == $"已完成0/1"))
                                 {
-                                    await _cacheService.RemoveAsync("ViewLive_Timer");
+                                    await _cacheService.RemoveAsync($"ViewLive_Timer_{device.Id}");
                                 }
-                                int count = await _cacheService.GetAsync<int>("ViewLive_Count");
-                                DateTime? Timer = await _cacheService.GetAsync<DateTime>("ViewLive_Timer");
+                                int count = await _cacheService.GetAsync<int>($"ViewLive_Count_{device.Id}");
+                                DateTime? Timer = await _cacheService.GetAsync<DateTime>($"ViewLive_Timer_{device.Id}");
                                 if (Timer != DateTime.MinValue)
                                 {
                                     await ClickAsync(device, _device, null, 3000, "返回-首页");
@@ -1193,8 +1194,8 @@ public class KuaishouAdWatching : AdWatchingBase
                                         var BoxPoint = Lives[new Random().Next(0, Lives.Count)];
                                         if (BoxPoint != null)
                                         {
-                                            await _cacheService.SetAsync("ViewLive_Count", count + 1);
-                                            await _cacheService.SetAsync("ViewLive_Timer", DateTime.Now);
+                                            await _cacheService.SetAsync($"ViewLive_Count_{device.Id}", count + 1);
+                                            await _cacheService.SetAsync($"ViewLive_Timer_{device.Id}", DateTime.Now);
                                             var pos = BoxPoint.BoxPoints.CalculateTextBlockCenter();
                                             await ClickAsync(device, _device, new List<OCRPoint>() { new OCRPoint(pos.X + 100, pos.Y + 50) }, 40000, BoxPoint.Text);
                                             continue;
@@ -1308,7 +1309,7 @@ public class KuaishouAdWatching : AdWatchingBase
                                 #region 逛街领金币
                                 if (text.TextBlocks.Any(a => a.Text == "领取奖励"))
                                 {
-                                    bool isError = await _cacheService.GetAsync<DateTime>("GuangJie_Error") != DateTime.MinValue;
+                                    bool isError = await _cacheService.GetAsync<DateTime>($"GuangJie_Error_{device.Id}") != DateTime.MinValue;
                                     var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == (isError ? "放弃" : "领取奖励"));
                                     if (BoxPoint != null)
                                     {
@@ -1329,7 +1330,7 @@ public class KuaishouAdWatching : AdWatchingBase
                                 {
                                     if (text.TextBlocks.Any(a => a.Text.Contains("服务器开小差了")))
                                     {
-                                        await _cacheService.SetAsync("GuangJie_Error", DateTime.Now);
+                                        await _cacheService.SetAsync($"GuangJie_Error_{device.Id}", DateTime.Now);
                                     }
                                     await ClickAsync(device, _device, null, 3000, "返回-逛街得金币恭喜获得");
                                     continue;
@@ -1559,21 +1560,40 @@ public class KuaishouAdWatching : AdWatchingBase
         bool isDesktop = false;
         DateTime dateTime = DateTime.Now;
         //最后滑动时间
-        DateTime KsData_LastTime = await _cacheService.GetAsync<DateTime>($"KsData_LastTime");
+        DateTime KsData_LastTime = await _cacheService.GetAsync<DateTime>($"KsData_LastTime_{device.Id}");
         //检查非首页次数
-        int KsData_NotHome = await _cacheService.GetAsync<int>($"KsData_NotHome");
+        int KsData_NotHome = await _cacheService.GetAsync<int>($"KsData_NotHome_{device.Id}");
 
+        var BoxPointx = text.TextBlocks.FirstOrDefault(a => Regex.IsMatch(a.Text, @"^@([\s\S]{4,})$"));
+        if (BoxPointx != null) {
 
-        if (!text.TextBlocks.Any(a => Regex.IsMatch(a.Text, @"^@([\s\S]{4,})$")))
+            var posx = BoxPointx.BoxPoints.CalculateTextBlockCenter();
+            Debug.WriteLine($"设备：{_device.Serial},总像素：宽{device.Width},高{device.Height} 位置：X={BoxPointx.BoxPoints.OrderBy(a => a.X).FirstOrDefault().X},Y={BoxPointx.BoxPoints.OrderByDescending(a => a.Y).FirstOrDefault().Y}");
+
+            Debug.WriteLine($"-----------------");
+        }
+
+        if (!text.TextBlocks.Any(a => a.Text.StartsWith("观看完整短剧")) &&!text.TextBlocks.Any(a => Regex.IsMatch(a.Text, @"^@([\s\S]{4,})$") && a.BoxPoints.OrderBy(a => a.X).FirstOrDefault()?.X < 50 && a.BoxPoints.OrderByDescending(a => a.Y).FirstOrDefault()?.Y > (device.Height * 0.8)))
         {
             KsData_NotHome++;
-            await _cacheService.SetAsync($"KsData_NotHome", KsData_NotHome);
+            await _cacheService.SetAsync($"KsData_NotHome_{device.Id}", KsData_NotHome);
         }
         else if (KsData_NotHome > 0)
         {
-            await _cacheService.SetAsync($"KsData_NotHome", 0);
+            KsData_NotHome = 0;
+            await _cacheService.SetAsync($"KsData_NotHome_{device.Id}", 0);
         }
-        if (text.TextBlocks.Any(a => a.Text == "快手极速版") && text.TextBlocks.Any(a => a.Text == "快手"))
+
+
+        if (text.TextBlocks.Any(a => a.Text == "添加到主屏幕" || a.Text == "添加至桌面") && text.TextBlocks.Any(a => a.Text == "取消") && text.TextBlocks.Any(a => a.Text == "添加"))
+        {
+            var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "取消");
+            if (BoxPoint != null)
+            {
+                await ClickAsync(device, _device, BoxPoint.BoxPoints, 2000, BoxPoint.Text);
+            }
+        }
+        else if(text.TextBlocks.Any(a => a.Text == "快手极速版") && text.TextBlocks.Any(a => a.Text == "快手"))
         {
             isDesktop = true;
         }
@@ -1662,13 +1682,22 @@ public class KuaishouAdWatching : AdWatchingBase
         {
             await ClickAsync(device, _device, new List<OCRPoint>() { new OCRPoint() { X = (device.Height * 0.5).ToInt(), Y = (device.Height * 0.3).ToInt() } }, 3000, "评论收起");
         }
+        else if (device.PackageName != PlatformType.AliPay.GetPackageName() && text.TextBlocks.Any(a => Regex.IsMatch(a.Text, @"^(\d+)条评论$")))
+        {
+            var BoxPoint = text.TextBlocks.FirstOrDefault(a => Regex.IsMatch(a.Text, @"^(\d+)条评论$"));
+            if (BoxPoint != null)
+            {
+                var pos = BoxPoint.BoxPoints.CalculateTextBlockCenter();
+                await ClickAsync(device, _device, new List<OCRPoint>() { new OCRPoint(pos.X, pos.Y - 300) }, 0, BoxPoint.Text);
+            }
+        }
         else if (
             ((device.PackageName == PlatformType.Kuaishou.GetPackageName() || device.PackageName == PlatformType.KuaishouJs.GetPackageName()) && text.TextBlocks.Any(a => a.Text == "首页" || a.Text == "我") && text.TextBlocks.Any(a => a.Text == "去赚钱" || a.Text == "精选")) ||
             (device.PackageName == PlatformType.AliPay.GetPackageName() && text.TextBlocks.Any(a => Regex.IsMatch(a.Text, @"^([\d-\.]+)元$")) && text.TextBlocks.Any(a => a.Text == "关注" || a.Text == "视频" || a.Text == "发现"))
             )
         {
-            await _cacheService.RemoveAsync($"KsData_Count");
-            await _cacheService.SetAsync($"KsData_LastTime", dateTime);
+            await _cacheService.RemoveAsync($"KsData_Count_{device.Id}");
+            await _cacheService.SetAsync($"KsData_LastTime_{device.Id}", dateTime);
 
             int Max = 13000;
             var m = Regex.Match(text.Text, @"(\d{1,2})/(\d{1,2})支");
@@ -1698,9 +1727,9 @@ public class KuaishouAdWatching : AdWatchingBase
         else
         {
             //检查未操作次数
-            int count = await _cacheService.GetAsync<int>($"KsData_Count");
+            int count = await _cacheService.GetAsync<int>($"KsData_Count_{device.Id}");
             count++;
-            await _cacheService.SetAsync($"KsData_Count", count);
+            await _cacheService.SetAsync($"KsData_Count_{device.Id}", count);
             if (count > 10)
             {
                 await _deviceService.PlayTextAsync("黄彩霞,出现未识别的错误,快过来看看");

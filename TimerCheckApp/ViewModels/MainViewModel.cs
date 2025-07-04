@@ -208,7 +208,7 @@ public partial class MainViewModel : ObservableObject
 
             if (now.Hour >= 0 && now.Hour < 9 && count > 30)
             {
-                await _cacheService.RemoveAsync($"CheckAndStartDevices");
+                await _cacheService.SetAsync($"CheckAndStartDevices", 0);
                 foreach (var device in nonRunningDevices)
                 {
                     _logService.LogInfo($"启动设备: {device.Name} ({device.Id})", "System");
