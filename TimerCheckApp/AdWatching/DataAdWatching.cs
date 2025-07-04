@@ -130,7 +130,7 @@ public class DataAdWatching : AdWatchingBase
                                 text.TextBlocks.Any(a => a.Text.EndsWith("点击关闭广告并退出小说")) ||
                                 text.TextBlocks.Any(a => a.Text.EndsWith("左滑开始阅读")))
                             {
-                                await SwipeAsync(device, _device, new Random().Next(12000, 22000), "左滑看小说", device.Width - 100, device.Height - 100, device.Width - 500, device.Height - 100, 300);
+                                await SwipeAsync(device, _device, SwipeDirection.Left, new Random().Next(12000, 22000), "左滑看小说", 200);
                             }
                             else if (text.TextBlocks.Any(a => a.Text.StartsWith("看视频最高得")))
                             {
@@ -362,15 +362,7 @@ public class DataAdWatching : AdWatchingBase
             {
                 await Task.Delay(r, cancellationToken);
             }
-            if (device.Width > 0 && device.Height > 0)
-            {
-                var l = new Random().Next((device.Width / 2) - 100, (device.Width / 2) + 100);
-                await SwipeAsync(device, _device, 0, "滑动刷视频", l, (device.Height - 300), l, (device.Height - 1000), 400);
-            }
-            else
-            {
-                await SwipeAsync(device, _device, 0, "滑动刷视频", 300, 1000, 300, 600, 400);
-            }
+            await SwipeAsync(device, _device, SwipeDirection.Up, 0, "滑动刷视频", 400);
         }
         else
         {

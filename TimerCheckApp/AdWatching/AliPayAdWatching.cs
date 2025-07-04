@@ -153,15 +153,7 @@ public class AliPayAdWatching : AdWatchingBase
                             {
                                 await Task.Delay(r, cancellationToken);
                             }
-                            if (device.Width > 0 && device.Height > 0)
-                            {
-                                var l = new Random().Next((device.Width / 2) - 100, (device.Width / 2) + 100);
-                                await SwipeAsync(device, _device, 0, "滑动刷视频", l, (device.Height - 300), l, (device.Height - 1000), 400);
-                            }
-                            else
-                            {
-                                await SwipeAsync(device, _device, 0, "滑动刷视频", 300, 1000, 300, 600, 400);
-                            }
+                            await SwipeAsync(device, _device, SwipeDirection.Up, 0, "滑动刷视频", 400);
                         }
                         #endregion
                         else

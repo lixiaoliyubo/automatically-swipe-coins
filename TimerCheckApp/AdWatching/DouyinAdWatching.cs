@@ -1336,14 +1336,7 @@ public class DouyinAdWatching : AdWatchingBase
 
             )
         {
-            if (device.Width > 500 && device.Height > 1000)
-            {
-                await SwipeAsync(device, adbDevice, 15000, "上滑滑继续看短剧", 50, (device.Height - 400), 50, (device.Height - 1000), 300);
-            }
-            else
-            {
-                await SwipeAsync(device, adbDevice, 15000, "上滑滑继续看短剧", 500, 1500, 500, 500, 300);
-            }
+            await SwipeAsync(device, adbDevice, SwipeDirection.Up, 15000, "上滑滑继续看短剧", 300);
         }
         // 判断最后10条数据内容是否90%相同
         if (!IsOperate && PagePosChange.Count >= 20)
