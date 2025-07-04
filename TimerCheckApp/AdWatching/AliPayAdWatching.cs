@@ -24,7 +24,7 @@ public class AliPayAdWatching : AdWatchingBase
         {
             // 支付宝相关任务可以在这里添加
         };
-        
+
         // 初始化用餐时间（如果需要）
         mealTimes = new ConcurrentDictionary<string, (TimeSpan start, TimeSpan end)>();
     }
@@ -115,57 +115,52 @@ public class AliPayAdWatching : AdWatchingBase
 
                         #region 页面层面
 
-                        else if (
-                            text.TextBlocks.Any(a => a.Text == "明日可领") ||
-                            text.TextBlocks.Any(a => Regex.IsMatch(a.Text, @"^([\d-\.]+)元$")) || text.TextBlocks.Any(a => a.Text.Contains("上滑继续看视频")) || text.TextBlocks.Any(a => a.Text == "不喜欢") || text.TextBlocks.Any(a => a.Text == "点击进入直播间" || a.Text == "点击进人直播间") || 
-                            (text.TextBlocks.Any(a => Regex.IsMatch(a.Text, @"^(\d+)/(\d+)$")) && text.TextBlocks.Any(a => a.Text == "关注") && !text.TextBlocks.Any(a => a.Text.Contains("更多直播"))) ||
-                            (text.TextBlocks.Any(a => a.Text == "关注" && a.BoxPoints.Max(x => x.X) > 500) && text.TextBlocks.Any(a => a.Text == "发现"))
-                            )
+                        else if (text.TextBlocks.Any(a => a.Text == "明日可领"))
+                        {
+                            // 如果是凌晨00:01-04:00且当前在支付宝1中，返回桌面并打开普通支付宝
+                            _logService.LogInfo("凌晨时段检测到支付宝1，准备切换到普通支付宝", device.Id);
+                            arrTask.UpdateTaskItem("支付宝1", DateTime.Now.ToString());
+                            _deviceService.CleanDeviceRunningApps(device.Id);
+                            await Task.Delay(15000, cancellationToken);
+                            continue;
+                        }
+                        else if (text.TextBlocks.Any(a => a.Text.Contains("我的红包")))
+                        {
+                            var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "我的红包");
+                            if (BoxPoint != null)
+                            {
+                                var pos = BoxPoint.BoxPoints.CalculateTextBlockCenter();
+                                await ClickAsync(device, _device, new List<OCRPoint>() { new OCRPoint(pos.X, pos.Y - 200) }, 3000, BoxPoint.Text);
+                                continue;
+                            }
+                        }
+                        else if ((text.TextBlocks.Any(a => Regex.IsMatch(a.Text, @"^([\d-\.]+)元$")) || text.TextBlocks.Any(a => a.Text.Contains("上滑继续看视频") ||  a.Text.Contains("点击进入直播间"))) && text.TextBlocks.Any(a => a.Text == "支"))
                         {
 
                             //var BoxPointx = text.TextBlocks.FirstOrDefault(a => Regex.IsMatch(a.Text, @"^@([\s\S]+)$"));
                             //var posx = BoxPointx.BoxPoints.CalculateTextBlockCenter();
                             //Debug.WriteLine($"设备：{_device.Serial},位置：X={BoxPointx.BoxPoints.OrderBy(a => a.X).FirstOrDefault().X},Y={BoxPointx.BoxPoints.OrderByDescending(a => a.X).FirstOrDefault().Y}");
-                            if (text.TextBlocks.Any(a => a.Text.Contains("我的红包")))
+
+
+                            int Max = 10000;
+                            var m = Regex.Match(text.Text, @"(\d{1,2})/(\d{1,2})支");
+                            if (m.Success)
                             {
-                                var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "我的红包");
-                                if (BoxPoint != null)
-                                {
-                                    var pos = BoxPoint.BoxPoints.CalculateTextBlockCenter();
-                                    await ClickAsync(device, _device, new List<OCRPoint>() { new OCRPoint(pos.X, pos.Y - 200) }, 3000, BoxPoint.Text);
-                                    continue;
-                                }
+                                Max = GetDynamicMax(m.Groups[2].Value.ToInt());
                             }
-                            else if (text.TextBlocks.Any(a => a.Text == "明日可领"))
+                            var r = new Random().Next(5000, Max);
+                            if (!text.TextBlocks.Any(a => a.Text == "点击进入直播间"))
                             {
-                                // 如果是凌晨00:01-04:00且当前在支付宝1中，返回桌面并打开普通支付宝
-                                _logService.LogInfo("凌晨时段检测到支付宝1，准备切换到普通支付宝", device.Id);
-                                arrTask.UpdateTaskItem("支付宝1", DateTime.Now.ToString());
-                                _deviceService.CleanDeviceRunningApps(device.Id);
-                                await Task.Delay(15000, cancellationToken);
-                                continue;
+                                await Task.Delay(r, cancellationToken);
+                            }
+                            if (device.Width > 0 && device.Height > 0)
+                            {
+                                var l = new Random().Next((device.Width / 2) - 100, (device.Width / 2) + 100);
+                                await SwipeAsync(device, _device, 0, "滑动刷视频", l, (device.Height - 300), l, (device.Height - 1000), 400);
                             }
                             else
                             {
-                                int Max = 10000;
-                                var m = Regex.Match(text.Text, @"(\d{1,2})/(\d{1,2})支");
-                                if (m.Success) {
-                                    Max = GetDynamicMax(m.Groups[2].Value.ToInt());
-                                }
-                                var r = new Random().Next(5000, Max); 
-                                if (!text.TextBlocks.Any(a => a.Text == "点击进入直播间"))
-                                {
-                                    await Task.Delay(r, cancellationToken);
-                                }
-                                if (device.Width > 0 && device.Height > 0)
-                                {
-                                    var l = new Random().Next((device.Width / 2) - 100, (device.Width / 2) + 100);
-                                    await SwipeAsync(device, _device, 0, "滑动刷视频", l, (device.Height - 300), l, (device.Height - 1000), 400);
-                                }
-                                else
-                                {
-                                    await SwipeAsync(device, _device, 0, "滑动刷视频", 300, 1000, 300, 600, 400);
-                                }
+                                await SwipeAsync(device, _device, 0, "滑动刷视频", 300, 1000, 300, 600, 400);
                             }
                         }
                         #endregion
@@ -173,7 +168,7 @@ public class AliPayAdWatching : AdWatchingBase
                         {
                             #region 非首页
 
-                            if (text.TextBlocks.Any(a => a.Text.StartsWith("说点什么") || a.Text == "立即关注"|| a.Text == "已关闭评论" || a.Text.Contains("更多直播") || a.Text.Contains("欢迎各位小伙伴来到直播间") ||a.Text == "粉丝团" ||a.Text == "分享直播间"))// || text.TextBlocks.Any(a => a.Text == "关注")
+                            if (text.TextBlocks.Any(a => a.Text.StartsWith("说点什么") || a.Text == "立即关注" || a.Text == "已关闭评论" || a.Text.Contains("更多直播") || a.Text.Contains("欢迎各位小伙伴来到直播间") || a.Text == "粉丝团" || a.Text == "分享直播间"))// || text.TextBlocks.Any(a => a.Text == "关注")
                             {
                                 await ClickAsync(device, _device, null, 3000, "返回到刷视频");
                                 continue;

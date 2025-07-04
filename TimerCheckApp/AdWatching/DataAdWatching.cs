@@ -372,7 +372,7 @@ public class DataAdWatching : AdWatchingBase
             await _cacheService.SetAsync($"DataAdWatching_{device.CurPage.ToString()}", count);
             if (count > 10)
             {
-                await _deviceService.PlayAudioAsync("error.wav");
+                await _deviceService.PlayTextAsync("黄彩霞,出现未识别的错误");
                 await Task.Delay(10000, cancellationToken);
             }
         }

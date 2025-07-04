@@ -142,7 +142,11 @@ public class DeviceService : IDeviceService, IDisposable
                     deviceModel.Width = sizeReceiver.width;
                     deviceModel.Height = sizeReceiver.height;
                 }
-
+                if (DateTime.Now.Hour > 0 && DateTime.Now.Hour < 9)
+                {
+                    deviceModel.CurPlatform =  enums.PlatformType.Kuaishou;
+                    deviceModel.CurPage =  enums.AppPageEnum.Data;
+                }
 
                 devices.Add(deviceModel);
                 //_logService.LogInfo($"发现设备: {deviceModel.Id} ({deviceModel.Name})", deviceModel.Id);
@@ -219,7 +223,6 @@ public class DeviceService : IDeviceService, IDisposable
                 // 等待1秒
                 await Task.Delay(2000, cts.Token).ContinueWith(t =>
                 {
-
                     if (t.IsCanceled)
                         _logService.LogWarning($"任务被取消", device.Id);
                 });

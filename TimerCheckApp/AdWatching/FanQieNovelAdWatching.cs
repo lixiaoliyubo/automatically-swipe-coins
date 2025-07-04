@@ -123,6 +123,97 @@ public class FanQieNovelAdWatching : AdWatchingBase
 
                         #endregion
 
+
+                        if (device.CurPage == AppPageEnum.SlideUp)
+                        {
+                            if (text.TextBlocks.Any(a => a.Text.Contains("上滑继续观看短剧")))
+                            {
+                                var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text.Contains("上滑继续观看短剧"));
+                                if (BoxPoint != null)
+                                {
+                                    var pos = BoxPoint.BoxPoints.CalculateTextBlockCenter();
+                                    await SwipeAsync(device, _device, 0, "上滑继续观看短剧", pos.X, pos.Y - 50, pos.X, pos.Y - 500, 200);
+                                }
+                            }
+                            else if (text.TextBlocks.Any(a => a.Text.Contains("上滑继续看短剧")))
+                            {
+                                var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text.Contains("上滑继续看短剧"));
+                                if (BoxPoint != null)
+                                {
+                                    var pos = BoxPoint.BoxPoints.CalculateTextBlockCenter();
+                                    await SwipeAsync(device, _device, 0, "上滑继续看短剧", pos.X, pos.Y - 20, pos.X, pos.Y - 500, 200);
+                                }
+                            }
+                            else if (text.TextBlocks.Any(a => a.Text == "看视频") && text.TextBlocks.Any(a => a.Text == "退出自动阅读"))
+                            {
+                                var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text.Contains("看视频"));
+                                if (BoxPoint != null)
+                                {
+                                    await ClickAsync(device, _device, BoxPoint.BoxPoints, 0, BoxPoint.Text);
+                                }
+                            }
+                            else if (text.TextBlocks.Any(a => Regex.IsMatch(a.Text, @"看到(\d+)集")))
+                            {
+                                var BoxPoint = text.TextBlocks.FirstOrDefault(a => Regex.IsMatch(a.Text, @"看到(\d+)集"));
+                                if (BoxPoint != null)
+                                {
+                                    await ClickAsync(device, _device, BoxPoint.BoxPoints, 3000, BoxPoint.Text);
+                                }
+                            }
+                            else if (text.TextBlocks.Any(a => a.Text == "剧场") && text.TextBlocks.Any(a => a.Text == "我的"))
+                            {
+                                var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text.Contains("我的"));
+                                if (BoxPoint != null)
+                                {
+                                    await ClickAsync(device, _device, BoxPoint.BoxPoints, 0, BoxPoint.Text);
+                                }
+                            }
+                            else if (text.TextBlocks.Any(a => a.Text == "点评此书") && text.TextBlocks.Any(a => a.Text == "取消"))
+                            {
+                                var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "取消");
+                                if (BoxPoint != null)
+                                {
+                                    await ClickAsync(device, _device, BoxPoint.BoxPoints, 0, BoxPoint.Text);
+                                }
+                            }
+                            //else if (isCompele)
+                            //{
+                            //    var BoxText = text.TextBlocks.LastOrDefault(a => a.Text.Length > 10);
+                            //    if (BoxText != null && text.TextBlocks.Count(a => a.Text.Length > 10) > 2)
+                            //    {
+                            //        await ClickAsync(device, _device, BoxText.BoxPoints, 0, BoxText.Text);
+                            //        isCompele = !text.TextBlocks.Any(a => a.Text == "听");
+                            //    }
+                            //}
+                            else if (text.TextBlocks.Any(a => a.Text.StartsWith("领取成功")))
+                            {
+                                if (text.TextBlocks.Any(a => a.Text == "X" || a.Text == "x" || a.Text == "×"))
+                                {
+                                    var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "X" || a.Text == "x" || a.Text == "×");
+                                    if (BoxPoint != null)
+                                    {
+                                        await ClickAsync(device, _device, BoxPoint.BoxPoints, 0, BoxPoint.Text);
+                                    }
+                                }
+                                else
+                                {
+
+                                    var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text.StartsWith("领取成功"));
+                                    if (BoxPoint != null)
+                                    {
+                                        await ClickAsync(device, _device, BoxPoint.BoxPoints, 0, BoxPoint.Text);
+                                    }
+                                }
+                            }
+                            else if (text.TextBlocks.Any(a => a.Text.StartsWith("说点什么")))
+                            {
+                                await ClickAsync(device, _device, null, 0, "返回-退出直播间");
+                            }
+                            await Task.Delay(3000);
+                            continue;
+                        }
+
+
                         #region 弹出层面
                         else if (text.TextBlocks.Any(a => Regex.IsMatch(a.Text, @"立即签到([\s\S]*)(\d+)金币")))
                         {

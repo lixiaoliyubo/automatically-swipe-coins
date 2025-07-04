@@ -780,7 +780,9 @@ public class KuaishouAdWatching : AdWatchingBase
                                 var array = arrTask.GetTaskItemValue("搜索赚金币").GetArray().ToList();
                                 if (array.Count < 3)
                                 {
-                                    if (text.TextBlocks.Any(a => a.Text == "搜索赚金币") || (DateTime.Now - array.LastOrDefault().ToDateTime(DateTime.Now.AddMinutes(-20))).TotalMinutes >= 20)
+                                    if (
+                                        text.TextBlocks.Any(a => a.Text == "搜索赚金币") ||
+                                        (text.TextBlocks.Any(a => Regex.IsMatch(a.Text, @"搜索\S{1}([\s\S]*?)\S{1}赚金币") || Regex.IsMatch(a.Text, @"搜索\S{1}([\s\S]*?)\S{1}")) && (DateTime.Now - array.LastOrDefault().ToDateTime(DateTime.Now.AddMinutes(-22))).TotalMinutes >= 20))
                                     {
                                         var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "去搜索");
                                         if (BoxPoint != null)
@@ -1625,14 +1627,19 @@ public class KuaishouAdWatching : AdWatchingBase
             _logService.LogInfo("完成支付宝刷视频", device.Id);
             _deviceService.StopDeviceCheck(device);
         }
-
         else if (
-            (text.TextBlocks.Any(a => a.Text == "首页" || a.Text == "我") && text.TextBlocks.Any(a => a.Text == "去赚钱" || a.Text == "精选")) ||
-            (text.TextBlocks.Any(a => Regex.IsMatch(a.Text, @"^([\d-\.]+)元$")) && text.TextBlocks.Any(a => a.Text == "关注" || a.Text == "视频" || a.Text == "发现"))
+            device.PackageName == PlatformType.AliPay.GetPackageName() && 
+            (text.TextBlocks.Any(a => a.Text == "分词" || a.Text.Contains("中/英")) && text.TextBlocks.Any(a => a.Text == "符" || a.Text == "换行"))
+            )
+        {
+            await ClickAsync(device, _device, new List<OCRPoint>() { new OCRPoint() { X = (device.Height * 0.5).ToInt(), Y = (device.Height * 0.3).ToInt() } }, 3000, "评论收起");
+        }
+        else if (
+            ((device.PackageName == PlatformType.Kuaishou.GetPackageName() || device.PackageName == PlatformType.KuaishouJs.GetPackageName()) && text.TextBlocks.Any(a => a.Text == "首页" || a.Text == "我") && text.TextBlocks.Any(a => a.Text == "去赚钱" || a.Text == "精选")) ||
+            (device.PackageName == PlatformType.AliPay.GetPackageName() && text.TextBlocks.Any(a => Regex.IsMatch(a.Text, @"^([\d-\.]+)元$")) && text.TextBlocks.Any(a => a.Text == "关注" || a.Text == "视频" || a.Text == "发现"))
             )
         {
             await _cacheService.RemoveAsync($"KuaishouAdWatching_{device.CurPage.ToString()}");
-
 
             int Max = 13000;
             var m = Regex.Match(text.Text, @"(\d{1,2})/(\d{1,2})支");
@@ -1656,7 +1663,7 @@ public class KuaishouAdWatching : AdWatchingBase
                 await SwipeAsync(device, _device, 0, "滑动刷视频", 300, 1000, 300, 600, 400);
             }
         }
-        else if(text.TextBlocks.Any(a => a.Text.StartsWith("说点什么") || a.Text == "立即关注" || a.Text == "已关闭评论" || a.Text.Contains("更多直播") || a.Text.Contains("欢迎各位小伙伴来到直播间") || a.Text == "粉丝团" || a.Text == "分享直播间"))// || text.TextBlocks.Any(a => a.Text == "关注")
+        else if (text.TextBlocks.Any(a => a.Text.StartsWith("说点什么") || a.Text == "立即关注" || a.Text == "已关闭评论" || a.Text.Contains("更多直播") || a.Text.Contains("欢迎各位小伙伴来到直播间") || a.Text == "粉丝团" || a.Text == "分享直播间"))// || text.TextBlocks.Any(a => a.Text == "关注")
         {
             await ClickAsync(device, _device, null, 3000, "返回到刷视频");
         }
@@ -1672,10 +1679,10 @@ public class KuaishouAdWatching : AdWatchingBase
         {
             int count = await _cacheService.GetAsync<int>($"KuaishouAdWatching_{device.CurPage.ToString()}");
             count++;
-            await _cacheService.SetAsync($"DataAdWatching_{device.CurPage.ToString()}", count);
+            await _cacheService.SetAsync($"KuaishouAdWatching_{device.CurPage.ToString()}", count);
             if (count > 10)
             {
-                await _deviceService.PlayAudioAsync("error.wav");
+                await _deviceService.PlayTextAsync("黄彩霞,出现未识别的错误");
                 await Task.Delay(10000, cancellationToken);
             }
         }

@@ -158,7 +158,7 @@ public partial class MainViewModel : ObservableObject
     {
         // 检查是否在0点到8点之间
         var now = DateTime.Now;
-        if (now.Hour >= 0 && now.Hour < 8)
+        if (now.Hour >= 0 && now.Hour < 9)
         {
             // 如果是0点，执行每日清理任务
             if (now.Hour == 0 && now.Minute == 0)
@@ -186,7 +186,8 @@ public partial class MainViewModel : ObservableObject
         {
             return;
         }
-        
+
+        var now = DateTime.Now;
         // 检查是否有设备未运行
         var nonRunningDevices = Devices.Where(d => !d.IsRunning);
         if (nonRunningDevices.Count() > 0)
@@ -205,8 +206,7 @@ public partial class MainViewModel : ObservableObject
             // 等待语音播放完成
             await Task.Delay(5000);
 
-            var now = DateTime.Now;
-            if (now.Hour >= 0 && now.Hour < 8 && count > 30)
+            if (now.Hour >= 0 && now.Hour < 9 && count > 30)
             {
                 await _cacheService.RemoveAsync($"CheckAndStartDevices");
                 foreach (var device in nonRunningDevices)
@@ -216,6 +216,19 @@ public partial class MainViewModel : ObservableObject
                 }
                 
             }
+
+        }
+        else if (Devices.Count() != 3 && now.Hour >= 0 && now.Hour < 9)
+        {
+
+            string message = $"夜间检测到{(3 - nonRunningDevices.Count())}个设备断开连接，等待检查...";
+            _logService.LogWarning(message, "System");
+
+            // 播放文本提示
+            await _deviceService.PlayTextAsync(message);
+
+            // 等待语音播放完成
+            await Task.Delay(5000);
 
         }
     }
@@ -232,7 +245,7 @@ public partial class MainViewModel : ObservableObject
         
         var now = DateTime.Now;
         // 只在0点到8点之间启动定时器
-        if (now.Hour >= 0 && now.Hour < 8)
+        if (now.Hour >= 0 && now.Hour < 9)
         {
             if (!_nightlyDeviceCheckTimer.IsEnabled)
             {
