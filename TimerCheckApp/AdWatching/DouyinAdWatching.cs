@@ -551,7 +551,7 @@ public class DouyinAdWatching : AdWatchingBase
                                 else
                                 {
 
-                                    await SwipeAsync(device, _device, 4000, "滑动到看指定视频得金币", 100, 1200, 540, 1000, 200);
+                                    await SwipeAsync(device, _device, SwipeDirection.Down, 4000, "滑动到看指定视频得金币", 200);
                                     continue;
                                 }
                             }
@@ -717,15 +717,15 @@ public class DouyinAdWatching : AdWatchingBase
                             else if (!IsOperate && (DateTime.Now - device.LastClickTime).TotalSeconds > 10)
                             {
                                 var taskSlide = arrTask.GetTaskItemValue("上下滑动");
-                                if (taskSlide.ToInt32() > 1500)
+                                if (taskSlide.ToInt32() > 500)
                                 {
                                     arrTask.UpdateTaskItem("上下滑动", $"{(taskSlide.ToInt32() - 100)}");
-                                    await SwipeAsync(device, _device, 3000, "在首页停留时间超过30秒自动下滑", 500, 900, 500, 1000, 200);
+                                    await SwipeAsync(device, _device, SwipeDirection.Down, 3000, "在首页停留时间超过10秒自动下滑", 200);
                                 }
                                 else
                                 {
                                     arrTask.UpdateTaskItem("上下滑动", $"{(taskSlide.ToInt32() + 100)}");
-                                    await SwipeAsync(device, _device, 3000, "在首页停留时间超过30秒自动上滑", 500, 1000, 500, 900, 200);
+                                    await SwipeAsync(device, _device, SwipeDirection.Up, 3000, "在首页停留时间超过10秒自动上滑", 200);
                                 }
                                 continue;
                             }
@@ -750,10 +750,10 @@ public class DouyinAdWatching : AdWatchingBase
                                     PagePosChange.Clear();
                                     if (text.TextBlocks.Any(a => Regex.IsMatch(a.Text, @"浏览(\d+)秒可领")))
                                     {
-                                        // 执行小幅度上滑
-                                        await SwipeAsync(device, _device, 4000, "逛街得金币", 500, 1500, 500, 500, 200);
-                                        // 执行小幅度下滑
-                                        await SwipeAsync(device, _device, 2000, "逛街得金币", 500, 500, 500, 1500, 200);
+                                        // 使用新的基于枚举的SwipeAsync方法 - 上滑
+                                        await SwipeAsync(device, _device, SwipeDirection.Up, 4000, "逛街得金币");
+                                        // 使用新的基于枚举的SwipeAsync方法 - 下滑
+                                        await SwipeAsync(device, _device, SwipeDirection.Down, 2000, "逛街得金币");
                                         continue;
                                     }
                                     else if (text.TextBlocks.Any(a => a.Text == "明日浏览可领取奖励" || a.Text.StartsWith("恭喜获得")))
@@ -782,7 +782,8 @@ public class DouyinAdWatching : AdWatchingBase
                                     //else
                                     //{
                                     //}
-                                    await SwipeAsync(device, _device, 2000, "金币暂停", 500, 1500, 500, 500, 200);
+                                    // 使用新的基于枚举的SwipeAsync方法 - 上滑
+                                    await SwipeAsync(device, _device, SwipeDirection.Up, 2000, "金币暂停");
                                     continue;
                                 }
                                 else if (text.TextBlocks.Any(a => a.Text.EndsWith("回任务页")))
@@ -810,7 +811,7 @@ public class DouyinAdWatching : AdWatchingBase
                                         (text.TextBlocks.Any(a => a.Text == "已暂停") && (text.TextBlocks.Any(a => a.Text == "已到账") || text.TextBlocks.Any(a => a.Text == "购买商品"))) ||
                                         (text.TextBlocks.Any(a => a.Text == "已暂停") && text.TextBlocks.Any(a => a.Text == "金币") && !text.TextBlocks.Any(a => a.Text.StartsWith("观看"))))
                                     {
-                                        await SwipeAsync(device, _device, 3000, "暂停金币", 500, 1500, 500, 500, 200);
+                                        await SwipeAsync(device, _device, SwipeDirection.Up, 3000, "暂停金币", 200);
                                     }
 
                                 }
@@ -1095,7 +1096,7 @@ public class DouyinAdWatching : AdWatchingBase
                                     }
                                     else
                                     {
-                                        await SwipeAsync(device, _device, new Random().Next(10000, 25000), "赚钱首页刷视频", 540, 1500, 540, 1000, 200);
+                                        await SwipeAsync(device, _device, SwipeDirection.Up, new Random().Next(10000, 25000), "赚钱首页刷视频", 200);
                                     }
                                 }
                                 #region 特殊页面
@@ -1107,7 +1108,7 @@ public class DouyinAdWatching : AdWatchingBase
                                 else if (text.TextBlocks.Any(a => a.Text == "加入购物车") && text.TextBlocks.Any(a => a.Text == "购物车"))
                                 {
                                     await ClickAsync(device, _device, null, 3000, "返回-加入购物车");
-                                    await SwipeAsync(device, _device, 2000, "加入购物车", 100, 1000, 540, 1100, 200);
+                                    await SwipeAsync(device, _device, SwipeDirection.Down, 2000, "加入购物车", 200);
                                     continue;
                                 }
                                 else if (text.TextBlocks.Any(a => a.Text.StartsWith("广告")) && text.TextBlocks.Any(a => a.Text == "免费领取"))
@@ -1197,7 +1198,7 @@ public class DouyinAdWatching : AdWatchingBase
 
                                 else if (device.CurPage == AppPageEnum.GuangJie)
                                 {
-                                    await SwipeAsync(device, _device, 2000, "返回-停留页面超过60秒", 500, 500, 500, 1500, 200);
+                                    await SwipeAsync(device, _device, SwipeDirection.Down, 2000, "返回-停留页面超过60秒", 200);
                                 }
                                 #region 页面停留超时
                                 else if ((DateTime.Now - device.LastClickTime).TotalSeconds > 60)
@@ -1305,7 +1306,7 @@ public class DouyinAdWatching : AdWatchingBase
         }
         else if (ocrResult.TextBlocks.Any(a => a.Text == "应用市场") && ocrResult.TextBlocks.Any(a => a.Text == "华为商城"))
         {
-            await SwipeAsync(device, adbDevice, 5000, "左滑查找抖音", 600, 1000, 100, 1000, 300);
+            await SwipeAsync(device, adbDevice, SwipeDirection.Left, 5000, "左滑查找抖音", 300);
         }
         else if (ocrResult.TextBlocks.Any(a => a.Text == "短剧") && ocrResult.TextBlocks.Any(a => a.Text == "首页") && !ocrResult.TextBlocks.Any(a => a.Text.Contains("进入看剧金币更多")))
         {
@@ -1317,7 +1318,7 @@ public class DouyinAdWatching : AdWatchingBase
         }
         else if (ocrResult.Text.Contains("免费看全集最高赚"))
         {
-            await SwipeAsync(device, adbDevice, 2000, "上滑滑继续看短剧", 500, 1500, 500, 500, 300);
+            await SwipeAsync(device, adbDevice, SwipeDirection.Up, 2000, "上滑滑继续看短剧", 300);
             var BoxPoint = ocrResult.TextBlocks.FirstOrDefault(a => a.Text.Contains("免费看全集"));
             if (BoxPoint != null)
             {
@@ -1353,7 +1354,7 @@ public class DouyinAdWatching : AdWatchingBase
                 else
                 {
 
-                    await SwipeAsync(device, adbDevice, 2000, "上滑-内容相似", 500, 1500, 500, 500, 300);
+                    await SwipeAsync(device, adbDevice, SwipeDirection.Up, 2000, "上滑-内容相似", 300);
                 }
                 PagePosChange.Clear();
                 return;
@@ -1581,7 +1582,7 @@ public class DouyinAdWatching : AdWatchingBase
         else if (!ocrResult.TextBlocks.Any(a => a.Text == "赚钱任务") && ocrResult.TextBlocks.Any(a => RegexCoinPattern.IsMatch(a.Text)))
         {
             isAd = false;
-            await SwipeAsync(device, adbDevice, new Random().Next(10000, 15000), "左滑继续看小说", 300, 1500, 100, 1500, 200);
+            await SwipeAsync(device, adbDevice, SwipeDirection.Left, new Random().Next(10000, 15000), "左滑继续看小说", 200);
 
         }
         else if (ocrResult.TextBlocks.Any(a => a.Text.Contains("个人信息保护声明") || a.Text.Contains("点击下方链接")))

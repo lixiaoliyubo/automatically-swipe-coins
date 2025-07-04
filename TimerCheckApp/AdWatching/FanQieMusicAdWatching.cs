@@ -477,7 +477,7 @@ public class FanQieMusicAdWatching : AdWatchingBase
                                     }
                                     else
                                     {
-                                        await SwipeAsync(device, _device, new Random().Next(3000, 3000), "赚钱首页刷视频", 540, 1500, 540, 1000, 200);
+                                        await SwipeAsync(device, _device, SwipeDirection.Up, new Random().Next(3000, 3000), "赚钱首页刷视频", 200);
                                     }
                                 }
                                 #endregion
@@ -500,7 +500,7 @@ public class FanQieMusicAdWatching : AdWatchingBase
                             {
                                 #region 阅读赚金币
 
-                                await SwipeAsync(device, _device, new Random().Next(10000, 15000), "阅读赚金币左滑", 800, 1500, 100, 1500, 200);
+                                await SwipeAsync(device, _device, SwipeDirection.Up, new Random().Next(10000, 15000), "上滑阅读赚金币", 200);
                                 #endregion
                             }
                             else if (text.TextBlocks.Any(a => Regex.IsMatch(a.Text, @"领(早饭|午饭|晚饭|夜宵)补贴(\d+)金币")))
@@ -540,7 +540,7 @@ public class FanQieMusicAdWatching : AdWatchingBase
                                 }
                                 else if ((DateTime.Now - device.LastClickTime).TotalSeconds > 60)
                                 {
-                                    await SwipeAsync(device, _device, 1000, "返回-停留页面超过60秒", 100, 1000, 500, 1000, 200);
+                                    await SwipeAsync(device, _device, SwipeDirection.Down, 1000, "返回-停留页面超过60秒", 200);
                                     await ClickAsync(device, _device, null, 2000, "返回-停留页面超过60秒");
                                 }
                                 #endregion

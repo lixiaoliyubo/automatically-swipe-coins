@@ -279,7 +279,7 @@ public class FanQieNovelAdWatching : AdWatchingBase
                             {
                                 device.CurPage = AppPageEnum.Ad;
                                 await ClickAsync(device, _device, BoxPoint.BoxPoints, 2000, BoxPoint.Text);
-                                await SwipeAsync(device, _device, 20000, "赚钱首页刷视频", 540, 1500, 540, 1000, 200);
+                                await SwipeAsync(device, _device, SwipeDirection.Up, 20000, "赚钱首页刷视频", 200);
                                 continue;
                             }
                         }
@@ -500,7 +500,7 @@ public class FanQieNovelAdWatching : AdWatchingBase
                                     }
                                     else
                                     {
-                                        await SwipeAsync(device, _device, new Random().Next(3000, 3000), "赚钱首页刷视频", 540, 1500, 540, 1000, 200);
+                                        await SwipeAsync(device, _device, SwipeDirection.Up, new Random().Next(3000, 3000), "赚钱首页刷视频", 200);
                                     }
                                 }
                                 #endregion
@@ -548,7 +548,7 @@ public class FanQieNovelAdWatching : AdWatchingBase
                                     else
                                     {
 
-                                        await SwipeAsync(device, _device, 1000, "上滑继续看广告", 300, 1500, 300, 1000, 200);
+                                        await SwipeAsync(device, _device, SwipeDirection.Up, 1000, "上滑继续看广告", 200);
                                     }
                                 }
                                 #endregion
@@ -573,7 +573,7 @@ public class FanQieNovelAdWatching : AdWatchingBase
                                 }
                                 else if ((DateTime.Now - device.LastClickTime).TotalSeconds > 60)
                                 {
-                                    await SwipeAsync(device, _device, 1000, "返回-停留页面超过60秒", 100, 1000, 500, 1000, 200);
+                                    await SwipeAsync(device, _device, SwipeDirection.Down, 1000, "返回-停留页面超过60秒", 200);
                                     await ClickAsync(device, _device, null, 2000, "返回-停留页面超过60秒");
                                 }
                                 #endregion

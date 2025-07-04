@@ -182,7 +182,7 @@ public class DataAdWatching : AdWatchingBase
                                 //}
                                 else if ((DateTime.Now - device.LastClickTime).TotalSeconds > 60)
                                 {
-                                    await SwipeAsync(device, _device, 1000, "返回-停留页面超过60秒", 100, 1000, 500, 1000, 200);
+                                    await SwipeAsync(device, _device, SwipeDirection.Right, 1000, "停留页面超过60秒", 200);
                                     await ClickAsync(device, _device, null, 2000, "返回-停留页面超过60秒");
                                 }
                                 #endregion
@@ -255,7 +255,7 @@ public class DataAdWatching : AdWatchingBase
             (text.TextBlocks.Any(a => a.Text == "华为商城") && text.TextBlocks.Any(a => a.Text == "应用市场"))
             )
         {
-            await SwipeAsync(device, _device, 2000, "左滑", 500, 500, 100, 500, 400);
+            await SwipeAsync(device, _device, SwipeDirection.Left, 2020, "左滑", 200);
         }
         else if (Data_LastTime != DateTime.MinValue && (dateTime - Data_LastTime.ToDateTime()).TotalMinutes >= 5)
         {
@@ -365,16 +365,16 @@ public class DataAdWatching : AdWatchingBase
             await SwipeAsync(device, _device, SwipeDirection.Up, 0, "滑动刷视频", 400);
         }
         else
-        {
-            int count = await _cacheService.GetAsync<int>($"DataAdWatching_{device.CurPage.ToString()}");
-            count++;
-            await _cacheService.SetAsync($"DataAdWatching_{device.CurPage.ToString()}", count);
-            if (count > 10)
             {
-                await _deviceService.PlayTextAsync("黄彩霞,出现未识别的错误");
-                await Task.Delay(10000, cancellationToken);
+                int count = await _cacheService.GetAsync<int>($"DataAdWatching_{device.CurPage.ToString()}");
+                count++;
+                await _cacheService.SetAsync($"DataAdWatching_{device.CurPage.ToString()}", count);
+                if (count > 10)
+                {
+                    await _deviceService.PlayTextAsync("黄彩霞,出现未识别的错误");
+                    await Task.Delay(10000, cancellationToken);
+                }
             }
-        }
     }
 
 }

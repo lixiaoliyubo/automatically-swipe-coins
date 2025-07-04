@@ -273,7 +273,7 @@ public class XiGuaWatching : AdWatchingBase
                         }
                         else if (text.TextBlocks.Any(a => a.Text == "已暂停") && text.TextBlocks.Any(a => a.Text == "金币") && !text.TextBlocks.Any(a => Regex.IsMatch(a.Text, @"观看([\d\.]+)秒")))
                         {
-                            await SwipeAsync(device, _device, 3000, "金币暂停", 500, 1500, 500, 500, 200);
+                            await SwipeAsync(device, _device, SwipeDirection.Up, 3000, "金币暂停", 200);
                             continue;
                         }
                         else if (text.TextBlocks.Any(a => a.Text.StartsWith("领取成功")))
@@ -484,7 +484,7 @@ public class XiGuaWatching : AdWatchingBase
                                 else
                                 {
 
-                                    await SwipeAsync(device, _device, 4000, "滑动到看指定视频得金币", 100, 1200, 540, 1000, 200);
+                                    await SwipeAsync(device, _device, SwipeDirection.Down, 4000, "滑动到看指定视频得金币", 200);
                                     continue;
                                 }
                             }
@@ -627,17 +627,17 @@ public class XiGuaWatching : AdWatchingBase
 
                             if(device.CurPage == AppPageEnum.MoneyHome && StopTimeSpan > 60)
                             {
-                                await SwipeAsync(device, _device, 3000, "在首页停留时间超过60秒自动下滑第一次", 500, 500, 500, 1500, 200);
+                                await SwipeAsync(device, _device, SwipeDirection.Down, 3000, "在首页停留时间超过60秒自动下滑第一次", 200);
                             }
                             else if (device.CurPage == AppPageEnum.MoneyHome && StopTimeSpan > 30)
                             {
                                 if (isSwipeTop)
                                 {
-                                    await SwipeAsync(device, _device, 3000, "在首页停留时间超过30秒自动上滑", 500, 1500, 500, 500, 200);
+                                    await SwipeAsync(device, _device, SwipeDirection.Up, 3000, "在首页停留时间超过30秒自动上滑", 200);
                                 }
                                 else
                                 {
-                                    await SwipeAsync(device, _device, 3000, "在首页停留时间超过30秒自动下滑", 500, 500, 500, 1500, 200);
+                                    await SwipeAsync(device, _device, SwipeDirection.Down, 3000, "在首页停留时间超过30秒自动下滑", 200);
                                 }
                                 isSwipeTop = !isSwipeTop;
 
@@ -664,9 +664,9 @@ public class XiGuaWatching : AdWatchingBase
                                     if (text.TextBlocks.Any(a => Regex.IsMatch(a.Text, @"浏览(\d+)秒可领")))
                                     {
                                         // 执行小幅度上滑
-                                        await SwipeAsync(device, _device, 4000, "逛街得金币", 500, 1500, 500, 500, 200);
+                                        await SwipeAsync(device, _device, SwipeDirection.Up, 4000, "逛街得金币", 200);
                                         // 执行小幅度下滑
-                                        await SwipeAsync(device, _device, 2000, "逛街得金币", 500, 500, 500, 1500, 200);
+                                        await SwipeAsync(device, _device, SwipeDirection.Down, 2000, "逛街得金币", 200);
                                     }
                                     else if (text.TextBlocks.Any(a => a.Text == "明日浏览可领取奖励" || a.Text.StartsWith("恭喜获得")))
                                     {
@@ -695,7 +695,7 @@ public class XiGuaWatching : AdWatchingBase
                                         (text.TextBlocks.Any(a => a.Text == "已暂停") && (text.TextBlocks.Any(a => a.Text == "已到账") || text.TextBlocks.Any(a => a.Text == "购买商品"))) ||
                                         (text.TextBlocks.Any(a => a.Text == "已暂停") && text.TextBlocks.Any(a => a.Text == "金币") && !text.TextBlocks.Any(a => a.Text.StartsWith("观看"))))
                                     {
-                                        await SwipeAsync(device, _device, 3000, "暂停金币", 500, 1500, 500, 500, 200);
+                                        await SwipeAsync(device, _device, SwipeDirection.Up, 3000, "暂停金币", 200);
                                     }
 
                                 }
@@ -959,7 +959,7 @@ public class XiGuaWatching : AdWatchingBase
                                     }
                                     else
                                     {
-                                        await SwipeAsync(device, _device, new Random().Next(10000, 25000), "赚钱首页刷视频", 540, 1500, 540, 1000, 200);
+                                        await SwipeAsync(device, _device, SwipeDirection.Up, new Random().Next(10000, 25000), "赚钱首页刷视频", 200);
                                     }
                                 }
                                 #region 特殊页面
@@ -970,7 +970,7 @@ public class XiGuaWatching : AdWatchingBase
                                 else if (text.TextBlocks.Any(a => a.Text == "加入购物车") && text.TextBlocks.Any(a => a.Text == "购物车"))
                                 {
                                     await ClickAsync(device, _device, null, 3000, "返回-加入购物车");
-                                    await SwipeAsync(device, _device, 2000, "加入购物车", 100, 1000, 540, 1100, 200);
+                                    await SwipeAsync(device, _device, SwipeDirection.Down, 2000, "加入购物车", 200);
                                 }
                                 else if (text.TextBlocks.Any(a => a.Text.StartsWith("广告")) && text.TextBlocks.Any(a => a.Text == "免费领取"))
                                 {
@@ -1048,7 +1048,7 @@ public class XiGuaWatching : AdWatchingBase
                                 }
                                 else if (device.CurPage == AppPageEnum.GuangJie)
                                 {
-                                    await SwipeAsync(device, _device, 2000, "返回-停留页面超过60秒", 500, 500, 500, 1500, 200);
+                                    await SwipeAsync(device, _device, SwipeDirection.Down, 2000, "返回-停留页面超过60秒", 200);
                                 }
                                 #region 页面停留超时
                                 else if ((DateTime.Now - device.LastClickTime).TotalSeconds > 60)

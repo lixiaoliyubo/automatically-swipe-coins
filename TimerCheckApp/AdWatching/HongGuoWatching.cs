@@ -233,7 +233,7 @@ public class HongGuoWatching : AdWatchingBase
                         else if (text.TextBlocks.Any(a => a.Text.StartsWith("上滑继续观看短剧")))
                         {
                             // 执行小幅度上滑
-                            await SwipeAsync(device, _device, 4000, "上滑继续观看短剧", 500, 1500, 500, 500, 200);
+                            await SwipeAsync(device, _device, SwipeDirection.Up, 4000, "上滑继续观看短剧");
                         }
                         else if (text.TextBlocks.Any(a => a.Text.StartsWith("看视频再得") || a.Text.StartsWith("看视频再领") || a.Text.StartsWith("看视频最高再得")))
                         {
@@ -448,7 +448,7 @@ public class HongGuoWatching : AdWatchingBase
                                 else
                                 {
 
-                                    await SwipeAsync(device, _device, 4000, "滑动到看指定视频得金币", 100, 1200, 540, 1000, 200);
+                                    await SwipeAsync(device, _device, SwipeDirection.Up, 4000, "滑动到看指定视频得金币", 200);
                                     continue;
                                 }
                             }
@@ -463,17 +463,17 @@ public class HongGuoWatching : AdWatchingBase
 
                             if (device.CurPage == AppPageEnum.MoneyHome && StopTimeSpan > 60)
                             {
-                                await SwipeAsync(device, _device, 3000, "在首页停留时间超过60秒自动下滑第一次", 500, 500, 500, 1500, 200);
+                                await SwipeAsync(device, _device, SwipeDirection.Down, 3000, "在首页停留时间超过60秒自动下滑第一次");
                             }
                             else if (device.CurPage == AppPageEnum.MoneyHome && StopTimeSpan > 30)
                             {
                                 if (isSwipeTop)
                                 {
-                                    await SwipeAsync(device, _device, 3000, "在首页停留时间超过30秒自动上滑", 500, 1500, 500, 500, 200);
+                                    await SwipeAsync(device, _device, SwipeDirection.Up, 3000, "在首页停留时间超过30秒自动上滑");
                                 }
                                 else
                                 {
-                                    await SwipeAsync(device, _device, 3000, "在首页停留时间超过30秒自动下滑", 500, 500, 500, 1500, 200);
+                                    await SwipeAsync(device, _device, SwipeDirection.Down, 3000, "在首页停留时间超过30秒自动下滑");
                                 }
                                 isSwipeTop = !isSwipeTop;
 
@@ -519,7 +519,7 @@ public class HongGuoWatching : AdWatchingBase
 
                                 //else if (device.CurPage == AppPageEnum.GuangJie)
                                 //{
-                                //    await SwipeAsync(device, _device, 2000, "返回-停留页面超过60秒", 500, 500, 500, 1500, 200);
+                                //    await SwipeAsync(device, _device, SwipeDirection.Down, 2000, "返回-停留页面超过60秒");
                                 //}
                                 #region 页面停留超时
                                 else if (_deviceService.CurAdbClient.GetAppStatus(_device, device.PackageName) != AdvancedSharpAdbClient.Models.AppStatus.Foreground)
@@ -540,7 +540,7 @@ public class HongGuoWatching : AdWatchingBase
                                     else
                                     {
 
-                                        await SwipeAsync(device, _device, 1000, "返回-停留页面超过60秒", 100, 1000, 500, 1000, 200);
+                                        await SwipeAsync(device, _device, SwipeDirection.Down, 1000, "返回-停留页面超过60秒", 200);
                                         await ClickAsync(device, _device, null, 2000, "返回-停留页面超过60秒");
                                     }
                                 }

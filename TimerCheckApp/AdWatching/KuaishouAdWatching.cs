@@ -363,6 +363,8 @@ public class KuaishouAdWatching : AdWatchingBase
                                         {
                                             if (i <= 3)
                                             {
+                                                // 使用新的基于枚举的SwipeAsync方法 - 右滑
+                                                //await SwipeAsync(device, _device, SwipeDirection.Right, 1000, BoxPoint.Text);
                                                 await SwipeAsync(device, _device, 1000, BoxPoint.Text, 100, device.Height / 2, 300, device.Height / 2, 500);
                                                 text = await _deviceService.GetOCRText(device);
                                                 if (text.TextBlocks.Any(a => a.Text == device.CurPlatform.GetDescription()))
@@ -372,6 +374,8 @@ public class KuaishouAdWatching : AdWatchingBase
                                             }
                                             else
                                             {
+                                                // 使用新的基于枚举的SwipeAsync方法 - 左滑
+                                                //await SwipeAsync(device, _device, SwipeDirection.Left, 1000, BoxPoint.Text);
                                                 await SwipeAsync(device, _device, 1000, BoxPoint.Text, device.Width - 100, device.Height / 2, 100, device.Height / 2, 500);
                                             }
                                         }
@@ -549,7 +553,7 @@ public class KuaishouAdWatching : AdWatchingBase
                         {
                             if (text.TextBlocks.Any(a => a.Text == "点击进入直播间"))
                             {
-                                await SwipeAsync(device, _device, 1000, "赚钱首页刷视频", 540, 1500, 540, 1000, 200);
+                                await SwipeAsync(device, _device, 1000, "赚钱首页刷视频", 500, 1000, 500, 500, 200);
                             }
                             else
                             {
@@ -637,7 +641,7 @@ public class KuaishouAdWatching : AdWatchingBase
                             if (BoxPoint?.Text != "5/5")
                             {
                                 // 执行小幅度上滑
-                                await SwipeAsync(device, _device, 10000, "滑动-逛街得金币", 500, 1500, 500, 500, 200);
+                                await SwipeAsync(device, _device, SwipeDirection.Up, 10000, "滑动-逛街得金币", 200);
                             }
                             else
                             {
@@ -703,7 +707,6 @@ public class KuaishouAdWatching : AdWatchingBase
                             #region 首页
                             if (device.CurPage != AppPageEnum.MoneyHome)
                             {
-                                //await SwipeAsync(device, _device, 2000, "滑动到首页顶部", 500, 500, 500, 1500, 200);
                                 device.CurPage = AppPageEnum.MoneyHome;
                                 var Last = PagePosChange.LastOrDefault();
                                 if (PagePosChange.Count > 0 && Last != null)
@@ -1042,11 +1045,11 @@ public class KuaishouAdWatching : AdWatchingBase
                                 {
                                     for (int i = 0; i < 30; i++)
                                     {
-                                        await SwipeAsync(device, _device, 2000, "滑动-逛街得金币", 500, 1500, 500, 1000, 200);
+                                        await SwipeAsync(device, _device, SwipeDirection.Up, 2000, "滑动-逛街得金币", 200);
                                     }
                                     for (int i = 0; i < 10; i++)
                                     {
-                                        await SwipeAsync(device, _device, 1000, "滑动-逛街得金币", 500, 100, 500, 1500, 200);
+                                        await SwipeAsync(device, _device, SwipeDirection.Down, 1000, "滑动-逛街得金币", 200);
                                     }
                                     await ClickAsync(device, _device, null, 3000, "返回-首页");
                                     continue;
@@ -1129,7 +1132,7 @@ public class KuaishouAdWatching : AdWatchingBase
                                         await Task.Delay(new Random().Next(5000, 10000));
                                     }
                                     //arrTask.UpdateTaskItem("上次滑动时间", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-                                    await SwipeAsync(device, _device, 1000, "赚钱首页刷视频", 540, 1500, 540, 1000, 200);
+                                    await SwipeAsync(device, _device, SwipeDirection.Up, 1000, "赚钱首页刷视频", 200);
                                     continue;
                                 }
                                 #endregion
@@ -1178,7 +1181,7 @@ public class KuaishouAdWatching : AdWatchingBase
                                 if (Timer != DateTime.MinValue)
                                 {
                                     await ClickAsync(device, _device, null, 3000, "返回-首页");
-                                    await SwipeAsync(device, _device, 10000, "滑动-逛街得金币", 500, 1500, 500, 500, 300);
+                                    await SwipeAsync(device, _device, SwipeDirection.Up, 10000, "看直播赚金币", 300);
                                     continue;
                                 }
                                 else
@@ -1253,7 +1256,7 @@ public class KuaishouAdWatching : AdWatchingBase
                                         int Delay = match.Groups[1].Value.ToInt() + 5;
                                         while (Delay >= 0)
                                         {
-                                            await SwipeAsync(device, _device, 1000, "滑动-逛快手商城赚金币", 500, 800, 500, 500, 200);
+                                            await SwipeAsync(device, _device, SwipeDirection.Up, 1000, "逛快手商城赚金币", 200);
                                             Delay -= 1;
                                         }
                                         continue;
@@ -1288,7 +1291,7 @@ public class KuaishouAdWatching : AdWatchingBase
                                 }
                                 else if (recentCount <= 5)
                                 {
-                                    await SwipeAsync(device, _device, new Random().Next(10000, 25000), "赚钱首页", 540, 1500, 540, 1000, 200);
+                                    await SwipeAsync(device, _device, SwipeDirection.Up, new Random().Next(10000, 25000), "刷广告视频赚金币", 200);
                                     continue;
                                 }
                                 else
@@ -1334,10 +1337,10 @@ public class KuaishouAdWatching : AdWatchingBase
                                 else
                                 {
                                     // 执行小幅度上滑
-                                    await SwipeAsync(device, _device, 4000, "逛街得金币", 500, 1500, 500, 500, 200);
+                                    await SwipeAsync(device, _device, SwipeDirection.Up, 4000, "逛街得金币", 200);
                                     // 执行小幅度下滑
-                                    await SwipeAsync(device, _device, 2000, "逛街得金币", 500, 500, 500, 1500, 200);
-                                    await SwipeAsync(device, _device, 2000, "逛街得金币", 500, 500, 500, 1500, 200);
+                                    await SwipeAsync(device, _device, SwipeDirection.Down, 2000, "逛街得金币", 200);
+                                    await SwipeAsync(device, _device, SwipeDirection.Down, 2000, "逛街得金币", 200);
                                     continue;
                                 }
                                 #endregion
@@ -1403,7 +1406,7 @@ public class KuaishouAdWatching : AdWatchingBase
                                 }
                                 else if (text.TextBlocks.Any(a => Regex.IsMatch(a.Text, @"倒计时\d+:\d+")))
                                 {
-                                    await SwipeAsync(device, _device, new Random().Next(5000, 10000), "赚钱首页", 400, 1000, 400, 500, 200);
+                                    await SwipeAsync(device, _device, SwipeDirection.Up, new Random().Next(5000, 10000), "赚钱首页", 200);
                                     continue;
                                 }
                                 else if (!text.TextBlocks.Any(a => a.Text == "去观看") && text.TextBlocks.Any(a => a.Text == "已完成" || a.Text.Contains("当前用户已在") || a.Text.Contains("当前设备已绑定")))
@@ -1433,7 +1436,7 @@ public class KuaishouAdWatching : AdWatchingBase
                                 }
                                 else
                                 {
-                                    await SwipeAsync(device, _device, new Random().Next(5000, 15000), "赚钱首页刷视频", 540, 1500, 540, 1000, 200);
+                                    await SwipeAsync(device, _device, SwipeDirection.Up, new Random().Next(5000, 15000), "赚钱首页刷视频", 200);
                                     continue;
                                 }
                                 #endregion
@@ -1582,7 +1585,7 @@ public class KuaishouAdWatching : AdWatchingBase
             (text.TextBlocks.Any(a => a.Text == "华为商城") && text.TextBlocks.Any(a => a.Text == "应用市场"))
             )
         {
-            await SwipeAsync(device, _device, 2000, "左滑", 500, 500, 100, 500, 400);
+            await SwipeAsync(device, _device, SwipeDirection.Left, 2000, "左滑");
         }
         else if (text.TextBlocks.Any(a => a.Text == "任务中心" || a.Text.StartsWith("说点什么")))
         {
@@ -1660,16 +1663,7 @@ public class KuaishouAdWatching : AdWatchingBase
             {
                 await Task.Delay(r, cancellationToken);
             }
-            if (device.Width > 0 && device.Height > 0)
-            {
-                var t = new Random().Next(330, 400);
-                var l = new Random().Next((device.Width / 2) - 100, (device.Width / 2) + 100);
-                await SwipeAsync(device, _device, 0, "滑动刷视频", l, (device.Height / 2) + 200, l, ((device.Height / 2) - 300), t);
-            }
-            else
-            {
-                await SwipeAsync(device, _device, 0, "滑动刷视频", 300, 1000, 300, 600, 400);
-            }
+             await SwipeAsync(device, _device, SwipeDirection.Up, 0, "滑动刷视频", 400);
         }
         else if (text.TextBlocks.Any(a => a.Text.StartsWith("说点什么") || a.Text == "立即关注" || a.Text == "已关闭评论" || a.Text.Contains("更多直播") || a.Text.Contains("欢迎各位小伙伴来到直播间") || a.Text == "粉丝团" || a.Text == "分享直播间"))// || text.TextBlocks.Any(a => a.Text == "关注")
         {

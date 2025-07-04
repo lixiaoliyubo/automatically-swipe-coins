@@ -5,8 +5,39 @@ using TimerCheckApp.Services.Interfaces;
 using AdvancedSharpAdbClient.Models;
 using AdvancedSharpAdbClient.DeviceCommands;
 using PaddleOCRSharp;
+using System.ComponentModel;
 
 namespace TimerCheckApp.AdWatching;
+
+/// <summary>
+/// 滑动方向枚举
+/// </summary>
+public enum SwipeDirection
+{
+    /// <summary>
+    /// 上滑（从屏幕下方向上滑动）
+    /// </summary>
+    [Description("上滑")]
+    Up,
+    
+    /// <summary>
+    /// 下滑（从屏幕上方向下滑动）
+    /// </summary>
+    [Description("下滑")]
+    Down,
+    
+    /// <summary>
+    /// 左滑（从屏幕右侧向左滑动）
+    /// </summary>
+    [Description("左滑")]
+    Left,
+    
+    /// <summary>
+    /// 右滑（从屏幕左侧向右滑动）
+    /// </summary>
+    [Description("右滑")]
+    Right
+}
 
 /// <summary>
 /// 广告观看自动化基类
@@ -149,6 +180,7 @@ public abstract class AdWatchingBase : IAdWatching
         }
     }
 
+
     /// <summary>
     /// 启动应用
     /// </summary>
@@ -219,5 +251,58 @@ public abstract class AdWatchingBase : IAdWatching
         // 线性反比
         int step = 500; // 每增加1个Value减少500ms
         return baseMax - (value - minValue) * step;
+    }
+    
+    /// <summary>
+    /// 根据方向执行滑动操作
+    /// </summary>
+    /// <param name="device">设备模型</param>
+    /// <param name="deviceData">设备数据</param>
+    /// <param name="direction">滑动方向</param>
+    /// <param name="delay">延迟时间（毫秒）</param>
+    /// <param name="text">滑动文本描述</param>
+    /// <param name="duration">滑动持续时间（毫秒），默认200</param>
+    /// <returns>异步任务</returns>
+    protected async Task SwipeAsync(DeviceModel device, DeviceData deviceData, SwipeDirection direction, int delay, string text, int duration = 200)
+    {
+        int startX, startY, endX, endY;
+        
+        // 根据滑动方向计算起始和结束坐标
+        switch (direction)
+        {
+            case SwipeDirection.Up: // 上滑：从屏幕下方向上滑动（Y坐标从大到小）
+                startX = device.Width / 2;
+                startY = (int)(device.Height * 0.7); // 屏幕70%位置
+                endX = startX;
+                endY = (int)(device.Height * 0.3);   // 屏幕30%位置
+                break;
+                
+            case SwipeDirection.Down: // 下滑：从屏幕上方向下滑动（Y坐标从小到大）
+                startX = device.Width / 2;
+                startY = (int)(device.Height * 0.3); // 屏幕30%位置
+                endX = startX;
+                endY = (int)(device.Height * 0.7);   // 屏幕70%位置
+                break;
+                
+            case SwipeDirection.Left: // 左滑：从屏幕右侧向左滑动（X坐标从大到小）
+                startX = (int)(device.Width * 0.8);  // 屏幕80%位置
+                startY = device.Height / 2;
+                endX = (int)(device.Width * 0.2);    // 屏幕20%位置
+                endY = startY;
+                break;
+                
+            case SwipeDirection.Right: // 右滑：从屏幕左侧向右滑动（X坐标从小到大）
+                startX = (int)(device.Width * 0.2);  // 屏幕20%位置
+                startY = device.Height / 2;
+                endX = (int)(device.Width * 0.8);    // 屏幕80%位置
+                endY = startY;
+                break;
+                
+            default:
+                throw new ArgumentOutOfRangeException(nameof(direction), direction, "不支持的滑动方向");
+        }
+        
+        // 调用基础滑动方法执行滑动操作
+        await SwipeAsync(device, deviceData, delay, text, startX, startY, endX, endY, duration);
     }
 }
