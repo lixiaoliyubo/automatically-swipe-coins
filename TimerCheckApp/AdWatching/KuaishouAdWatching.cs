@@ -1679,20 +1679,26 @@ public class KuaishouAdWatching : AdWatchingBase
     {
         bool isDesktop = false;
         DateTime dateTime = DateTime.Now;
+        if (dateTime.Hour > 22)
+        {
+            await Task.Delay(10000, cancellationToken);
+            return;
+        }
+
         //最后滑动时间
         DateTime KsData_LastTime = await _cacheService.GetAsync<DateTime>($"KsData_LastTime_{device.Id}");
         //检查非首页次数
         int KsData_NotHome = await _cacheService.GetAsync<int>($"KsData_NotHome_{device.Id}");
 
-        var BoxPointx = text.TextBlocks.FirstOrDefault(a => Regex.IsMatch(a.Text, @"^@([\s\S]{4,})$"));
-        if (BoxPointx != null)
-        {
+        //var BoxPointx = text.TextBlocks.FirstOrDefault(a => Regex.IsMatch(a.Text, @"^@([\s\S]{4,})$"));
+        //if (BoxPointx != null)
+        //{
 
-            var posx = BoxPointx.BoxPoints.CalculateTextBlockCenter();
-            Debug.WriteLine($"设备：{_device.Serial},总像素：宽{device.Width},高{device.Height} 位置：X={BoxPointx.BoxPoints.OrderBy(a => a.X).FirstOrDefault().X},Y={BoxPointx.BoxPoints.OrderByDescending(a => a.Y).FirstOrDefault().Y}");
+        //    var posx = BoxPointx.BoxPoints.CalculateTextBlockCenter();
+        //    Debug.WriteLine($"设备：{_device.Serial},总像素：宽{device.Width},高{device.Height} 位置：X={BoxPointx.BoxPoints.OrderBy(a => a.X).FirstOrDefault().X},Y={BoxPointx.BoxPoints.OrderByDescending(a => a.Y).FirstOrDefault().Y}");
 
-            Debug.WriteLine($"-----------------");
-        }
+        //    Debug.WriteLine($"-----------------");
+        //}
 
         if (!text.TextBlocks.Any(a => a.Text.StartsWith("观看完整短剧")) && !text.TextBlocks.Any(a => Regex.IsMatch(a.Text, @"^@([\s\S]{4,})$") && a.BoxPoints.OrderBy(a => a.X).FirstOrDefault()?.X < 50 && a.BoxPoints.OrderByDescending(a => a.Y).FirstOrDefault()?.Y > (device.Height * 0.8)))
         {
@@ -1730,17 +1736,17 @@ public class KuaishouAdWatching : AdWatchingBase
             isDesktop = true;
         }
 
-        if (isDesktop && dateTime.Hour >= 5)// && dateTime.Hour < 9
+        if (isDesktop && dateTime.Hour >= 4)// && dateTime.Hour < 9
         {
             _ = arrTask.RemoveTaskItem("支付宝");
             await Task.Delay(5000, cancellationToken);
         }
-        else if (isDesktop && dateTime.Hour >= 3 && dateTime.Hour < 5)
+        else if (isDesktop && dateTime.Hour >= 2 && dateTime.Hour < 4)
         {
             _ = arrTask.RemoveTaskItem("快手极速版");
             await Task.Delay(5000, cancellationToken);
         }
-        else if (isDesktop && dateTime.Hour >= 0 && dateTime.Hour < 3)
+        else if (isDesktop && dateTime.Hour >= 0 && dateTime.Hour < 2)
         {
             _ = arrTask.RemoveTaskItem("快手");
             await Task.Delay(5000, cancellationToken);
@@ -1757,7 +1763,7 @@ public class KuaishouAdWatching : AdWatchingBase
         {
             await ClickAsync(device, _device, null, 2000, "返回-首页");
         }
-        else if (dateTime.Hour >= 5 && !arrTask.GetTaskEmptyOrNull("支付宝"))// && dateTime.Hour < 9
+        else if (dateTime.Hour >= 4 && !arrTask.GetTaskEmptyOrNull("支付宝"))// && dateTime.Hour < 9
         {
             _logService.LogInfo($"打开支付宝", device.Id);
             _ = arrTask.UpdateTaskItem("支付宝", dateTime.ToString());
@@ -1769,7 +1775,7 @@ public class KuaishouAdWatching : AdWatchingBase
             await StartAppAsync(device, device.PackageName);
             await Task.Delay(10000);
         }
-        else if (dateTime.Hour >= 3 && dateTime.Hour < 5 && !arrTask.GetTaskEmptyOrNull("快手极速版"))
+        else if (dateTime.Hour >= 2 && dateTime.Hour < 4 && !arrTask.GetTaskEmptyOrNull("快手极速版"))
         {
             _logService.LogInfo($"打开快手极速版", device.Id);
             _ = arrTask.UpdateTaskItem("快手极速版", dateTime.ToString());
@@ -1781,7 +1787,7 @@ public class KuaishouAdWatching : AdWatchingBase
             await StartAppAsync(device, device.PackageName);
             await Task.Delay(10000);
         }
-        else if (dateTime.Hour >= 0 && dateTime.Hour < 3 && !arrTask.GetTaskEmptyOrNull("快手"))
+        else if (dateTime.Hour >= 0 && dateTime.Hour < 2 && !arrTask.GetTaskEmptyOrNull("快手"))
         {
             _logService.LogInfo($"准备打开快手", device.Id);
             _ = arrTask.UpdateTaskItem("快手", dateTime.ToString());
@@ -1793,8 +1799,12 @@ public class KuaishouAdWatching : AdWatchingBase
             await StartAppAsync(device, device.PackageName);
             await Task.Delay(10000);
         }
-        else if (text.TextBlocks.Any(a => a.Text == "明日可领"))
+        else if (text.TextBlocks.Any(a => a.Text == "明日可领") && dateTime.Hour < 9)
         {
+            var DeviceCount = _cacheService.Get<string>($"DeviceCount").ToList<string>() ?? new();
+            DeviceCount.Remove(device.Id);
+            await _cacheService.SetAsync($"DeviceCount", DeviceCount.ToJson());
+
             _logService.LogInfo("完成支付宝刷视频", device.Id);
             _deviceService.StopDeviceCheck(device);
         }

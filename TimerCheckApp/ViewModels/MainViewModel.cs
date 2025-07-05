@@ -1,3 +1,4 @@
+using System;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Text.Json;
@@ -14,7 +15,6 @@ namespace TimerCheckApp.ViewModels;
 public partial class MainViewModel : ObservableObject
 {
     #region 字段
-
     private readonly IDeviceService _deviceService;
     private readonly ILogService _logService;
     private readonly ICacheService _cacheService;
@@ -102,7 +102,7 @@ public partial class MainViewModel : ObservableObject
     /// <param name="deviceService">设备服务</param>
     /// <param name="logService">日志服务</param>
     /// <param name="webSocketService">WebSocket服务</param>
-    public MainViewModel(IDeviceService deviceService, ILogService logService, ICacheService cacheService,  IWebSocketService webSocketService)
+    public MainViewModel(IDeviceService deviceService, ILogService logService, ICacheService cacheService, IWebSocketService webSocketService)
     {
         _deviceService = deviceService;
         _logService = logService;
@@ -125,16 +125,38 @@ public partial class MainViewModel : ObservableObject
 
         // 初始加载设备
         RefreshDevicesCommand.Execute(null);
-        
+
         // 初始化夜间设备检测定时器
         _nightlyDeviceCheckTimer = new DispatcherTimer
         {
             Interval = TimeSpan.FromSeconds(10)
         };
         _nightlyDeviceCheckTimer.Tick += NightlyDeviceCheck_Tick;
-        
+
         // 启动夜间设备检测
         StartNightlyDeviceCheck();
+        // 启动夜间设备检测
+        StartDeviceCountCheck();
+    }
+
+    private void StartDeviceCountCheck()
+    {
+        Task.Run(async () =>
+        {
+            while (true)
+            {
+                var now = DateTime.Now;
+                if (now.Hour >= 0 && now.Hour < 9)
+                {
+                    if (Devices.Count > 0)
+                    {
+                        await _cacheService.SetAsync($"DeviceCount", Devices.Select(a => a.Id).ToJson());
+                        break;
+                    }
+                }
+                await Task.Delay(10000);
+            }
+        });
     }
 
     #endregion
@@ -150,7 +172,7 @@ public partial class MainViewModel : ObservableObject
     }
 
 
-    
+
     /// <summary>
     /// 夜间设备检测定时器事件
     /// </summary>
@@ -166,7 +188,7 @@ public partial class MainViewModel : ObservableObject
                 _logService.LogInfo("执行每日清理任务", "System");
                 CleanupAllCommand.Execute(null);
             }
-            
+
             CheckAndStartDevices();
         }
         else
@@ -176,18 +198,19 @@ public partial class MainViewModel : ObservableObject
             _logService.LogInfo("已退出夜间设备检测时间段，停止检测", "System");
         }
     }
-    
+
     /// <summary>
     /// 检查并启动未运行的设备
     /// </summary>
     private async void CheckAndStartDevices()
     {
-        if (!EnableNightlyDeviceCheck || Devices.Count == 0)
+        var now = DateTime.Now;
+        if (!EnableNightlyDeviceCheck || Devices.Count == 0 || now.Hour > 22)
         {
             return;
         }
 
-        var now = DateTime.Now;
+        var DeviceCount = _cacheService.Get<string>($"DeviceCount").ToList<string>() ?? new ();
         // 检查是否有设备未运行
         var nonRunningDevices = Devices.Where(d => !d.IsRunning);
         if (nonRunningDevices.Count() > 101)
@@ -202,7 +225,7 @@ public partial class MainViewModel : ObservableObject
 
             // 播放文本提示
             //await _deviceService.PlayTextAsync(message);
-            
+
             // 等待语音播放完成
             await Task.Delay(5000);
 
@@ -214,11 +237,11 @@ public partial class MainViewModel : ObservableObject
                     _logService.LogInfo($"启动设备: {device.Name} ({device.Id})", "System");
                     StartDeviceCheck(device);
                 }
-                
+
             }
 
         }
-        else if (Devices.Count() != 3 && now.Hour >= 0 && now.Hour < 9)
+        else if (Devices.Count() != DeviceCount.Count && now.Hour >= 0 && now.Hour < 9)
         {
 
             string message = $"夜间检测到{(3 - nonRunningDevices.Count())}个设备断开连接，等待检查...";
@@ -232,7 +255,7 @@ public partial class MainViewModel : ObservableObject
 
         }
     }
-    
+
     /// <summary>
     /// 启动夜间设备检测
     /// </summary>
@@ -242,7 +265,7 @@ public partial class MainViewModel : ObservableObject
         {
             return;
         }
-        
+
         var now = DateTime.Now;
         // 只在0点到8点之间启动定时器
         if (now.Hour >= 0 && now.Hour < 9)
@@ -251,7 +274,7 @@ public partial class MainViewModel : ObservableObject
             {
                 _nightlyDeviceCheckTimer.Start();
                 _logService.LogInfo("启动夜间设备检测（0点到8点，每10秒检测一次）", "System");
-                
+
                 // 立即执行一次检查
                 CheckAndStartDevices();
             }
@@ -261,7 +284,7 @@ public partial class MainViewModel : ObservableObject
             _logService.LogInfo("当前不在夜间设备检测时间段（0点到8点），将在下次进入该时间段时自动启动", "System");
         }
     }
-    
+
     /// <summary>
     /// 停止夜间设备检测
     /// </summary>
@@ -273,7 +296,7 @@ public partial class MainViewModel : ObservableObject
             _logService.LogInfo("停止夜间设备检测", "System");
         }
     }
-    
+
     /// <summary>
     /// 夜间设备检测启用状态变更处理
     /// </summary>
@@ -737,10 +760,10 @@ public partial class MainViewModel : ObservableObject
         {
             _refreshTimer.Stop();
         }
-        
+
         // 停止夜间设备检测
         StopNightlyDeviceCheck();
-        
+
         // 取消任何正在进行的操作
         if (_nightlyDeviceCheckCts != null)
         {
@@ -748,13 +771,13 @@ public partial class MainViewModel : ObservableObject
             _nightlyDeviceCheckCts.Dispose();
             _nightlyDeviceCheckCts = null;
         }
-        
+
         // 断开WebSocket连接
         if (IsWebSocketConnected)
         {
             _webSocketService.Disconnect();
         }
-        
+
         _logService.LogInfo("应用资源已清理", "System");
     }
 
