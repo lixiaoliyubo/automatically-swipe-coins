@@ -34,6 +34,7 @@ public class KuaishouAdWatching : AdWatchingBase
             new TaskItem("走路赚金币"),
             new TaskItem("看直播赚金币"),
             new TaskItem("搜索赚金币"),
+            new TaskItem("金币购赚金币"),
             new TaskItem("吃饭打卡赚金币"),
             new TaskItem("逛街领金币"),
             new TaskItem("逛快手商城赚金币"),
@@ -700,6 +701,10 @@ public class KuaishouAdWatching : AdWatchingBase
                         {
                             device.CurPage = AppPageEnum.KSShopMall;
                         }
+                        else if (text.TextBlocks.Any(a => a.Text == "看直播") && text.TextBlocks.Any(a => a.Text == "爆款好物"))
+                        {
+                            device.CurPage = AppPageEnum.JbGou;
+                        }
                         #endregion
 
                         if (text.TextBlocks.Any(a => a.Text.Contains("任务中心")) || text.TextBlocks.Any(a => a.Text.Contains("金币") && a.Text.Contains("现金")) || (text.TextBlocks.Any(a => a.Text.StartsWith("金币")) && text.TextBlocks.Any(a => a.Text.StartsWith("现金"))))
@@ -804,28 +809,6 @@ public class KuaishouAdWatching : AdWatchingBase
                             }
                             #endregion
 
-                            #region 看广告得金币
-                            if (device.CurPage == AppPageEnum.MoneyHome && text.TextBlocks.Any(a => a.Text.StartsWith("看广告得金币")) && !text.TextBlocks.Any(a => a.Text == "冷却中"))
-                            {
-                                var array = arrTask.GetTaskItemValue("看广告得金币").GetArray().ToList();
-                                if (array.Count < 10 && (DateTime.Now - array.LastOrDefault().ToDateTime(DateTime.Now.AddMinutes(-11))).TotalMinutes > 10)
-                                {
-
-                                    var BoxPoint = text.TextBlocks.FirstOrDefault(a => Regex.IsMatch(a.Text, "看广告得金币"));
-                                    if (BoxPoint != null)
-                                    {
-                                        device.CurPage = AppPageEnum.ViewAdMoney;
-                                        PagePosChange.Add("看广告得金币");
-                                        array.Add($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}");
-                                        arrTask.UpdateTaskItem("看广告得金币", string.Join("|", array));
-                                        await ClickAsync(device, _device, BoxPoint.BoxPoints, 3000, BoxPoint.Text);
-                                        continue;
-                                    }
-                                }
-
-                            }
-                            #endregion
-
                             #region 看直播赚金币
                             if (device.CurPage == AppPageEnum.MoneyHome && text.TextBlocks.Any(a => Regex.IsMatch(a.Text, @"看(\d+)次直播领金币")))
                             {
@@ -876,24 +859,70 @@ public class KuaishouAdWatching : AdWatchingBase
                             }
                             #endregion
 
-                            #region 刷广告视频赚金币
-                            if (device.CurPage == AppPageEnum.MoneyHome && text.TextBlocks.Any(a => a.Text.StartsWith("刷广告视频赚金币")))
+                            #region 逛街领金币
+                            if (device.CurPage == AppPageEnum.MoneyHome && text.TextBlocks.Any(a => a.Text == "去逛街") && !text.TextBlocks.Any(a => a.Text.Contains("浏览商品赚金币10/10")) && !arrTask.GetTaskEmptyOrNull("逛街领金币"))
                             {
-                                var array = arrTask.GetTaskItemValue("刷广告视频赚金币").GetArray().ToList();
-                                if (array.Count < 50 && (DateTime.Now - array.LastOrDefault().ToDateTime(DateTime.Now.AddMinutes(-11))).TotalMinutes >= 10)
+                                var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "去逛街");
+                                if (BoxPoint != null)
+                                {
+                                    device.CurPage = AppPageEnum.GuangJie;
+                                    PagePosChange.Add("逛街领金币");
+                                    arrTask.UpdateTaskItem("逛街领金币", $"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}");
+                                    await ClickAsync(device, _device, BoxPoint.BoxPoints, 3000, BoxPoint.Text);
+                                    continue;
+                                }
+                            }
+                            #endregion
+
+                            #region 金币购赚金币
+                            if (device.CurPage == AppPageEnum.MoneyHome && text.TextBlocks.Any(a => a.Text == "去金币购赚更多金币" || a.Text == "领金币购签到奖励") && !arrTask.GetTaskEmptyOrNull("金币购赚金币"))
+                            {
+                                var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "去金币购赚更多金币" || a.Text == "领金币购签到奖励");
+                                if (BoxPoint != null)
+                                {
+                                    device.CurPage = AppPageEnum.JbGou;
+                                    PagePosChange.Add("金币购赚金币");
+                                    arrTask.UpdateTaskItem("金币购赚金币", $"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}");
+                                    await ClickAsync(device, _device, BoxPoint.BoxPoints, 3000, BoxPoint.Text);
+                                    continue;
+                                }
+                            }
+                            #endregion
+
+                            #region 每天打卡拿奖励
+                            if (device.CurPage == AppPageEnum.MoneyHome && text.TextBlocks.Any(a => a.Text.StartsWith("连续打卡白拿")) && !arrTask.GetTaskEmptyOrNull("每天打卡拿奖励"))
+                            {
+                                var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text.StartsWith("连续打卡白拿"));
+                                if (BoxPoint != null)
+                                {
+                                    device.CurPage = AppPageEnum.DayClockIn;
+                                    PagePosChange.Add("每天打卡拿奖励");
+                                    arrTask.UpdateTaskItem("每天打卡拿奖励", $"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}");
+                                    await ClickAsync(device, _device, BoxPoint.BoxPoints, 3000, BoxPoint.Text);
+                                    continue;
+                                }
+                            }
+                            #endregion
+
+                            #region 看广告得金币
+                            if (device.CurPage == AppPageEnum.MoneyHome && text.TextBlocks.Any(a => a.Text.StartsWith("看广告得金币")) && !text.TextBlocks.Any(a => a.Text == "冷却中"))
+                            {
+                                var array = arrTask.GetTaskItemValue("看广告得金币").GetArray().ToList();
+                                if (array.Count < 10 && (DateTime.Now - array.LastOrDefault().ToDateTime(DateTime.Now.AddMinutes(-11))).TotalMinutes > 10)
                                 {
 
-                                    var BoxPoint = text.TextBlocks.FirstOrDefault(a => Regex.IsMatch(a.Text, "刷广告视频赚金币"));
+                                    var BoxPoint = text.TextBlocks.FirstOrDefault(a => Regex.IsMatch(a.Text, "看广告得金币"));
                                     if (BoxPoint != null)
                                     {
-                                        device.CurPage = AppPageEnum.ReLoadAd;
-                                        PagePosChange.Add("刷广告视频赚金币");
+                                        device.CurPage = AppPageEnum.ViewAdMoney;
+                                        PagePosChange.Add("看广告得金币");
                                         array.Add($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}");
-                                        arrTask.UpdateTaskItem("刷广告视频赚金币", string.Join("|", array));
+                                        arrTask.UpdateTaskItem("看广告得金币", string.Join("|", array));
                                         await ClickAsync(device, _device, BoxPoint.BoxPoints, 3000, BoxPoint.Text);
                                         continue;
                                     }
                                 }
+
                             }
                             #endregion
 
@@ -915,33 +944,23 @@ public class KuaishouAdWatching : AdWatchingBase
                             }
                             #endregion
 
-
-                            #region 逛街领金币
-                            if (device.CurPage == AppPageEnum.MoneyHome && text.TextBlocks.Any(a => a.Text == "去逛街") && !text.TextBlocks.Any(a => a.Text.Contains("浏览商品赚金币10/10")) && !arrTask.GetTaskEmptyOrNull("逛街领金币"))
+                            #region 刷广告视频赚金币
+                            if (device.CurPage == AppPageEnum.MoneyHome && text.TextBlocks.Any(a => a.Text.StartsWith("刷广告视频赚金币")))
                             {
-                                var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "去逛街");
-                                if (BoxPoint != null)
+                                var array = arrTask.GetTaskItemValue("刷广告视频赚金币").GetArray().ToList();
+                                if (array.Count < 50 && (DateTime.Now - array.LastOrDefault().ToDateTime(DateTime.Now.AddMinutes(-11))).TotalMinutes >= 10)
                                 {
-                                    device.CurPage = AppPageEnum.GuangJie;
-                                    PagePosChange.Add("逛街领金币");
-                                    arrTask.UpdateTaskItem("逛街领金币", $"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}");
-                                    await ClickAsync(device, _device, BoxPoint.BoxPoints, 3000, BoxPoint.Text);
-                                    continue;
-                                }
-                            }
-                            #endregion
 
-                            #region 每天打卡拿奖励
-                            if (device.CurPage == AppPageEnum.MoneyHome && text.TextBlocks.Any(a => a.Text.StartsWith("连续打卡白拿")) && !arrTask.GetTaskEmptyOrNull("每天打卡拿奖励"))
-                            {
-                                var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text.StartsWith("连续打卡白拿"));
-                                if (BoxPoint != null)
-                                {
-                                    device.CurPage = AppPageEnum.DayClockIn;
-                                    PagePosChange.Add("每天打卡拿奖励");
-                                    arrTask.UpdateTaskItem("每天打卡拿奖励", $"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}");
-                                    await ClickAsync(device, _device, BoxPoint.BoxPoints, 3000, BoxPoint.Text);
-                                    continue;
+                                    var BoxPoint = text.TextBlocks.FirstOrDefault(a => Regex.IsMatch(a.Text, "刷广告视频赚金币"));
+                                    if (BoxPoint != null)
+                                    {
+                                        device.CurPage = AppPageEnum.ReLoadAd;
+                                        PagePosChange.Add("刷广告视频赚金币");
+                                        array.Add($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}");
+                                        arrTask.UpdateTaskItem("刷广告视频赚金币", string.Join("|", array));
+                                        await ClickAsync(device, _device, BoxPoint.BoxPoints, 3000, BoxPoint.Text);
+                                        continue;
+                                    }
                                 }
                             }
                             #endregion
@@ -967,6 +986,16 @@ public class KuaishouAdWatching : AdWatchingBase
 
                             if (!IsOperate && (DateTime.Now - device.LastClickTime).TotalSeconds > 10)
                             {
+                                if (text.TextBlocks.Any(a => a.Text == "浏览得金币"))
+                                {
+                                    for (int i = 0; i < 90; i++)
+                                    {
+                                        await SwipeAsync(device, _device, SwipeDirection.Up, 2000, "浏览得金币赚金币", 200);
+                                        await SwipeAsync(device, _device, SwipeDirection.Down, 2000, "浏览得金币赚金币", 200);
+                                    }
+                                    await SwipeAsync(device, _device, SwipeDirection.Down, 1000, "浏览得金币赚金币", 200);
+                                    continue;
+                                }
                                 if (arrTask.GetTaskItemValue("上下滑动").ToInt32() > 500)
                                 {
                                     //arrTask.UpdateTaskItem("上下滑动", $"{(arrTask.GetTaskItemValue("上下滑动").ToInt32() - 100)}");
@@ -1110,48 +1139,6 @@ public class KuaishouAdWatching : AdWatchingBase
                                 #endregion
                             }
 
-                            if (device.CurPage == AppPageEnum.AppointVideo)
-                            {
-                                PagePosChange.Clear();
-                                #region 看指定视频赚金币 
-
-                                var Minutes = (DateTime.Now - arrTask.GetTaskArrayLast("看指定视频赚金币").ToDateTime(DateTime.Now.AddMinutes(18))).TotalMinutes;
-                                if (Minutes >= 15)
-                                {
-                                    await ClickAsync(device, _device, null, 3000, "返回首页");
-                                    continue;
-                                }
-                                else if (text.TextBlocks.Any(a => a.Text == "没有更多作品了" || a.Text == "查看收益"))
-                                {
-                                    await ClickAsync(device, _device, null, 3000, "返回首页");
-                                    continue;
-                                }
-                                else
-                                {
-                                    if (text.TextBlocks.Any(a => a.Text == "看视频" && a.BoxPoints.Max(x => x.X) > (device.Width - 300)))
-                                    {
-                                        await Task.Delay(new Random().Next(5000, 10000));
-                                    }
-                                    //arrTask.UpdateTaskItem("上次滑动时间", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-                                    await SwipeAsync(device, _device, SwipeDirection.Up, 1000, "赚钱首页刷视频", 200);
-                                    continue;
-                                }
-                                #endregion
-                            }
-
-                            if (device.CurPage == AppPageEnum.ViewAdMoney)
-                            {
-                                PagePosChange.Clear();
-                                #region 看广告得金币 
-                                if (text.TextBlocks.Any(a => a.Text == "关注"))
-                                { //text.TextBlocks.Any(a => Regex.IsMatch(a.Text, @"00:\d{2}"))
-                                    await Task.Delay(30000);
-                                    await ClickAsync(device, _device, null, 3000, "返回-赚钱首页");
-                                    continue;
-                                }
-                                #endregion
-                            }
-
                             if (device.CurPage == AppPageEnum.ViewLive)
                             {
                                 PagePosChange.Clear();
@@ -1275,6 +1262,120 @@ public class KuaishouAdWatching : AdWatchingBase
                                 else
                                 {
                                     await ClickAsync(device, _device, null, 3000, "返回-首页");
+                                    continue;
+                                }
+                                #endregion
+                            }
+
+                            if (device.CurPage == AppPageEnum.JbGou)
+                            {
+                                PagePosChange.Clear();
+                                #region 金币购赚金币
+                                if (text.TextBlocks.Any(a => a.Text == "今日签到"))
+                                {
+                                    var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "今日签到");
+                                    if (BoxPoint != null)
+                                    {
+                                        await ClickAsync(device, _device, BoxPoint.BoxPoints, 2000, BoxPoint.Text);
+                                        continue;
+                                    }
+                                }
+                                else if (text.TextBlocks.Any(a => a.Text == "看直播可领"))
+                                {
+                                    var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "看直播可领");
+                                    if (BoxPoint != null)
+                                    {
+                                        await ClickAsync(device, _device, BoxPoint.BoxPoints, 2000, BoxPoint.Text);
+                                        continue;
+                                    }
+                                }
+                                else if (text.TextBlocks.Any(a => a.Text.StartsWith("倒计时")))
+                                {
+                                    //直播间倒计时
+                                    await ClickAsync(device, _device, new List<OCRPoint>() { new OCRPoint() { X = device.Width / 2, Y = device.Height / 2 } }, 5000, "直播间倒计时");
+                                    continue;
+                                }
+                                else if (text.TextBlocks.Any(a => a.Text == "退出直播间"))
+                                {
+                                    var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "退出直播间");
+                                    if (BoxPoint != null)
+                                    {
+                                        await ClickAsync(device, _device, BoxPoint.BoxPoints, 3000, BoxPoint.Text);
+                                        await SwipeAsync(device, _device, SwipeDirection.Up, 2000, "逛快手商城赚金币", 200);
+                                        continue;
+                                    }
+                                }
+                                else if (text.TextBlocks.Any(a => a.Text == "直播已结束"))
+                                {
+                                    await ClickAsync(device, _device, null, 3000, "返回-首页");
+                                    continue;
+                                }
+                                else if (text.TextBlocks.Any(a => Regex.IsMatch(a.Text, @"已完成\((\d+)/(\d+)\)")))
+                                {
+                                    Match match = Regex.Match(text.Text, @"已完成\((\d+)/(\d+)\)");
+                                    if (match.Success)
+                                    {
+                                        int count = match.Groups[1].Value.ToInt32();
+                                        if (count != match.Groups[2].Value.ToInt32())
+                                        {
+                                            var BoxPoints = text.TextBlocks.Where(a => Regex.IsMatch(a.Text, @"返(\d+)金币")).ToList();
+                                            if (BoxPoints.Count > 0)
+                                            {
+                                                await ClickAsync(device, _device, BoxPoints[0].BoxPoints, 2000, BoxPoints[0].Text);
+                                                continue;
+                                            }
+                                        }
+                                        else
+                                        {
+                                            await ClickAsync(device, _device, null, 3000, "返回-金币购赚金币");
+                                            continue;
+                                        }
+                                    }
+                                }
+                                else if (text.TextBlocks.Count > 5) //.Any(a => a.Text == "看直播") && text.TextBlocks.Any(a => a.Text == "爆款好物")
+                                {
+                                    await ClickAsync(device, _device, null, 3000, "返回-金币购赚金币");
+                                }
+                                #endregion
+                            }
+
+                            if (device.CurPage == AppPageEnum.AppointVideo)
+                            {
+                                PagePosChange.Clear();
+                                #region 看指定视频赚金币 
+
+                                var Minutes = (DateTime.Now - arrTask.GetTaskArrayLast("看指定视频赚金币").ToDateTime(DateTime.Now.AddMinutes(18))).TotalMinutes;
+                                if (Minutes >= 15)
+                                {
+                                    await ClickAsync(device, _device, null, 3000, "返回首页");
+                                    continue;
+                                }
+                                else if (text.TextBlocks.Any(a => a.Text == "没有更多作品了" || a.Text == "查看收益"))
+                                {
+                                    await ClickAsync(device, _device, null, 3000, "返回首页");
+                                    continue;
+                                }
+                                else
+                                {
+                                    if (text.TextBlocks.Any(a => a.Text == "看视频" && a.BoxPoints.Max(x => x.X) > (device.Width - 300)))
+                                    {
+                                        await Task.Delay(new Random().Next(5000, 10000));
+                                    }
+                                    //arrTask.UpdateTaskItem("上次滑动时间", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                                    await SwipeAsync(device, _device, SwipeDirection.Up, 1000, "赚钱首页刷视频", 200);
+                                    continue;
+                                }
+                                #endregion
+                            }
+
+                            if (device.CurPage == AppPageEnum.ViewAdMoney)
+                            {
+                                PagePosChange.Clear();
+                                #region 看广告得金币 
+                                if (text.TextBlocks.Any(a => a.Text == "关注"))
+                                { //text.TextBlocks.Any(a => Regex.IsMatch(a.Text, @"00:\d{2}"))
+                                    await Task.Delay(30000);
+                                    await ClickAsync(device, _device, null, 3000, "返回-赚钱首页");
                                     continue;
                                 }
                                 #endregion
@@ -1405,6 +1506,20 @@ public class KuaishouAdWatching : AdWatchingBase
                                         continue;
                                     }
                                 }
+                                else if (text.TextBlocks.Any(a => a.Text == "回复") && text.TextBlocks.Any(a => a.Text.Contains("天前") || a.Text.Contains("小时前")))
+                                {
+                                    await ClickAsync(device, _device, null, 3000, "返回-首页");
+                                    continue;
+                                }
+                                else if (text.TextBlocks.Any(a => a.Text == "分享给朋友"))
+                                {
+                                    var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "分享给朋友");
+                                    if (BoxPoint != null)
+                                    {
+                                        await ClickAsync(device, _device, BoxPoint.BoxPoints, 2000, BoxPoint.Text);
+                                        continue;
+                                    }
+                                }
                                 else if (text.TextBlocks.Any(a => Regex.IsMatch(a.Text, @"倒计时\d+:\d+")))
                                 {
                                     await SwipeAsync(device, _device, SwipeDirection.Up, new Random().Next(5000, 10000), "赚钱首页", 200);
@@ -1497,6 +1612,11 @@ public class KuaishouAdWatching : AdWatchingBase
                                     await ClickAsync(device, _device, null, 3000, "退出直播间");
                                     continue;
                                 }
+                                else if (text.TextBlocks.Any(a => a.Text.StartsWith("大家还在搜")) && text.TextBlocks.Any(a => a.Text == "退出"))
+                                {
+                                    await ClickAsync(device, _device, null, 3000, "退出");
+                                    continue;
+                                }
                                 else if ((DateTime.Now - device.LastClickTime).TotalSeconds > 60)
                                 {
                                     if (_deviceService.CurAdbClient.GetAppStatus(_device, device.PackageName) != AppStatus.Foreground)
@@ -1538,7 +1658,7 @@ public class KuaishouAdWatching : AdWatchingBase
                     _logService.LogError($"自动化过程出错: {ex.Message}", device.Id);
                 }
                 // 等待1秒
-                await Task.Delay(3000, cancellationToken).ContinueWith(t =>
+                await Task.Delay(1000, cancellationToken).ContinueWith(t =>
                 {
                     if (t.IsCanceled)
                         _logService.LogWarning($"任务被取消", device.Id);
@@ -1565,7 +1685,8 @@ public class KuaishouAdWatching : AdWatchingBase
         int KsData_NotHome = await _cacheService.GetAsync<int>($"KsData_NotHome_{device.Id}");
 
         var BoxPointx = text.TextBlocks.FirstOrDefault(a => Regex.IsMatch(a.Text, @"^@([\s\S]{4,})$"));
-        if (BoxPointx != null) {
+        if (BoxPointx != null)
+        {
 
             var posx = BoxPointx.BoxPoints.CalculateTextBlockCenter();
             Debug.WriteLine($"设备：{_device.Serial},总像素：宽{device.Width},高{device.Height} 位置：X={BoxPointx.BoxPoints.OrderBy(a => a.X).FirstOrDefault().X},Y={BoxPointx.BoxPoints.OrderByDescending(a => a.Y).FirstOrDefault().Y}");
@@ -1573,7 +1694,7 @@ public class KuaishouAdWatching : AdWatchingBase
             Debug.WriteLine($"-----------------");
         }
 
-        if (!text.TextBlocks.Any(a => a.Text.StartsWith("观看完整短剧")) &&!text.TextBlocks.Any(a => Regex.IsMatch(a.Text, @"^@([\s\S]{4,})$") && a.BoxPoints.OrderBy(a => a.X).FirstOrDefault()?.X < 50 && a.BoxPoints.OrderByDescending(a => a.Y).FirstOrDefault()?.Y > (device.Height * 0.8)))
+        if (!text.TextBlocks.Any(a => a.Text.StartsWith("观看完整短剧")) && !text.TextBlocks.Any(a => Regex.IsMatch(a.Text, @"^@([\s\S]{4,})$") && a.BoxPoints.OrderBy(a => a.X).FirstOrDefault()?.X < 50 && a.BoxPoints.OrderByDescending(a => a.Y).FirstOrDefault()?.Y > (device.Height * 0.8)))
         {
             KsData_NotHome++;
             await _cacheService.SetAsync($"KsData_NotHome_{device.Id}", KsData_NotHome);
@@ -1583,7 +1704,7 @@ public class KuaishouAdWatching : AdWatchingBase
             KsData_NotHome = 0;
             await _cacheService.SetAsync($"KsData_NotHome_{device.Id}", 0);
         }
-       
+
         if (KsData_NotHome > 10)
         {
             await _deviceService.PlayTextAsync($"黄彩霞,检测到非首页{KsData_NotHome}次,快过来看看");
@@ -1604,11 +1725,11 @@ public class KuaishouAdWatching : AdWatchingBase
                 await ClickAsync(device, _device, BoxPoint.BoxPoints, 2000, BoxPoint.Text);
             }
         }
-        else if(text.TextBlocks.Any(a => a.Text == "快手极速版") && text.TextBlocks.Any(a => a.Text == "快手"))
+        else if (text.TextBlocks.Any(a => a.Text == "快手极速版") && text.TextBlocks.Any(a => a.Text == "快手"))
         {
             isDesktop = true;
         }
-        if (isDesktop && dateTime.Hour >= 5 && dateTime.Hour < 9)
+        if (isDesktop && dateTime.Hour >= 5)// && dateTime.Hour < 9
         {
             _ = arrTask.RemoveTaskItem("支付宝");
             await Task.Delay(5000, cancellationToken);
@@ -1635,7 +1756,7 @@ public class KuaishouAdWatching : AdWatchingBase
         {
             await ClickAsync(device, _device, null, 2000, "返回-首页");
         }
-        else if (dateTime.Hour >= 5 && dateTime.Hour < 9 && !arrTask.GetTaskEmptyOrNull("支付宝"))
+        else if (dateTime.Hour >= 5 && !arrTask.GetTaskEmptyOrNull("支付宝"))// && dateTime.Hour < 9
         {
             _logService.LogInfo($"打开支付宝", device.Id);
             _ = arrTask.UpdateTaskItem("支付宝", dateTime.ToString());
@@ -1677,7 +1798,7 @@ public class KuaishouAdWatching : AdWatchingBase
             _deviceService.StopDeviceCheck(device);
         }
         else if (
-            device.PackageName == PlatformType.AliPay.GetPackageName() && 
+            device.PackageName == PlatformType.AliPay.GetPackageName() &&
             (text.TextBlocks.Any(a => a.Text == "分词" || a.Text.Contains("中/英")) && text.TextBlocks.Any(a => a.Text == "符" || a.Text == "换行"))
             )
         {
@@ -1692,11 +1813,11 @@ public class KuaishouAdWatching : AdWatchingBase
                 await ClickAsync(device, _device, new List<OCRPoint>() { new OCRPoint(pos.X, pos.Y - 300) }, 0, BoxPoint.Text);
             }
         }
-        else if (text.TextBlocks.Any(a => a.Text.StartsWith("说点什么") || a.Text == "立即关注" || a.Text == "已关闭评论" || a.Text.Contains("更多直播") || a.Text.Contains("欢迎各位小伙伴来到直播间") || a.Text == "粉丝团" || a.Text == "分享直播间"))// || text.TextBlocks.Any(a => a.Text == "关注")
+        else if (text.TextBlocks.Any(a => a.Text.StartsWith("每日红包爆涨") || a.Text.StartsWith("说点什么") || a.Text == "立即关注" || a.Text == "已关闭评论" || a.Text.Contains("更多直播") || a.Text.Contains("欢迎各位小伙伴来到直播间") || a.Text == "粉丝团" || a.Text == "分享直播间"))// || text.TextBlocks.Any(a => a.Text == "关注")
         {
             await ClickAsync(device, _device, null, 3000, "返回到刷视频");
         }
-        else if (device.PackageName == PlatformType.AliPay.GetPackageName() && text.TextBlocks.Any(a => a.Text == "视频") && text.TextBlocks.Any(a => a.Text == "我的") && !text.TextBlocks.Any(a => a.Text == "发现"))
+        else if (device.PackageName == PlatformType.AliPay.GetPackageName() && text.TextBlocks.Any(a => a.Text == "视频" || a.Text == "收付款") && text.TextBlocks.Any(a => a.Text == "我的") && !text.TextBlocks.Any(a => a.Text == "发现"))
         {
             var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "视频");
             if (BoxPoint != null)
@@ -1706,11 +1827,26 @@ public class KuaishouAdWatching : AdWatchingBase
         }
         else
         {
-             if (
-                ((device.PackageName == PlatformType.Kuaishou.GetPackageName() || device.PackageName == PlatformType.KuaishouJs.GetPackageName()) && text.TextBlocks.Any(a => a.Text == "首页" || a.Text == "我") && text.TextBlocks.Any(a => a.Text == "去赚钱" || a.Text == "精选")) ||
-                (device.PackageName == PlatformType.AliPay.GetPackageName() && text.TextBlocks.Any(a => Regex.IsMatch(a.Text, @"^([\d-\.]+)元$")) && text.TextBlocks.Any(a => a.Text == "关注" || a.Text == "视频" || a.Text == "发现")) ||
-                (device.PackageName == PlatformType.AliPay.GetPackageName() && text.TextBlocks.Any(a => a.Text == "关注") && text.TextBlocks.Any(a => a.Text == "发现") && text.TextBlocks.Any(a => a.Text == "支"))
-                )
+            bool isHome = false;
+            if (device.PackageName == PlatformType.AliPay.GetPackageName())
+            {
+                if (
+                   (text.TextBlocks.Any(a => Regex.IsMatch(a.Text, @"^([\d-\.]+)元$")) && text.TextBlocks.Any(a => a.Text == "关注" || a.Text == "视频" || a.Text == "发现")) ||
+                   (text.TextBlocks.Any(a => a.Text == "关注") && text.TextBlocks.Any(a => a.Text == "发现") && text.TextBlocks.Any(a => a.Text == "支")) ||
+                   (text.TextBlocks.Any(a => a.Text == "发首评" || a.Text == "发条评论") && text.TextBlocks.Any(a => a.Text == "支"))
+                   )
+                {
+                    isHome = true;
+                }
+            }
+            else if (device.PackageName == PlatformType.Kuaishou.GetPackageName())
+            {
+                if (text.TextBlocks.Any(a => a.Text == "首页" || a.Text == "我") && text.TextBlocks.Any(a => a.Text == "去赚钱" || a.Text == "精选"))
+                {
+                    isHome = true;
+                }
+            }
+            if (isHome)
             {
                 await _cacheService.RemoveAsync($"KsData_Count_{device.Id}");
                 await _cacheService.SetAsync($"KsData_LastTime_{device.Id}", dateTime);

@@ -263,7 +263,7 @@ public abstract class AdWatchingBase : IAdWatching
     /// <param name="text">滑动文本描述</param>
     /// <param name="duration">滑动持续时间（毫秒），默认200</param>
     /// <returns>异步任务</returns>
-    protected async Task SwipeAsync(DeviceModel device, DeviceData deviceData, SwipeDirection direction, int delay, string text, int duration = 200)
+    protected async Task SwipeAsync(DeviceModel device, DeviceData deviceData, SwipeDirection direction, int delay, string text, int duration = 300)
     {
         int startX, startY, endX, endY;
         

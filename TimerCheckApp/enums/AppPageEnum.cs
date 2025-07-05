@@ -25,16 +25,18 @@ namespace TimerCheckApp.enums
         DayMoney = 9,
         [Description("每天打卡拿奖励")]
         DayClockIn = 10,
+        [Description("每天睡觉起床")]
+        DaySawu = 11,
         [Description("一键领金币")]
         OneClickMoney = 12,
         [Description("早安小岛")]
         ZaoAnXiaoDao = 13,
-        [Description("刷广告视频赚金币")]
-        ReLoadAd = 18,
         [Description("抖音快手快手极速版")]
         DyAndKsAddKsJs = 14,
-        [Description("每天睡觉起床")]
-        DaySawu = 11,
+        [Description("金币购赚金币")]
+        JbGou = 15,
+        [Description("刷广告视频赚金币")]
+        ReLoadAd = 18,
         [Description("看视频赚金币")]
         ViewVideo = 31,
         [Description("看直播赚金币")]
