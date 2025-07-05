@@ -1729,6 +1729,7 @@ public class KuaishouAdWatching : AdWatchingBase
         {
             isDesktop = true;
         }
+
         if (isDesktop && dateTime.Hour >= 5)// && dateTime.Hour < 9
         {
             _ = arrTask.RemoveTaskItem("支付宝");
@@ -1813,7 +1814,7 @@ public class KuaishouAdWatching : AdWatchingBase
                 await ClickAsync(device, _device, new List<OCRPoint>() { new OCRPoint(pos.X, pos.Y - 300) }, 0, BoxPoint.Text);
             }
         }
-        else if (text.TextBlocks.Any(a => a.Text.StartsWith("每日红包爆涨") || a.Text.StartsWith("说点什么") || a.Text == "立即关注" || a.Text == "已关闭评论" || a.Text.Contains("更多直播") || a.Text.Contains("欢迎各位小伙伴来到直播间") || a.Text == "粉丝团" || a.Text == "分享直播间"))// || text.TextBlocks.Any(a => a.Text == "关注")
+        else if (text.TextBlocks.Any(a => a.Text.StartsWith("每日红包爆涨") || a.Text.StartsWith("说点什么") || a.Text == "外卖红包" || a.Text == "立即关注" || a.Text == "已关闭评论" || a.Text.Contains("更多直播") || a.Text.Contains("欢迎各位小伙伴来到直播间") || a.Text == "粉丝团" || a.Text == "分享直播间"))// || text.TextBlocks.Any(a => a.Text == "关注")
         {
             await ClickAsync(device, _device, null, 3000, "返回到刷视频");
         }
