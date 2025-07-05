@@ -1583,6 +1583,17 @@ public class KuaishouAdWatching : AdWatchingBase
             KsData_NotHome = 0;
             await _cacheService.SetAsync($"KsData_NotHome_{device.Id}", 0);
         }
+       
+        if (KsData_NotHome > 10)
+        {
+            await _deviceService.PlayTextAsync($"黄彩霞,检测到非首页{KsData_NotHome}次,快过来看看");
+            await Task.Delay(10000, cancellationToken);
+        }
+        else if (KsData_LastTime != DateTime.MinValue && (dateTime - KsData_LastTime.ToDateTime()).TotalMinutes >= 5)
+        {
+            await _deviceService.PlayTextAsync($"黄彩霞,刷视频出现已停止{(dateTime - KsData_LastTime.ToDateTime()).TotalMinutes}分钟,快过来看看");
+            await Task.Delay(10000, cancellationToken);
+        }
 
 
         if (text.TextBlocks.Any(a => a.Text == "添加到主屏幕" || a.Text == "添加至桌面") && text.TextBlocks.Any(a => a.Text == "取消") && text.TextBlocks.Any(a => a.Text == "添加"))
@@ -1623,16 +1634,6 @@ public class KuaishouAdWatching : AdWatchingBase
         else if (text.TextBlocks.Any(a => a.Text == "任务中心" || a.Text.StartsWith("说点什么")))
         {
             await ClickAsync(device, _device, null, 2000, "返回-首页");
-        }
-        else if (KsData_NotHome > 10)
-        {
-            await _deviceService.PlayTextAsync($"黄彩霞,检测到非首页{KsData_NotHome}次,快过来看看");
-            await Task.Delay(10000, cancellationToken);
-        }
-        else if (KsData_LastTime != DateTime.MinValue && (dateTime - KsData_LastTime.ToDateTime()).TotalMinutes >= 5)
-        {
-            await _deviceService.PlayTextAsync($"黄彩霞,刷视频出现已停止{(dateTime - KsData_LastTime.ToDateTime()).TotalMinutes}分钟,快过来看看");
-            await Task.Delay(10000, cancellationToken);
         }
         else if (dateTime.Hour >= 5 && dateTime.Hour < 9 && !arrTask.GetTaskEmptyOrNull("支付宝"))
         {
@@ -1691,27 +1692,6 @@ public class KuaishouAdWatching : AdWatchingBase
                 await ClickAsync(device, _device, new List<OCRPoint>() { new OCRPoint(pos.X, pos.Y - 300) }, 0, BoxPoint.Text);
             }
         }
-        else if (
-            ((device.PackageName == PlatformType.Kuaishou.GetPackageName() || device.PackageName == PlatformType.KuaishouJs.GetPackageName()) && text.TextBlocks.Any(a => a.Text == "首页" || a.Text == "我") && text.TextBlocks.Any(a => a.Text == "去赚钱" || a.Text == "精选")) ||
-            (device.PackageName == PlatformType.AliPay.GetPackageName() && text.TextBlocks.Any(a => Regex.IsMatch(a.Text, @"^([\d-\.]+)元$")) && text.TextBlocks.Any(a => a.Text == "关注" || a.Text == "视频" || a.Text == "发现"))
-            )
-        {
-            await _cacheService.RemoveAsync($"KsData_Count_{device.Id}");
-            await _cacheService.SetAsync($"KsData_LastTime_{device.Id}", dateTime);
-
-            int Max = 13000;
-            var m = Regex.Match(text.Text, @"(\d{1,2})/(\d{1,2})支");
-            if (m.Success)
-            {
-                Max = GetDynamicMax(m.Groups[2].Value.ToInt());
-            }
-            var r = new Random().Next(5000, Max);
-            if (!text.TextBlocks.Any(a => a.Text == "点击进入直播间" || a.Text.Contains("上滑继续观看视频")))
-            {
-                await Task.Delay(r, cancellationToken);
-            }
-             await SwipeAsync(device, _device, SwipeDirection.Up, 0, "滑动刷视频", 400);
-        }
         else if (text.TextBlocks.Any(a => a.Text.StartsWith("说点什么") || a.Text == "立即关注" || a.Text == "已关闭评论" || a.Text.Contains("更多直播") || a.Text.Contains("欢迎各位小伙伴来到直播间") || a.Text == "粉丝团" || a.Text == "分享直播间"))// || text.TextBlocks.Any(a => a.Text == "关注")
         {
             await ClickAsync(device, _device, null, 3000, "返回到刷视频");
@@ -1726,15 +1706,28 @@ public class KuaishouAdWatching : AdWatchingBase
         }
         else
         {
-            //检查未操作次数
-            int count = await _cacheService.GetAsync<int>($"KsData_Count_{device.Id}");
-            count++;
-            await _cacheService.SetAsync($"KsData_Count_{device.Id}", count);
-            if (count > 10)
+             if (
+                ((device.PackageName == PlatformType.Kuaishou.GetPackageName() || device.PackageName == PlatformType.KuaishouJs.GetPackageName()) && text.TextBlocks.Any(a => a.Text == "首页" || a.Text == "我") && text.TextBlocks.Any(a => a.Text == "去赚钱" || a.Text == "精选")) ||
+                (device.PackageName == PlatformType.AliPay.GetPackageName() && text.TextBlocks.Any(a => Regex.IsMatch(a.Text, @"^([\d-\.]+)元$")) && text.TextBlocks.Any(a => a.Text == "关注" || a.Text == "视频" || a.Text == "发现")) ||
+                (device.PackageName == PlatformType.AliPay.GetPackageName() && text.TextBlocks.Any(a => a.Text == "关注") && text.TextBlocks.Any(a => a.Text == "发现") && text.TextBlocks.Any(a => a.Text == "支"))
+                )
             {
-                await _deviceService.PlayTextAsync("黄彩霞,出现未识别的错误,快过来看看");
-                await Task.Delay(10000, cancellationToken);
+                await _cacheService.RemoveAsync($"KsData_Count_{device.Id}");
+                await _cacheService.SetAsync($"KsData_LastTime_{device.Id}", dateTime);
             }
+
+            int Max = 13000;
+            var m = Regex.Match(text.Text, @"(\d{1,2})/(\d{1,2})支");
+            if (m.Success)
+            {
+                Max = GetDynamicMax(m.Groups[2].Value.ToInt());
+            }
+            var r = new Random().Next(5000, Max);
+            if (!text.TextBlocks.Any(a => a.Text == "点击进入直播间" || a.Text.Contains("上滑继续观看视频")))
+            {
+                await Task.Delay(r, cancellationToken);
+            }
+            await SwipeAsync(device, _device, SwipeDirection.Up, 0, "滑动刷视频", 400);
         }
     }
 

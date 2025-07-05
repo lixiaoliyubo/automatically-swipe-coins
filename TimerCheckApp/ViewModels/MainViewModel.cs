@@ -190,7 +190,7 @@ public partial class MainViewModel : ObservableObject
         var now = DateTime.Now;
         // 检查是否有设备未运行
         var nonRunningDevices = Devices.Where(d => !d.IsRunning);
-        if (nonRunningDevices.Count() > 0)
+        if (nonRunningDevices.Count() > 101)
         {
             int count = await _cacheService.GetAsync<int>($"CheckAndStartDevices");
             count++;
@@ -201,7 +201,7 @@ public partial class MainViewModel : ObservableObject
             _logService.LogWarning(message, "System");
 
             // 播放文本提示
-            await _deviceService.PlayTextAsync(message);
+            //await _deviceService.PlayTextAsync(message);
             
             // 等待语音播放完成
             await Task.Delay(5000);
