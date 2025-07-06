@@ -26,6 +26,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
+using System.Windows.Threading;
 using TimerCheckApp.enums;
 using TimerCheckApp.Extensions;
 using TimerCheckApp.Services;
@@ -35,6 +36,39 @@ using Point = OpenCvSharp.Point;
 namespace ConsoleApp1;
 public class ConsoleApp1
 {
+
+
+
+    /// <summary>
+    /// 定时器测试
+    /// </summary>
+    /// <param name="args"></param>
+    static void Main(string[] args)
+    {
+
+        // 初始化夜间设备检测定时器
+        var _refreshTimer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromSeconds(5)
+        }; 
+
+        _refreshTimer.Tick += RefreshDevices_Tick;
+        _refreshTimer.Start();
+
+        Console.ReadLine();
+    }
+
+    private static void RefreshDevices_Tick(object? sender, EventArgs e)
+    {
+        Console.WriteLine("RefreshDevices_Tick打印：" + DateTime.Now);
+        CheckAndStartDevices();
+    }
+    private static async void CheckAndStartDevices() { 
+    
+        await Task.Delay(3000);
+        Console.WriteLine("CheckAndStartDevices打印：" + DateTime.Now);
+    }
+
     static int GetDynamicMax(int value, int baseMax = 15000)
     {
         const int minValue = 5;
@@ -54,7 +88,7 @@ public class ConsoleApp1
     /// <summary>
     /// 原始Main方法
     /// </summary>
-    static void Main1(string[] args)
+    static void Main340(string[] args)
     {
         ConcurrentDictionary<string, string> arrTask = new()
         {
@@ -118,7 +152,7 @@ public class ConsoleApp1
     /// <summary>
      /// 缓存服务示例 - 展示FileCacheService和MemoryCacheService的使用
      /// </summary>
-     static void Main(string[] args)
+     static void Main309(string[] args)
      {
         int BaseMax = GetDynamicMax(18); 
         Console.WriteLine("===== 缓存服务示例 =====\n");

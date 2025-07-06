@@ -62,7 +62,7 @@ public class HongGuoWatching : AdWatchingBase
                                 if (BoxPoint != null)
                                 {
                                     var pos = BoxPoint.BoxPoints.CalculateTextBlockCenter();
-                                    await SwipeAsync(device, _device, 0, "上滑继续观看短剧", pos.X, pos.Y - 50, pos.X, pos.Y - 500, 200);
+                                    await SwipeAsync(device, _device, SwipeDirection.Up, 0, "上滑继续观看短剧");
                                 }
                             }
                             else if (text.TextBlocks.Any(a => a.Text.Contains("上滑继续看短剧")))
@@ -71,7 +71,7 @@ public class HongGuoWatching : AdWatchingBase
                                 if (BoxPoint != null)
                                 {
                                     var pos = BoxPoint.BoxPoints.CalculateTextBlockCenter();
-                                    await SwipeAsync(device, _device, 0, "上滑继续看短剧", pos.X, pos.Y - 20, pos.X, pos.Y - 500, 200);
+                                    await SwipeAsync(device, _device, SwipeDirection.Up, 0, "上滑继续看短剧");
                                 }
                             }
                             else if (text.TextBlocks.Any(a => a.Text == "看视频") && text.TextBlocks.Any(a => a.Text == "退出自动阅读"))

@@ -137,52 +137,6 @@ public partial class MainViewModel : ObservableObject
 
         // 启动夜间设备检测
         StartNightlyDeviceCheck();
-        // 启动夜间设备检测
-        StartDeviceCountCheck();
-    }
-
-    private void StartDeviceCountCheck()
-    {
-        Task.Run(async () =>
-        {
-            while (true)
-            {
-                try
-                {
-                    var now = DateTime.Now;
-                    if (now.Hour >= 0 && now.Hour < 9)
-                    {
-                        if (Devices.Count > 0)
-                        {
-                            if (!_cacheService.Exists($"DeviceCount"))
-                            {
-                                await _cacheService.SetAsync($"DeviceCount", Devices.Select(a => a.Id).ToJson());
-                            }
-                            string PlayaValue = string.Empty;
-                            foreach (var device in Devices)
-                            {
-                                int KsData_Count = await _cacheService.GetAsync<int>($"KsData_Count_{device.Id}");
-                                //最后滑动时间
-                                if (KsData_Count > 5)
-                                {
-                                    PlayaValue = $"刷视频设备{device.Id}出现已停止{KsData_Count}次";
-                                }
-                            }
-                            if (!PlayaValue.IsNotEmptyOrNull())
-                            {
-                                PlayaValue = string.Empty;
-                                await _deviceService.PlayTextAsync(PlayaValue);
-                            }
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logService.LogError("设备检查错误：" + ex.Message, "System");
-                }
-                await Task.Delay(5000);
-            }
-        });
     }
 
     #endregion
@@ -197,88 +151,30 @@ public partial class MainViewModel : ObservableObject
         RefreshDevicesCommand.Execute(null);
     }
 
-
-
     /// <summary>
-    /// 夜间设备检测定时器事件
+    /// 夜间设备检测启用状态变更处理
     /// </summary>
-    private void NightlyDeviceCheck_Tick(object? sender, EventArgs e)
+    partial void OnEnableNightlyDeviceCheckChanged(bool value)
     {
-        // 检查是否在0点到8点之间
-        var now = DateTime.Now;
-        if (now.Hour >= 0 && now.Hour < 9)
+        if (value)
         {
-            // 如果是0点，执行每日清理任务
-            if (now.Hour == 0 && now.Minute == 0)
-            {
-                _logService.LogInfo("执行每日清理任务", "System");
-                CleanupAllCommand.Execute(null);
-            }
-
-            CheckAndStartDevices();
+            StartNightlyDeviceCheck();
         }
         else
         {
-            // 不在指定时间范围内，停止定时器
-            _nightlyDeviceCheckTimer.Stop();
-            _logService.LogInfo("已退出夜间设备检测时间段，停止检测", "System");
+            StopNightlyDeviceCheck();
         }
     }
 
     /// <summary>
-    /// 检查并启动未运行的设备
+    /// 停止夜间设备检测
     /// </summary>
-    private async void CheckAndStartDevices()
+    private void StopNightlyDeviceCheck()
     {
-        var now = DateTime.Now;
-        if (!EnableNightlyDeviceCheck || Devices.Count == 0 || now.Hour > 22)
+        if (_nightlyDeviceCheckTimer.IsEnabled)
         {
-            return;
-        }
-
-        var DeviceCount = _cacheService.Get<string>($"DeviceCount").ToList<string>() ?? new ();
-        // 检查是否有设备未运行
-        var nonRunningDevices = Devices.Where(d => !d.IsRunning);
-        if (nonRunningDevices.Count() > 101)
-        {
-            int count = await _cacheService.GetAsync<int>($"CheckAndStartDevices");
-            count++;
-            await _cacheService.SetAsync($"CheckAndStartDevices", count);
-
-
-            string message = $"夜间检测到{nonRunningDevices.Count()}个设备未运行，等待启动...";
-            _logService.LogWarning(message, "System");
-
-            // 播放文本提示
-            //await _deviceService.PlayTextAsync(message);
-
-            // 等待语音播放完成
-            await Task.Delay(5000);
-
-            if (now.Hour >= 0 && now.Hour < 9 && count > 30)
-            {
-                await _cacheService.SetAsync($"CheckAndStartDevices", 0);
-                foreach (var device in nonRunningDevices)
-                {
-                    _logService.LogInfo($"启动设备: {device.Name} ({device.Id})", "System");
-                    StartDeviceCheck(device);
-                }
-
-            }
-
-        }
-        else if (Devices.Count() != DeviceCount.Count && now.Hour >= 0 && now.Hour < 9)
-        {
-
-            string message = $"夜间检测到{(3 - nonRunningDevices.Count())}个设备断开连接，等待检查...";
-            _logService.LogWarning(message, "System");
-
-            // 播放文本提示
-            await _deviceService.PlayTextAsync(message);
-
-            // 等待语音播放完成
-            await Task.Delay(5000);
-
+            _nightlyDeviceCheckTimer.Stop();
+            _logService.LogInfo("停止夜间设备检测", "System");
         }
     }
 
@@ -312,29 +208,100 @@ public partial class MainViewModel : ObservableObject
     }
 
     /// <summary>
-    /// 停止夜间设备检测
+    /// 检查并启动未运行的设备
     /// </summary>
-    private void StopNightlyDeviceCheck()
+    private async void CheckAndStartDevices()
     {
-        if (_nightlyDeviceCheckTimer.IsEnabled)
+        var now = DateTime.Now;
+        if (!EnableNightlyDeviceCheck || Devices.Count == 0 || now.Hour > 22)
         {
-            _nightlyDeviceCheckTimer.Stop();
-            _logService.LogInfo("停止夜间设备检测", "System");
+            return;
+        }
+
+        var DeviceCount = _cacheService.Get<string>($"DeviceCount").ToList<string>() ?? new();
+        // 检查是否有设备未运行
+        var nonRunningDevices = Devices.Where(d => !d.IsRunning);
+        if (nonRunningDevices.Count() > 101)
+        {
+            int count = await _cacheService.GetAsync<int>($"CheckAndStartDevices");
+            count++;
+            await _cacheService.SetAsync($"CheckAndStartDevices", count);
+
+
+            string message = $"夜间检测到{nonRunningDevices.Count()}个设备未运行，等待启动...";
+            _logService.LogWarning(message, "System");
+
+            // 播放文本提示
+            await _deviceService.PlayTextAsync(message);
+
+            if (count > 30)
+            {
+                await _cacheService.SetAsync($"CheckAndStartDevices", 0);
+                foreach (var device in nonRunningDevices)
+                {
+                    _logService.LogInfo($"启动设备: {device.Name} ({device.Id})", "System");
+                    StartDeviceCheck(device);
+                }
+
+            }
+        }
+        if (Devices.Count() != DeviceCount.Count)
+        {
+
+            string message = $"夜间检测到{(3 - nonRunningDevices.Count())}个设备断开连接，等待检查...";
+            _logService.LogWarning(message, "System");
+
+            // 播放文本提示
+            await _deviceService.PlayTextAsync(message);
+
+        }
+        if (Devices.Count > 0)
+        {
+            if (!_cacheService.Exists($"DeviceCount"))
+            {
+                await _cacheService.SetAsync($"DeviceCount", Devices.Select(a => a.Id).ToJson());
+            }
+            string PlayaValue = string.Empty;
+            foreach (var device in Devices)
+            {
+                int KsData_Count = await _cacheService.GetAsync<int>($"KsData_Count_{device.Id}");
+                //最后滑动时间
+                if (KsData_Count > 5)
+                {
+                    PlayaValue = $"刷视频设备{device.Id}出现已停止{KsData_Count}次";
+                }
+            }
+            if (!PlayaValue.IsNotEmptyOrNull())
+            {
+                PlayaValue = string.Empty;
+                await _deviceService.PlayTextAsync(PlayaValue);
+            }
         }
     }
 
     /// <summary>
-    /// 夜间设备检测启用状态变更处理
+    /// 夜间设备检测定时器事件
     /// </summary>
-    partial void OnEnableNightlyDeviceCheckChanged(bool value)
+    private void NightlyDeviceCheck_Tick(object? sender, EventArgs e)
     {
-        if (value)
+        // 检查是否在0点到8点之间
+        var now = DateTime.Now;
+        if (now.Hour >= 0 && now.Hour < 9)
         {
-            StartNightlyDeviceCheck();
+            // 如果是0点，执行每日清理任务
+            if (now.Hour == 0 && now.Minute == 0)
+            {
+                _logService.LogInfo("执行每日清理任务", "System");
+                CleanupAllCommand.Execute(null);
+            }
+
+            CheckAndStartDevices();
         }
         else
         {
-            StopNightlyDeviceCheck();
+            // 不在指定时间范围内，停止定时器
+            _nightlyDeviceCheckTimer.Stop();
+            _logService.LogInfo("已退出夜间设备检测时间段，停止检测", "System");
         }
     }
 

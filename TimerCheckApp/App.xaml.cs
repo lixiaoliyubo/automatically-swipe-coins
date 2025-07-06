@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Threading;
@@ -45,12 +46,11 @@ namespace TimerCheckApp
             DispatcherUnhandledException += App_DispatcherUnhandledException;
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
-
             // 显示主窗口
             var mainWindow = Services!.GetRequiredService<MainWindow>();
             mainWindow.Show();
         }
-        
+
         /// <summary>
         /// 创建应用程序所需的目录
         /// </summary>
