@@ -42,12 +42,16 @@ public class DataAdWatching : AdWatchingBase
                     if (text?.Text?.Length > 1)
                     {
 
-
-
-                        if (device.CurPage == AppPageEnum.DyAndKsAddKsJs)
+                        if (device.CurPage == AppPageEnum.SlideUp)
                         {
                             // 刷短剧
                             await HandleSlideUpPageInteractions(device, _device, text, cancellationToken);
+
+                        }
+                        else if (device.CurPage == AppPageEnum.Data)
+                        {
+                            // 刷抖音快手首页视频
+                            await HandleDataPageInteractions(device, _device, text, cancellationToken);
 
                         }
                         else
@@ -224,11 +228,12 @@ public class DataAdWatching : AdWatchingBase
         }
     }
 
-    private async Task HandleSlideUpPageInteractions(DeviceModel device, DeviceData _device, OCRResult text, CancellationToken cancellationToken)
+    private async Task HandleDataPageInteractions(DeviceModel device, DeviceData _device, OCRResult text, CancellationToken cancellationToken)
     {
+
         bool isDesktop = false;
         DateTime dateTime = DateTime.Now;
-        DateTime Data_LastTime = await _cacheService.GetAsync<DateTime>($"KsData_LastTime_{device.Id}");
+        DateTime Data_LastTime = await _cacheService.GetAsync<DateTime>($"Data_LastTime_{device.Id}");
         if (text.TextBlocks.Any(a => a.Text.Contains("抖音极速版")) && text.TextBlocks.Any(a => a.Text.Contains("快手极速版")))
         {
             isDesktop = true;
@@ -365,16 +370,47 @@ public class DataAdWatching : AdWatchingBase
             await SwipeAsync(device, _device, SwipeDirection.Up, 0, "滑动刷视频", 400);
         }
         else
+        {
+            int count = await _cacheService.GetAsync<int>($"DataAdWatching_{device.Id}");
+            count++;
+            await _cacheService.SetAsync($"DataAdWatching_{device.Id}", count);
+            if (count > 10)
             {
-                int count = await _cacheService.GetAsync<int>($"DataAdWatching_{device.Id}");
-                count++;
-                await _cacheService.SetAsync($"DataAdWatching_{device.Id}", count);
-                if (count > 10)
-                {
-                    await _deviceService.PlayTextAsync("黄彩霞,出现未识别的错误");
-                    await Task.Delay(10000, cancellationToken);
-                }
+                await _deviceService.PlayTextAsync("黄彩霞,出现未识别的错误");
+                await Task.Delay(10000, cancellationToken);
             }
+        }
+    }
+
+    private async Task HandleSlideUpPageInteractions(DeviceModel device, DeviceData _device, OCRResult text, CancellationToken cancellationToken)
+    {
+        if (text.TextBlocks.Any(a => a.Text == "朋友" || a.Text == "精选") && text.TextBlocks.Any(a => a.Text == "我"))
+        {
+            if (text.TextBlocks.Any(a => a.Text.StartsWith("每日红包爆涨") || a.Text.StartsWith("说点什么") || a.Text == "外卖红包" || a.Text == "周六限时加补" || a.Text == "立即关注" || a.Text == "人气榜" || a.Text == "带货总榜" || a.Text == "已关闭评论" || a.Text.Contains("更多直播") || a.Text.Contains("欢迎各位小伙伴来到直播间") || a.Text == "粉丝团" || a.Text == "分享直播间"))// || text.TextBlocks.Any(a => a.Text == "关注")
+            {
+                await ClickAsync(device, _device, null, 3000, "返回到刷视频");
+                return;
+            }
+            if (text.TextBlocks.Any(a => a.Text == "广告" || a.Text.Contains("平板") || a.Text.Contains("华为") || a.Text.Contains("小米") || a.Text.Contains("荣耀")))
+            {
+                //var BoxPoint = ocrResult.TextBlocks.FirstOrDefault(a => a.Text == "点击进入直播间");
+                //if (BoxPoint != null)
+                //{
+                //    await ClickAsync(device, adbDevice, BoxPoint.BoxPoints, 3000, BoxPoint.Text);
+                //}
+                await Task.Delay(10000);
+            }
+            if (!text.TextBlocks.Any(a => a.Text.ToLower().Contains("cos")))
+            {
+                var r = new Random().Next(3000, 10000);
+                await Task.Delay(r);
+            }
+            await SwipeAsync(device, _device, SwipeDirection.Up, 0, "滑动刷视频", 400);
+        }
+        else
+        {
+            await ClickAsync(device, _device, null, 3000, "返回到刷视频");
+        }
     }
 
 }

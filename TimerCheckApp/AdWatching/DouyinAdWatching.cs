@@ -11,6 +11,8 @@ using OpenCvSharp;
 using System.IO;
 using TimerCheckApp.Models;
 using DynamicData;
+using static System.Net.Mime.MediaTypeNames;
+using System.Threading;
 
 namespace TimerCheckApp.AdWatching;
 
@@ -1251,6 +1253,7 @@ public class DouyinAdWatching : AdWatchingBase
     }
     private async Task HandleSlideUpPageInteractions(DeviceModel device, DeviceData adbDevice, OCRResult ocrResult, List<string> PagePosChange)
     {
+
         // 限制PagePosChange列表大小不超过50条
         if (PagePosChange.Count >= 50)
         {

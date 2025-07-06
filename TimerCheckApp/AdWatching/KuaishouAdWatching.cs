@@ -1681,14 +1681,10 @@ public class KuaishouAdWatching : AdWatchingBase
         DateTime dateTime = DateTime.Now;
         if (dateTime.Hour > 22)
         {
+            _logService.LogInfo($"时间未到，数据准备中", device.Id);
             await Task.Delay(10000, cancellationToken);
             return;
         }
-
-        //最后滑动时间
-        DateTime KsData_LastTime = await _cacheService.GetAsync<DateTime>($"KsData_LastTime_{device.Id}");
-        //检查非首页次数
-        int KsData_NotHome = await _cacheService.GetAsync<int>($"KsData_NotHome_{device.Id}");
 
         //var BoxPointx = text.TextBlocks.FirstOrDefault(a => Regex.IsMatch(a.Text, @"^@([\s\S]{4,})$"));
         //if (BoxPointx != null)
@@ -1700,27 +1696,39 @@ public class KuaishouAdWatching : AdWatchingBase
         //    Debug.WriteLine($"-----------------");
         //}
 
-        if (!text.TextBlocks.Any(a => a.Text.StartsWith("观看完整短剧")) && !text.TextBlocks.Any(a => Regex.IsMatch(a.Text, @"^@([\s\S]{4,})$") && a.BoxPoints.OrderBy(a => a.X).FirstOrDefault()?.X < 50 && a.BoxPoints.OrderByDescending(a => a.Y).FirstOrDefault()?.Y > (device.Height * 0.8)))
+        #region 检测是否停留在刷视频页面
+        bool isHome = false;
+        if (device.PackageName == PlatformType.AliPay.GetPackageName())
         {
-            KsData_NotHome++;
-            await _cacheService.SetAsync($"KsData_NotHome_{device.Id}", KsData_NotHome);
+            if (
+               (text.TextBlocks.Any(a => Regex.IsMatch(a.Text, @"^([\d-\.]+)元$")) && text.TextBlocks.Any(a => a.Text == "关注" || a.Text == "视频" || a.Text == "发现")) ||
+               (text.TextBlocks.Any(a => a.Text == "关注") && text.TextBlocks.Any(a => a.Text == "发现") && text.TextBlocks.Any(a => a.Text == "支")) ||
+               (text.TextBlocks.Any(a => a.Text == "发首评" || a.Text == "发条评论" || a.Text == "评论区已关闭" || a.Text.Contains("作者期待你的评论")) && text.TextBlocks.Any(a => a.Text == "支")) ||
+               (text.TextBlocks.Any(a => Regex.IsMatch(a.Text, @"^@([\s\S]{3,})$") && a.BoxPoints.OrderBy(a => a.X).FirstOrDefault()?.X < 50 && a.BoxPoints.OrderByDescending(a => a.Y).FirstOrDefault()?.Y > (device.Height * 0.8)) && text.TextBlocks.Any(a => a.Text == "支"))
+               )
+            {
+                isHome = true;
+            }
         }
-        else if (KsData_NotHome > 0)
+        else if (device.PackageName == PlatformType.Kuaishou.GetPackageName() || device.PackageName == PlatformType.KuaishouJs.GetPackageName())
         {
-            KsData_NotHome = 0;
-            await _cacheService.SetAsync($"KsData_NotHome_{device.Id}", 0);
+            if (text.TextBlocks.Any(a => a.Text == "首页" || a.Text == "我") && text.TextBlocks.Any(a => a.Text == "去赚钱" || a.Text == "精选"))
+            {
+                isHome = true;
+            }
         }
-
-        if (KsData_NotHome > 10)
+        if (isHome)
         {
-            await _deviceService.PlayTextAsync($"黄彩霞,检测到非首页{KsData_NotHome}次,快过来看看");
-            await Task.Delay(10000, cancellationToken);
+            await _cacheService.SetAsync($"KsData_Count_{device.Id}", 0);
+            await _cacheService.SetAsync($"KsData_LastTime_{device.Id}", dateTime);
         }
-        else if (KsData_LastTime != DateTime.MinValue && (dateTime - KsData_LastTime.ToDateTime()).TotalMinutes >= 5)
+        else
         {
-            await _deviceService.PlayTextAsync($"黄彩霞,刷视频出现已停止{(dateTime - KsData_LastTime.ToDateTime()).TotalMinutes}分钟,快过来看看");
-            await Task.Delay(10000, cancellationToken);
+            int KsData_Count = await _cacheService.GetAsync<int>($"KsData_Count_{device.Id}");
+            KsData_Count++;
+            await _cacheService.SetAsync($"KsData_Count_{device.Id}", KsData_Count);
         }
+        #endregion
 
 
         if (text.TextBlocks.Any(a => a.Text == "添加到主屏幕" || a.Text == "添加至桌面") && text.TextBlocks.Any(a => a.Text == "取消") && text.TextBlocks.Any(a => a.Text == "添加"))
@@ -1808,12 +1816,22 @@ public class KuaishouAdWatching : AdWatchingBase
             _logService.LogInfo("完成支付宝刷视频", device.Id);
             _deviceService.StopDeviceCheck(device);
         }
-        else if (
-            device.PackageName == PlatformType.AliPay.GetPackageName() &&
-            (text.TextBlocks.Any(a => a.Text == "分词" || a.Text.Contains("中/英")) && text.TextBlocks.Any(a => a.Text == "符" || a.Text == "换行"))
-            )
+        else if (text.TextBlocks.Any(a => a.Text == "分词" || a.Text.Contains("中/英")) && text.TextBlocks.Any(a => a.Text == "符" || a.Text == "换行"))
         {
             await ClickAsync(device, _device, new List<OCRPoint>() { new OCRPoint() { X = (device.Height * 0.5).ToInt(), Y = (device.Height * 0.3).ToInt() } }, 3000, "评论收起");
+        }
+        else if (text.TextBlocks.Any(a => a.Text.StartsWith("每日红包爆涨") || a.Text.StartsWith("说点什么") || a.Text == "外卖红包" || a.Text == "周六限时加补" || a.Text == "立即关注" || a.Text == "已关闭评论" || a.Text.Contains("更多直播") || a.Text.Contains("欢迎各位小伙伴来到直播间") || a.Text == "粉丝团" || a.Text == "分享直播间"))// || text.TextBlocks.Any(a => a.Text == "关注")
+        {
+            await ClickAsync(device, _device, null, 3000, "返回到刷视频");
+        }
+        else if (device.PackageName != PlatformType.AliPay.GetPackageName() && text.TextBlocks.Any(a => a.Text == "朋友推荐"))
+        {
+            var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "朋友推荐");
+            if (BoxPoint != null)
+            {
+                var pos = BoxPoint.BoxPoints.CalculateTextBlockCenter();
+                await ClickAsync(device, _device, new List<OCRPoint>() { new OCRPoint(pos.X, pos.Y - 100) }, 3000, BoxPoint.Text);
+            }
         }
         else if (device.PackageName != PlatformType.AliPay.GetPackageName() && text.TextBlocks.Any(a => Regex.IsMatch(a.Text, @"^(\d+)条评论$")))
         {
@@ -1824,10 +1842,6 @@ public class KuaishouAdWatching : AdWatchingBase
                 await ClickAsync(device, _device, new List<OCRPoint>() { new OCRPoint(pos.X, pos.Y - 300) }, 0, BoxPoint.Text);
             }
         }
-        else if (text.TextBlocks.Any(a => a.Text.StartsWith("每日红包爆涨") || a.Text.StartsWith("说点什么") || a.Text == "外卖红包" || a.Text == "立即关注" || a.Text == "已关闭评论" || a.Text.Contains("更多直播") || a.Text.Contains("欢迎各位小伙伴来到直播间") || a.Text == "粉丝团" || a.Text == "分享直播间"))// || text.TextBlocks.Any(a => a.Text == "关注")
-        {
-            await ClickAsync(device, _device, null, 3000, "返回到刷视频");
-        }
         else if (device.PackageName == PlatformType.AliPay.GetPackageName() && text.TextBlocks.Any(a => a.Text == "视频" || a.Text == "收付款") && text.TextBlocks.Any(a => a.Text == "我的") && !text.TextBlocks.Any(a => a.Text == "发现"))
         {
             var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "视频");
@@ -1835,33 +1849,14 @@ public class KuaishouAdWatching : AdWatchingBase
             {
                 await ClickAsync(device, _device, BoxPoint.BoxPoints, 3000, BoxPoint.Text);
             }
+            else 
+            {
+                var pos = new List<OCRPoint>() { new OCRPoint(device.Width / 2, device.Height - 50) };
+                await ClickAsync(device, _device, pos, 3000, "支付宝位置识别");
+            }
         }
         else
         {
-            bool isHome = false;
-            if (device.PackageName == PlatformType.AliPay.GetPackageName())
-            {
-                if (
-                   (text.TextBlocks.Any(a => Regex.IsMatch(a.Text, @"^([\d-\.]+)元$")) && text.TextBlocks.Any(a => a.Text == "关注" || a.Text == "视频" || a.Text == "发现")) ||
-                   (text.TextBlocks.Any(a => a.Text == "关注") && text.TextBlocks.Any(a => a.Text == "发现") && text.TextBlocks.Any(a => a.Text == "支")) ||
-                   (text.TextBlocks.Any(a => a.Text == "发首评" || a.Text == "发条评论") && text.TextBlocks.Any(a => a.Text == "支"))
-                   )
-                {
-                    isHome = true;
-                }
-            }
-            else if (device.PackageName == PlatformType.Kuaishou.GetPackageName())
-            {
-                if (text.TextBlocks.Any(a => a.Text == "首页" || a.Text == "我") && text.TextBlocks.Any(a => a.Text == "去赚钱" || a.Text == "精选"))
-                {
-                    isHome = true;
-                }
-            }
-            if (isHome)
-            {
-                await _cacheService.RemoveAsync($"KsData_Count_{device.Id}");
-                await _cacheService.SetAsync($"KsData_LastTime_{device.Id}", dateTime);
-            }
 
             int Max = 13000;
             var m = Regex.Match(text.Text, @"(\d{1,2})/(\d{1,2})支");

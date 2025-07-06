@@ -2,7 +2,9 @@ using System;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Text.Json;
+using System.Threading;
 using System.Windows.Threading;
+using Dm;
 using SqlSugar;
 using TimerCheckApp.Services.Interfaces;
 using ICacheService = TimerCheckApp.Services.Interfaces.ICacheService;
@@ -145,16 +147,40 @@ public partial class MainViewModel : ObservableObject
         {
             while (true)
             {
-                var now = DateTime.Now;
-                if (now.Hour >= 0 && now.Hour < 9)
+                try
                 {
-                    if (Devices.Count > 0)
+                    var now = DateTime.Now;
+                    if (now.Hour >= 0 && now.Hour < 9)
                     {
-                        await _cacheService.SetAsync($"DeviceCount", Devices.Select(a => a.Id).ToJson());
-                        break;
+                        if (Devices.Count > 0)
+                        {
+                            if (!_cacheService.Exists($"DeviceCount"))
+                            {
+                                await _cacheService.SetAsync($"DeviceCount", Devices.Select(a => a.Id).ToJson());
+                            }
+                            string PlayaValue = string.Empty;
+                            foreach (var device in Devices)
+                            {
+                                int KsData_Count = await _cacheService.GetAsync<int>($"KsData_Count_{device.Id}");
+                                //最后滑动时间
+                                if (KsData_Count > 5)
+                                {
+                                    PlayaValue = $"刷视频设备{device.Id}出现已停止{KsData_Count}次";
+                                }
+                            }
+                            if (!PlayaValue.IsNotEmptyOrNull())
+                            {
+                                PlayaValue = string.Empty;
+                                await _deviceService.PlayTextAsync(PlayaValue);
+                            }
+                        }
                     }
                 }
-                await Task.Delay(10000);
+                catch (Exception ex)
+                {
+                    _logService.LogError("设备检查错误：" + ex.Message, "System");
+                }
+                await Task.Delay(5000);
             }
         });
     }
