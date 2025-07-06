@@ -218,6 +218,7 @@ public partial class MainViewModel : ObservableObject
             return;
         }
 
+        string message = string.Empty;
         var DeviceCount = _cacheService.Get<string>($"DeviceCount").ToList<string>() ?? new();
         // 检查是否有设备未运行
         var nonRunningDevices = Devices.Where(d => !d.IsRunning);
@@ -228,11 +229,9 @@ public partial class MainViewModel : ObservableObject
             await _cacheService.SetAsync($"CheckAndStartDevices", count);
 
 
-            string message = $"夜间检测到{nonRunningDevices.Count()}个设备未运行，等待启动...";
+            message = $"夜间检测到{nonRunningDevices.Count()}个设备未运行，等待启动...";
             _logService.LogWarning(message, "System");
 
-            // 播放文本提示
-            await _deviceService.PlayTextAsync(message);
 
             if (count > 30)
             {
@@ -245,37 +244,33 @@ public partial class MainViewModel : ObservableObject
 
             }
         }
-        if (Devices.Count() != DeviceCount.Count)
+        else if (Devices.Count() != DeviceCount.Count)
         {
-
-            string message = $"夜间检测到{(3 - nonRunningDevices.Count())}个设备断开连接，等待检查...";
+            message = $"夜间检测到{(3 - nonRunningDevices.Count())}个设备断开连接，等待检查...";
             _logService.LogWarning(message, "System");
 
             // 播放文本提示
-            await _deviceService.PlayTextAsync(message);
-
         }
-        if (Devices.Count > 0)
+        else if(Devices.Count > 0)
         {
             if (!_cacheService.Exists($"DeviceCount"))
             {
                 await _cacheService.SetAsync($"DeviceCount", Devices.Select(a => a.Id).ToJson());
             }
-            string PlayaValue = string.Empty;
             foreach (var device in Devices)
             {
                 int KsData_Count = await _cacheService.GetAsync<int>($"KsData_Count_{device.Id}");
                 //最后滑动时间
                 if (KsData_Count > 5)
                 {
-                    PlayaValue = $"刷视频设备{device.Id}出现已停止{KsData_Count}次";
+                    message = $"刷视频设备{device.Id}出现已停止{KsData_Count}次";
                 }
             }
-            if (!PlayaValue.IsNotEmptyOrNull())
-            {
-                PlayaValue = string.Empty;
-                await _deviceService.PlayTextAsync(PlayaValue);
-            }
+        }
+        if (!message.IsNotEmptyOrNull())
+        {
+            message = string.Empty;
+            await _deviceService.PlayTextAsync(message);
         }
     }
 
