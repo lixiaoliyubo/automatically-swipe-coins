@@ -269,8 +269,8 @@ public partial class MainViewModel : ObservableObject
         }
         if (!message.IsNotEmptyOrNull())
         {
-            message = string.Empty;
             await _deviceService.PlayTextAsync(message);
+            message = string.Empty;
         }
     }
 
