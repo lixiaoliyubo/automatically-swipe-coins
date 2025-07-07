@@ -222,7 +222,7 @@ public partial class MainViewModel : ObservableObject
         var DeviceCount = _cacheService.Get<string>($"DeviceCount").ToList<string>() ?? new();
         // 检查是否有设备未运行
         var nonRunningDevices = Devices.Where(d => !d.IsRunning);
-        if (nonRunningDevices.Count() > 101)
+        if (nonRunningDevices.Count() > 0)
         {
             int count = await _cacheService.GetAsync<int>($"CheckAndStartDevices");
             count++;
@@ -244,9 +244,9 @@ public partial class MainViewModel : ObservableObject
 
             }
         }
-        else if (Devices.Count() != DeviceCount.Count)
+        else if (Devices.Count() != DeviceCount.Count && DeviceCount.Count > 0 && Devices.Count() > 0)
         {
-            message = $"夜间检测到{(3 - nonRunningDevices.Count())}个设备断开连接，等待检查...";
+            message = $"夜间检测到{(DeviceCount.Count - Devices.Count())}个设备断开连接，等待检查...";
             _logService.LogWarning(message, "System");
 
             // 播放文本提示
