@@ -583,7 +583,7 @@ public class KuaishouAdWatching : AdWatchingBase
                                 }
                             }
                         }
-                        else if (device.CurPage != AppPageEnum.KSShopMall && !text.TextBlocks.Any(a => a.Text == "去领取") && text.TextBlocks.Any(a => a.Text == "首页") && text.TextBlocks.Any(a => a.Text == "去赚钱") && !text.TextBlocks.Any(a => a.Text == "任务中心") && text.TextBlocks.Any(a => a.Text == "发现" || a.Text == "关注"))
+                        else if (device.CurPage != AppPageEnum.DayClockIn && device.CurPage != AppPageEnum.KSShopMall && !text.TextBlocks.Any(a => a.Text == "去领取") && text.TextBlocks.Any(a => a.Text == "首页") && text.TextBlocks.Any(a => a.Text == "去赚钱") && !text.TextBlocks.Any(a => a.Text == "任务中心") && text.TextBlocks.Any(a => a.Text == "发现" || a.Text == "关注"))
                         {
                             var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "去赚钱");
                             if (BoxPoint != null)

@@ -380,7 +380,7 @@ public class DataAdWatching : AdWatchingBase
                 await _cacheService.SetAsync($"DataAdWatching_{device.CurPage.ToString()}", count);
                 if (count > 10)
                 {
-                    await _deviceService.PlayTextAsync("黄彩霞,出现未识别的错误");
+                    await _deviceService.PlayTextAsync("出现未识别的错误");
                     await Task.Delay(10000, cancellationToken);
                 }
             }
@@ -397,11 +397,11 @@ public class DataAdWatching : AdWatchingBase
             }
             if (text.TextBlocks.Any(a => a.Text == "广告" || a.Text.Contains("平板") || a.Text.Contains("华为") || a.Text.Contains("小米") || a.Text.Contains("荣耀")))
             {
-                //var BoxPoint = ocrResult.TextBlocks.FirstOrDefault(a => a.Text == "点击进入直播间");
-                //if (BoxPoint != null)
-                //{
-                //    await ClickAsync(device, adbDevice, BoxPoint.BoxPoints, 3000, BoxPoint.Text);
-                //}
+                var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "点击进入直播间");
+                if (BoxPoint != null)
+                {
+                    await ClickAsync(device, _device, BoxPoint.BoxPoints, 3000, BoxPoint.Text);
+                }
                 await Task.Delay(10000);
             }
             if (!text.TextBlocks.Any(a => a.Text.ToLower().Contains("cos")))
