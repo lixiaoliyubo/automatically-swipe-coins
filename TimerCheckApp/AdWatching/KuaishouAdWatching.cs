@@ -1716,6 +1716,9 @@ public class KuaishouAdWatching : AdWatchingBase
             {
                 isHome = true;
             }
+            else {
+                await ClickAsync(device, _device, null, 2000, "返回-首页");
+            }
         }
         if (isHome)
         {
