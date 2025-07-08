@@ -1484,7 +1484,7 @@ public class KuaishouAdWatching : AdWatchingBase
                                     var BoxPoint = text.TextBlocks.LastOrDefault(a => a.Text == "去观看");
                                     if (BoxPoint != null)
                                     {
-                                        await ClickAsync(device, _device, BoxPoint.BoxPoints, 2000, BoxPoint.Text);
+                                        await ClickAsync(device, _device, BoxPoint.BoxPoints, 30000, BoxPoint.Text);
                                         continue;
                                     }
                                 }
@@ -1493,7 +1493,7 @@ public class KuaishouAdWatching : AdWatchingBase
                                     var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "去观看");
                                     if (BoxPoint != null)
                                     {
-                                        await ClickAsync(device, _device, BoxPoint.BoxPoints, 2000, BoxPoint.Text);
+                                        await ClickAsync(device, _device, BoxPoint.BoxPoints, 5000, BoxPoint.Text);
                                         continue;
                                     }
                                 }
@@ -1527,7 +1527,7 @@ public class KuaishouAdWatching : AdWatchingBase
                                 }
                                 else if (!text.TextBlocks.Any(a => a.Text == "去观看") && text.TextBlocks.Any(a => a.Text == "已完成" || a.Text.Contains("当前用户已在") || a.Text.Contains("当前设备已绑定")))
                                 {
-                                    await ClickAsync(device, _device, null, 3000, "返回-首页");
+                                    await ClickAsync(device, _device, null, 7000, "返回-首页");
                                     continue;
                                 }
                                 else

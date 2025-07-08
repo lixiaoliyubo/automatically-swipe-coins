@@ -374,16 +374,16 @@ public class DataAdWatching : AdWatchingBase
             }
         }
         else
+        {
+            int count = await _cacheService.GetAsync<int>($"DataAdWatching_{device.CurPage.ToString()}");
+            count++;
+            await _cacheService.SetAsync($"DataAdWatching_{device.CurPage.ToString()}", count);
+            if (count > 10)
             {
-                int count = await _cacheService.GetAsync<int>($"DataAdWatching_{device.CurPage.ToString()}");
-                count++;
-                await _cacheService.SetAsync($"DataAdWatching_{device.CurPage.ToString()}", count);
-                if (count > 10)
-                {
-                    await _deviceService.PlayTextAsync("出现未识别的错误");
-                    await Task.Delay(10000, cancellationToken);
-                }
+                await _deviceService.PlayTextAsync("出现未识别的错误");
+                await Task.Delay(10000, cancellationToken);
             }
+        }
     }
 
     private async Task HandleSlideUpPageInteractions(DeviceModel device, DeviceData _device, OCRResult text, CancellationToken cancellationToken)
@@ -395,7 +395,7 @@ public class DataAdWatching : AdWatchingBase
                 await ClickAsync(device, _device, null, 3000, "返回到刷视频");
                 return;
             }
-            if (text.TextBlocks.Any(a => a.Text == "广告" || a.Text.Contains("平板") || a.Text.Contains("华为") || a.Text.Contains("小米") || a.Text.Contains("荣耀")))
+            if (text.TextBlocks.Any(a => a.Text == "广告" || a.Text.Contains("平板") || a.Text.Contains("华为") || a.Text.Contains("小米") || a.Text.Contains("荣耀")) && new int[] { 3, 15, 22, 30, 41, 45, 50, 46, 58 }.Contains(DateTime.Now.Minute))
             {
                 var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "点击进入直播间");
                 if (BoxPoint != null)
