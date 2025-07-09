@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using System.Collections.Concurrent;
 using TimerCheckApp.Models;
 using System.Diagnostics;
+using System;
 
 namespace TimerCheckApp.AdWatching;
 
@@ -41,13 +42,13 @@ public class AliPayAdWatching : AdWatchingBase
                     OCRResult? text = await _deviceService.GetOCRText(device);
                     if (text?.Text?.Length > 1)
                     {
+                        DateTime now = DateTime.Now;
                         if (device.CurPage == AppPageEnum.Data)
                         {
                             // 获取当前时间
-                            DateTime now = DateTime.Now;
                             //_logService.LogInfo($"当前时间: {now:yyyy-MM-dd HH:mm:ss}", device.Id);
 
-                            if (text.TextBlocks.Any(a => a.Text == "明日可领") && now.Hour > 22)
+                            if (now.Hour > 22)
                             {
                                 await Task.Delay(15000, cancellationToken);
                                 continue;
@@ -118,6 +119,15 @@ public class AliPayAdWatching : AdWatchingBase
 
                         #region 页面层面
 
+                        else if (text.TextBlocks.Any(a => a.Text == "明日可领") && now.Hour < 9)
+                        {
+                            var DeviceCount = _cacheService.Get<string>($"DeviceCount").ToList<string>() ?? new();
+                            DeviceCount.Remove(device.Id);
+                            await _cacheService.SetAsync($"DeviceCount", DeviceCount.ToJson());
+
+                            _logService.LogInfo("完成支付宝刷视频", device.Id);
+                            _deviceService.StopDeviceCheck(device);
+                        }
                         else if (
                             (text.TextBlocks.Any(a => a.Text == "软件商店") && text.TextBlocks.Any(a => a.Text == "主题商店")) ||
                             (text.TextBlocks.Any(a => a.Text == "华为商城") && text.TextBlocks.Any(a => a.Text == "应用市场"))
