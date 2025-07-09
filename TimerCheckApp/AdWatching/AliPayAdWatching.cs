@@ -61,12 +61,10 @@ public class AliPayAdWatching : AdWatchingBase
 
                         if (text.TextBlocks.Any(a => a.Text.Contains("抖音极速版")) && text.TextBlocks.Any(a => a.Text.Contains("支付宝")))
                         {
-                            var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "支付宝");
-                            if (BoxPoint != null)
-                            {
-                                await ClickAsync(device, _device, BoxPoint.BoxPoints, 10000, BoxPoint.Text);
-                                continue;
-                            }
+                            device.PackageName = PlatformType.AliPay.GetPackageName();
+                            await StartAppAsync(device, device.PackageName);
+                            await Task.Delay(10000);
+                            continue;
                         }
 
 
@@ -197,15 +195,6 @@ public class AliPayAdWatching : AdWatchingBase
                             {
                                 await ClickAsync(device, _device, null, 3000, "返回到刷视频");
                                 continue;
-                            }
-                            else if (!text.TextBlocks.Any(a => Regex.IsMatch(a.Text, @"^([\d-\.]+)元$")))
-                            {
-                                var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "视频");
-                                if (BoxPoint != null)
-                                {
-                                    await ClickAsync(device, _device, BoxPoint.BoxPoints, 2000, BoxPoint.Text);
-                                    continue;
-                                }
                             }
                             else if (text.TextBlocks.Any(a => a.Text == "闪购") && text.TextBlocks.Any(a => a.Text == "订单"))
                             {
