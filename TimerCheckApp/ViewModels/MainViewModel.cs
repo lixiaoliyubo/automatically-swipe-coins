@@ -222,7 +222,7 @@ public partial class MainViewModel : ObservableObject
         var DeviceCount = _cacheService.Get<string>($"DeviceCount").ToList<string>() ?? new();
         // 检查是否有设备未运行
         var nonRunningDevices = Devices.Where(d => !d.IsRunning);
-        if (nonRunningDevices.Count() > 0)
+        if (Devices.Count() != DeviceCount.Count && nonRunningDevices.Count() > 0)
         {
             int count = await _cacheService.GetAsync<int>($"CheckAndStartDevices");
             count++;
