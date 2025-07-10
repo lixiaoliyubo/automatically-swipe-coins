@@ -195,6 +195,22 @@ public class KuaishouAdWatching : AdWatchingBase
                             await Task.Delay(2000);
                             continue;
                         }
+                        else if (device.CurPage == AppPageEnum.SlideUpVideo)
+                        {
+                            // 刷短剧
+                            try
+                            {
+
+                                await HandleSlideUpVideoPageInteractions(device, _device, text, cancellationToken);
+                            }
+                            catch (Exception ex)
+                            {
+                                _logService.LogError($"自动化过程出错: {ex.Message}", device.Id);
+                                await Task.Delay(5000);
+                            }
+                            await Task.Delay(2000);
+                            continue;
+                        }
                         #endregion
 
 
@@ -1525,6 +1541,11 @@ public class KuaishouAdWatching : AdWatchingBase
                                     await SwipeAsync(device, _device, SwipeDirection.Up, new Random().Next(5000, 10000), "赚钱首页", 200);
                                     continue;
                                 }
+                                else if (text.TextBlocks.Any(a => a.Text == "去观看"))
+                                {
+                                    await Task.Delay(2000);
+                                    continue;
+                                }
                                 else if (!text.TextBlocks.Any(a => a.Text == "去观看") && text.TextBlocks.Any(a => a.Text == "已完成" || a.Text.Contains("当前用户已在") || a.Text.Contains("当前设备已绑定")))
                                 {
                                     await ClickAsync(device, _device, null, 7000, "返回-首页");
@@ -1672,6 +1693,79 @@ public class KuaishouAdWatching : AdWatchingBase
         catch (Exception ex)
         {
             _logService.LogError($"自动化过程出错: {ex.Message}", device.Id);
+        }
+    }
+
+    private async Task HandleSlideUpVideoPageInteractions(DeviceModel device, DeviceData _device, OCRResult text, CancellationToken cancellationToken)
+    {
+        DateTime dateTime = DateTime.Now;
+        
+
+        if (
+            (text.TextBlocks.Any(a => a.Text == "软件商店") && text.TextBlocks.Any(a => a.Text == "主题商店")) ||
+            (text.TextBlocks.Any(a => a.Text == "华为商城") && text.TextBlocks.Any(a => a.Text == "应用市场"))
+            )
+        {
+            await SwipeAsync(device, _device, SwipeDirection.Left, 2000, "左滑");
+        }
+        else if(text.TextBlocks.Any(a => a.Text == "快手极速版") && text.TextBlocks.Any(a => a.Text == "快手"))
+        {
+            device.PackageName = device.CurPlatform.GetPackageName();
+            await StartAppAsync(device, device.PackageName);
+            await Task.Delay(10000);
+        }
+        else if(text.TextBlocks.Any(a => a.Text == "添加到主屏幕" || a.Text == "添加至桌面") && text.TextBlocks.Any(a => a.Text == "取消") && text.TextBlocks.Any(a => a.Text == "添加"))
+        {
+            var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "取消");
+            if (BoxPoint != null)
+            {
+                await ClickAsync(device, _device, BoxPoint.BoxPoints, 2000, BoxPoint.Text);
+                return;
+            }
+        }
+        else if (text.TextBlocks.Any(a => a.Text == "分词" || a.Text.Contains("中/英")) && text.TextBlocks.Any(a => a.Text == "符" || a.Text == "换行"))
+        {
+            await ClickAsync(device, _device, new List<OCRPoint>() { new OCRPoint() { X = (device.Height * 0.5).ToInt(), Y = (device.Height * 0.3).ToInt() } }, 3000, "评论收起");
+        }
+        else if (text.TextBlocks.Any(a => a.Text == "朋友推荐"))
+        {
+            var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "朋友推荐");
+            if (BoxPoint != null)
+            {
+                var pos = BoxPoint.BoxPoints.CalculateTextBlockCenter();
+                await ClickAsync(device, _device, new List<OCRPoint>() { new OCRPoint(pos.X, pos.Y - 100) }, 3000, BoxPoint.Text);
+            }
+        }
+        else if (text.TextBlocks.Any(a => Regex.IsMatch(a.Text, @"^(\d+)条评论$")))
+        {
+            var BoxPoint = text.TextBlocks.FirstOrDefault(a => Regex.IsMatch(a.Text, @"^(\d+)条评论$"));
+            if (BoxPoint != null)
+            {
+                var pos = BoxPoint.BoxPoints.CalculateTextBlockCenter();
+                await ClickAsync(device, _device, new List<OCRPoint>() { new OCRPoint(pos.X, pos.Y - 300) }, 0, BoxPoint.Text);
+            }
+        }
+        else
+        {
+            if (text.TextBlocks.Any(a => a.Text == "首页" || a.Text == "我") && text.TextBlocks.Any(a => a.Text == "朋友" || a.Text == "去赚钱" || a.Text == "精选"))
+            {
+                int Max = 13000;
+                var m = Regex.Match(text.Text, @"(\d{1,2})/(\d{1,2})支");
+                if (m.Success)
+                {
+                    Max = GetDynamicMax(m.Groups[2].Value.ToInt());
+                }
+                var r = new Random().Next(5000, Max);
+                if (!text.TextBlocks.Any(a => a.Text == "点击进入直播间" || a.Text.Contains("上滑继续观看视频")))
+                {
+                    await Task.Delay(r, cancellationToken);
+                }
+                await SwipeAsync(device, _device, SwipeDirection.Up, 0, "滑动刷视频", 400);
+            }
+            else
+            {
+                await ClickAsync(device, _device, null, 3000, "返回到刷视频");
+            }
         }
     }
 

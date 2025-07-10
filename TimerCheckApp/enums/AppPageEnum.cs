@@ -7,6 +7,11 @@ namespace TimerCheckApp.enums
         Node = 0,
         [Description("滑动看短剧")]
         SlideUp = 1,
+        /// <summary>
+        /// 刷视频
+        /// </summary>
+        [Description("滑动刷视频")]
+        SlideUpVideo = 16,
         [Description("金币首页")]
         MoneyHome = 2,
         [Description("逛街得金币")]
