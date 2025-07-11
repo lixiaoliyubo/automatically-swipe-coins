@@ -48,7 +48,7 @@ public class AliPayAdWatching : AdWatchingBase
                             // 获取当前时间
                             //_logService.LogInfo($"当前时间: {now:yyyy-MM-dd HH:mm:ss}", device.Id);
 
-                            if (now.Hour > 22)
+                            if (now.Hour >= 22)
                             {
                                 await Task.Delay(15000, cancellationToken);
                                 continue;
