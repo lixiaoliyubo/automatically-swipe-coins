@@ -119,12 +119,17 @@ public class AliPayAdWatching : AdWatchingBase
 
                         else if (text.TextBlocks.Any(a => a.Text == "明日可领") && now.Hour < 9)
                         {
-                            var DeviceCount = _cacheService.Get<string>($"DeviceCount").ToList<string>() ?? new();
-                            DeviceCount.Remove(device.Id);
-                            await _cacheService.SetAsync($"DeviceCount", DeviceCount.ToJson());
+                            //var DeviceCount = _cacheService.Get<string>($"DeviceCount").ToList<string>() ?? new();
+                            //DeviceCount.Remove(device.Id);
+                            //await _cacheService.SetAsync($"DeviceCount", DeviceCount.ToJson());
 
                             _logService.LogInfo("完成支付宝刷视频", device.Id);
-                            _deviceService.StopDeviceCheck(device);
+                            //_deviceService.StopDeviceCheck(device);
+
+
+                            device.CurPlatform = PlatformType.Kuaishou;
+                            device.CurPage = AppPageEnum.SlideUpVideo;
+                            _deviceService.StartDeviceCheck(device, "");
                         }
                         else if (
                             (text.TextBlocks.Any(a => a.Text == "软件商店") && text.TextBlocks.Any(a => a.Text == "主题商店")) ||

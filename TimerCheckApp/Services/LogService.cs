@@ -47,6 +47,7 @@ public class LogService : ILogService
         var entriesCopy = entries.ToList();
         foreach (var entry in entriesCopy)
         {
+            if (entry == null) continue;
             sb.AppendLine(FormatLogEntry(entry));
         }
         return sb.ToString();

@@ -144,8 +144,8 @@ public class DeviceService : IDeviceService, IDisposable
                 }
                 if (DateTime.Now.Hour >= 0 && DateTime.Now.Hour < 9)
                 {
-                    deviceModel.CurPlatform =  enums.PlatformType.Kuaishou;
-                    deviceModel.CurPage =  enums.AppPageEnum.Data;
+                    deviceModel.CurPlatform =  enums.PlatformType.AliPay;
+                    deviceModel.CurPage =  enums.AppPageEnum.Node;
                 }
 
                 devices.Add(deviceModel);

@@ -26,7 +26,7 @@ public partial class DeviceModel : ObservableObject
     /// 获取或设置当前选择的平台类型
     /// </summary>
     [ObservableProperty]
-    private PlatformType _curPlatform = PlatformType.DouyinJs;
+    private PlatformType _curPlatform = PlatformType.AliPay;
 
     /// <summary>
     /// 设备ID
