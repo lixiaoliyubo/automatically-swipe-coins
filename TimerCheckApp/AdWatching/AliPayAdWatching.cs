@@ -124,8 +124,8 @@ public class AliPayAdWatching : AdWatchingBase
                             //await _cacheService.SetAsync($"DeviceCount", DeviceCount.ToJson());
 
                             _logService.LogInfo("完成支付宝刷视频", device.Id);
-                            //_deviceService.StopDeviceCheck(device);
-
+                            _deviceService.CleanDeviceRunningApps(device.Id);
+                            await Task.Delay(15000, cancellationToken);
 
                             device.CurPlatform = PlatformType.Kuaishou;
                             device.CurPage = AppPageEnum.SlideUpVideo;
