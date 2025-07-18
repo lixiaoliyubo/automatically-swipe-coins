@@ -517,10 +517,6 @@ public class HongGuoWatching : AdWatchingBase
                                 }
                                 #endregion
 
-                                //else if (device.CurPage == AppPageEnum.GuangJie)
-                                //{
-                                //    await SwipeAsync(device, _device, SwipeDirection.Down, 2000, "返回-停留页面超过60秒");
-                                //}
                                 #region 页面停留超时
                                 else if (_deviceService.CurAdbClient.GetAppStatus(_device, device.PackageName) != AdvancedSharpAdbClient.Models.AppStatus.Foreground)
                                 {
@@ -540,7 +536,6 @@ public class HongGuoWatching : AdWatchingBase
                                     else
                                     {
 
-                                        await SwipeAsync(device, _device, SwipeDirection.Down, 1000, "返回-停留页面超过60秒", 200);
                                         await ClickAsync(device, _device, null, 2000, "返回-停留页面超过60秒");
                                     }
                                 }
