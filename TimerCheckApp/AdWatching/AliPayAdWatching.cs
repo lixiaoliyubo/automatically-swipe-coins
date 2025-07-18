@@ -122,6 +122,9 @@ public class AliPayAdWatching : AdWatchingBase
                             //var DeviceCount = _cacheService.Get<string>($"DeviceCount").ToList<string>() ?? new();
                             //DeviceCount.Remove(device.Id);
                             //await _cacheService.SetAsync($"DeviceCount", DeviceCount.ToJson());
+                            _deviceService.StopDeviceCheck(device);
+
+                            await Task.Delay(5000, cancellationToken);
 
                             _logService.LogInfo("完成支付宝刷视频", device.Id);
                             _deviceService.CleanDeviceRunningApps(device.Id);
