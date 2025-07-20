@@ -240,11 +240,11 @@ public class LogService : ILogService
         // 获取日志不需要在UI线程上执行，因为我们只是读取数据
         if (isWebSocketLog)
         {
-            deviceLogs.AddRange(_webSocketLogEntries.Where(log => string.IsNullOrEmpty(deviceId) || log.DeviceId == deviceId).ToList());
+            deviceLogs.AddRange(_webSocketLogEntries.Where(log => string.IsNullOrEmpty(deviceId) || log?.DeviceId == deviceId).ToList());
         }
         else
         {
-            deviceLogs.AddRange(_logEntries.Where(log => string.IsNullOrEmpty(deviceId) || log.DeviceId == deviceId).ToList());
+            deviceLogs.AddRange(_logEntries.Where(log => string.IsNullOrEmpty(deviceId) || log?.DeviceId == deviceId).ToList());
         }
 
         return deviceLogs;

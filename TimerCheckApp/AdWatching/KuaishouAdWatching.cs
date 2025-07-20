@@ -567,7 +567,7 @@ public class KuaishouAdWatching : AdWatchingBase
                         #endregion
 
                         #region 页面层
-                        else if (text.TextBlocks.Any(a => a.Text == "精选") && text.TextBlocks.Any(a => a.Text == "我") && !text.TextBlocks.Any(a => a.Text == "去领取"))
+                        else if (device.CurPage != AppPageEnum.DayClockIn && device.CurPage != AppPageEnum.KSShopMall && !text.TextBlocks.Any(a => a.Text == "去领取") && text.TextBlocks.Any(a => a.Text == "精选") && text.TextBlocks.Any(a => a.Text == "我") && !text.TextBlocks.Any(a => a.Text == "去领取"))
                         {
                             if (text.TextBlocks.Any(a => a.Text == "点击进入直播间"))
                             {
@@ -1553,7 +1553,7 @@ public class KuaishouAdWatching : AdWatchingBase
                                 }
                                 else
                                 {
-
+                                    await SwipeAsync(device, _device, SwipeDirection.Up, new Random().Next(3000), "赚钱首页", 200);
                                 }
                                 #endregion
                             }

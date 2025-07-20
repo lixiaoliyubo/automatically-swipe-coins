@@ -190,7 +190,7 @@ public partial class MainViewModel : ObservableObject
 
         var now = DateTime.Now;
         // 只在0点到8点之间启动定时器
-        if (now.Hour >= 0 && now.Hour < 9)
+        if (now.Hour >= 0 && now.Hour < 8)
         {
             if (!_nightlyDeviceCheckTimer.IsEnabled)
             {
@@ -281,7 +281,7 @@ public partial class MainViewModel : ObservableObject
     {
         // 检查是否在0点到8点之间
         var now = DateTime.Now;
-        if (now.Hour >= 0 && now.Hour < 9)
+        if (now.Hour >= 0 && now.Hour < 8)
         {
             // 如果是0点，执行每日清理任务
             if (now.Hour == 0 && now.Minute == 0)

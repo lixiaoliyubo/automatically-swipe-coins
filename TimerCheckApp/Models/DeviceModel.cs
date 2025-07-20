@@ -14,7 +14,7 @@ public partial class DeviceModel : ObservableObject
     /// 当前页面类型
     /// </summary>
     [ObservableProperty]
-    private AppPageEnum _curPage;
+    private AppPageEnum _curPage = AppPageEnum.SlideUpVideo;
 
     /// <summary>
     /// 当前子级页面类型
