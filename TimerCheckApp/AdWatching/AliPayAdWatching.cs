@@ -102,16 +102,16 @@ public class AliPayAdWatching : AdWatchingBase
                                 continue;
                             }
                         }
-                        else if (text.TextBlocks.Any(a => a.Text.Contains("外卖红包") || a.Text.Contains("闪购外卖")) && text.TextBlocks.Any(a => a.Text == "去领取" || a.Text == "去使用"))
-                        {
+                        //else if (text.TextBlocks.Any(a => a.Text.Contains("外卖红包") || a.Text.Contains("闪购外卖")) && text.TextBlocks.Any(a => a.Text == "去领取" || a.Text == "去使用"))
+                        //{
 
-                            var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "去领取" || a.Text == "去使用");
-                            if (BoxPoint != null)
-                            {
-                                await ClickAsync(device, _device, BoxPoint.BoxPoints, 2000, BoxPoint.Text);
-                                continue;
-                            }
-                        }
+                        //    var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "去领取" || a.Text == "去使用");
+                        //    if (BoxPoint != null)
+                        //    {
+                        //        await ClickAsync(device, _device, BoxPoint.BoxPoints, 2000, BoxPoint.Text);
+                        //        continue;
+                        //    }
+                        //}
                         #endregion
 
 
