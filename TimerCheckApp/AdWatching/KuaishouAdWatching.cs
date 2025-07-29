@@ -1745,27 +1745,22 @@ public class KuaishouAdWatching : AdWatchingBase
                 await ClickAsync(device, _device, new List<OCRPoint>() { new OCRPoint(pos.X, pos.Y - 300) }, 0, BoxPoint.Text);
             }
         }
+        else if (text.TextBlocks.Any(a => a.Text == "朋友") && text.TextBlocks.Any(a => a.Text == "消息") && text.TextBlocks.Any(a => a.Text == "精选" || a.Text == "去赚钱"))
+        {
+            var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "精选" || a.Text == "去赚钱");
+            if (BoxPoint != null)
+            {
+                await ClickAsync(device, _device, BoxPoint.BoxPoints, 2000, BoxPoint.Text);
+            }
+        }
         else
         {
-            if (text.TextBlocks.Any(a => a.Text == "首页" || a.Text == "我") && text.TextBlocks.Any(a => a.Text == "朋友" || a.Text == "去赚钱" || a.Text == "精选"))
+            var r = new Random().Next(5000, 10000);
+            if (!text.TextBlocks.Any(a => a.Text == "点击进入直播间" || a.Text.Contains("上滑继续观看视频")))
             {
-                int Max = 13000;
-                var m = Regex.Match(text.Text, @"(\d{1,2})/(\d{1,2})支");
-                if (m.Success)
-                {
-                    Max = GetDynamicMax(m.Groups[2].Value.ToInt());
-                }
-                var r = new Random().Next(5000, Max);
-                if (!text.TextBlocks.Any(a => a.Text == "点击进入直播间" || a.Text.Contains("上滑继续观看视频")))
-                {
-                    await Task.Delay(r, cancellationToken);
-                }
-                await SwipeAsync(device, _device, SwipeDirection.Up, 0, "滑动刷视频", 400);
+                await Task.Delay(r, cancellationToken);
             }
-            else
-            {
-                await ClickAsync(device, _device, null, 3000, "返回到刷视频");
-            }
+            await SwipeAsync(device, _device, SwipeDirection.Up, 0, "滑动刷视频", 400);
         }
     }
 

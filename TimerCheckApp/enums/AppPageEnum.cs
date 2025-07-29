@@ -11,37 +11,37 @@ namespace TimerCheckApp.enums
         /// 刷视频
         /// </summary>
         [Description("滑动刷视频")]
-        SlideUpVideo = 16,
+        SlideUpVideo = 2,
         [Description("金币首页")]
-        MoneyHome = 2,
+        MoneyHome = 3,
         [Description("逛街得金币")]
-        GuangJie = 3,
+        GuangJie = 4,
         [Description("看指定视频得金币")]
-        AppointVideo = 4,
+        AppointVideo = 5,
         [Description("开宝箱得金币")]
-        OpenTreasure = 5,
+        OpenTreasure = 6,
         [Description("看广告")]
-        Ad = 6,
+        Ad = 7,
         [Description("看广告赚金币")]
-        ViewAdMoney = 7,
+        ViewAdMoney = 8,
         [Description("吃饭打卡领金币")]
-        Dining = 8,
+        Dining = 9,
         [Description("天天领金币")]
-        DayMoney = 9,
+        DayMoney = 10,
         [Description("每天打卡拿奖励")]
-        DayClockIn = 10,
+        DayClockIn = 11,
         [Description("每天睡觉起床")]
-        DaySawu = 11,
+        DaySawu = 12,
         [Description("一键领金币")]
-        OneClickMoney = 12,
+        OneClickMoney = 13,
         [Description("早安小岛")]
-        ZaoAnXiaoDao = 13,
+        ZaoAnXiaoDao = 14,
         [Description("抖音快手快手极速版")]
-        DyAndKsAddKsJs = 14,
+        DyAndKsAddKsJs = 15,
         [Description("金币购赚金币")]
-        JbGou = 15,
+        JbGou = 16,
         [Description("刷广告视频赚金币")]
-        ReLoadAd = 18,
+        ReLoadAd = 17,
         [Description("看视频赚金币")]
         ViewVideo = 31,
         [Description("看直播赚金币")]
