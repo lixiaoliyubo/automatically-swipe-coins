@@ -218,6 +218,25 @@ public abstract class AdWatchingBase : IAdWatching
             await Task.Delay(delay);
         }
     }
+    /// <summary>
+    /// 点击返回
+    /// </summary>
+    /// <param name="device">设备模型</param>
+    /// <param name="deviceData">设备数据</param>
+    /// <param name="delay">延迟时间</param>
+    /// <returns>异步任务</returns>
+    protected async Task ClickBackButtonAsync(DeviceModel device, DeviceData deviceData, int delay = 0)
+    {
+        IsOperate = true;
+        device.LastClickTime = DateTime.Now;
+        _logService.LogInfo($"位置：{device.CurPage}{device.CurPage.GetDescription()}，点击返回", device.Id);
+        await _deviceService.CurAdbClient.ClickBackButtonAsync(deviceData);
+
+        if (delay > 0)
+        {
+            await Task.Delay(delay);
+        }
+    }
 
     /// <summary>
     /// 点击Home按钮

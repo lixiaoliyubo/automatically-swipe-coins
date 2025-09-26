@@ -42,6 +42,7 @@ public class AdWatchingFactory : IAdWatchingFactory
         
         return platformType switch
         {
+            PlatformType.DayClock => new DayClockAdWatching(_logService, deviceService, _cacheService, _sqlSugarService),
             PlatformType.Douyin => new DouyinAdWatching(_logService, deviceService, _cacheService, _sqlSugarService),
             PlatformType.DouyinJs => new DouyinAdWatching(_logService, deviceService, _cacheService, _sqlSugarService),
             PlatformType.Kuaishou => new KuaishouAdWatching(_logService, deviceService, _cacheService, _sqlSugarService),

@@ -29,9 +29,15 @@ namespace TimerCheckApp.enums
     public enum PlatformType
     {
         /// <summary>
+        /// 每日打卡
+        /// </summary>
+        [Description("每日打卡")]
+        [AppPackage("")]
+        DayClock = 12,
+        /// <summary>
         /// 抖音
         /// </summary>
-        [Description("抖音极速版")]
+        [Description("抖音")]
         [AppPackage("com.ss.android.ugc.aweme")]
         Douyin = 0,
         /// <summary>
