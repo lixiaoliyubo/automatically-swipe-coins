@@ -136,15 +136,6 @@ public class DayClockAdWatching : AdWatchingBase
                         #endregion
 
                         #region  抖音
-                        else if (text.TextBlocks.Any(a => a.Text == "做任务完成打卡"))
-                        {
-                            var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "做任务完成打卡");
-                            if (BoxPoint != null)
-                            {
-                                await ClickAsync(device, _device, BoxPoint.BoxPoints, 3000, BoxPoint.Text);
-                                continue;
-                            }
-                        }
                         else if (text.TextBlocks.Any(a => a.Text == "打卡领5000元现金") && text.TextBlocks.Any(a => a.Text == "去打卡"))
                         {
                             var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "去打卡");
@@ -154,12 +145,39 @@ public class DayClockAdWatching : AdWatchingBase
                                 continue;
                             }
                         }
-                        else if (text.TextBlocks.Any(a => a.Text.Contains("继续加油吧")) && text.TextBlocks.Any(a => a.Text == "去观看"))
+                        else if (text.TextBlocks.Any(a => a.Text.EndsWith("任务完成打卡")))
                         {
-                            var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "去观看");
+                            var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text.EndsWith("任务完成打卡"));
+                            if (BoxPoint != null)
+                            {
+                                await ClickAsync(device, _device, BoxPoint.BoxPoints, 3000, BoxPoint.Text);
+                                continue;
+                            }
+                        }
+                        else if (text.TextBlocks.Any(a => a.Text.Contains("继续加油吧")) && text.TextBlocks.Any(a => a.Text.EndsWith("个指定视频")))
+                        {
+                            var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text.EndsWith("个指定视频"));
                             if (BoxPoint != null)
                             {
                                 await ClickAsync(device, _device, BoxPoint.BoxPoints, 35000, BoxPoint.Text);
+                                await ClickBackButtonAsync(device, _device, 3000);
+                                continue;
+                            }
+                        }
+                        else if (text.TextBlocks.Any(a => a.Text.Contains("继续加油吧")) && text.TextBlocks.Any(a => a.Text.EndsWith("分钟视频")))
+                        {
+                            var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text.EndsWith("分钟视频"));
+                            if (BoxPoint != null)
+                            {
+                                Match a = Regex.Match(BoxPoint.Text, @"(\d+)分钟视频");
+                                DateTime dateTime = DateTime.Now.AddMinutes(a.Groups[1].Value.ToInt());
+                                while (true)
+                                {
+                                    if (dateTime < DateTime.Now) break;
+
+                                    var r = new Random().Next(3000, 8000);
+                                    await SwipeAsync(device, _device, SwipeDirection.Up, 5000, "上滑继续看刷视频", 200);
+                                }
                                 await ClickBackButtonAsync(device, _device, 3000);
                                 continue;
                             }
