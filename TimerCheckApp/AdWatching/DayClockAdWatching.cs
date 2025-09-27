@@ -145,16 +145,26 @@ public class DayClockAdWatching : AdWatchingBase
                                 continue;
                             }
                         }
-                        else if (text.TextBlocks.Any(a => a.Text.EndsWith("任务完成打卡")))
+                        else if (text.TextBlocks.Any(a => Regex.IsMatch(a.Text, @"做(\d+)个任务完成打卡") || a.Text == "做任务完成打卡") && !text.TextBlocks.Any(a => a.Text.Contains("继续加油吧")))
                         {
-                            var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text.EndsWith("任务完成打卡"));
+                            var BoxPoint = text.TextBlocks.FirstOrDefault(a => Regex.IsMatch(a.Text, @"做(\d+)个任务完成打卡") || a.Text == "做任务完成打卡");
                             if (BoxPoint != null)
                             {
                                 await ClickAsync(device, _device, BoxPoint.BoxPoints, 3000, BoxPoint.Text);
                                 continue;
                             }
                         }
-                        else if (text.TextBlocks.Any(a => a.Text.Contains("继续加油吧")) && text.TextBlocks.Any(a => a.Text.EndsWith("个指定视频")))
+                        else if (text.TextBlocks.Any(a => a.Text.EndsWith("广告完成打卡") || a.Text == "看广告完成打卡"))
+                        {
+                            var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text.EndsWith("广告完成打卡") || a.Text == "看广告完成打卡");
+                            if (BoxPoint != null)
+                            {
+                                await ClickAsync(device, _device, BoxPoint.BoxPoints, 35000, BoxPoint.Text);
+                                await ClickBackButtonAsync(device, _device, 3000);
+                                continue;
+                            }
+                        }
+                        else if (text.TextBlocks.Any(a => a.Text.Contains("继续加油吧")) && text.TextBlocks.Any(a => a.Text.EndsWith("个指定视频")) && !text.TextBlocks.Any(a => a.Text == "已完成"))
                         {
                             var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text.EndsWith("个指定视频"));
                             if (BoxPoint != null)
@@ -169,6 +179,7 @@ public class DayClockAdWatching : AdWatchingBase
                             var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text.EndsWith("分钟视频"));
                             if (BoxPoint != null)
                             {
+                                await ClickAsync(device, _device, BoxPoint.BoxPoints, 5000, BoxPoint.Text);
                                 Match a = Regex.Match(BoxPoint.Text, @"(\d+)分钟视频");
                                 DateTime dateTime = DateTime.Now.AddMinutes(a.Groups[1].Value.ToInt());
                                 while (true)
@@ -176,15 +187,15 @@ public class DayClockAdWatching : AdWatchingBase
                                     if (dateTime < DateTime.Now) break;
 
                                     var r = new Random().Next(3000, 8000);
-                                    await SwipeAsync(device, _device, SwipeDirection.Up, 5000, "上滑继续看刷视频", 200);
+                                    await SwipeAsync(device, _device, SwipeDirection.Up, r, "上滑继续看刷视频", 200);
                                 }
                                 await ClickBackButtonAsync(device, _device, 3000);
                                 continue;
                             }
                         }
-                        else if (text.TextBlocks.Any(a => a.Text == "完成任务"))
+                        else if (text.TextBlocks.Any(a => a.Text.StartsWith("完成任务")))
                         {
-                            var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "完成任务");
+                            var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text.StartsWith("完成任务"));
                             if (BoxPoint != null)
                             {
                                 await ClickAsync(device, _device, BoxPoint.BoxPoints, 35000, BoxPoint.Text);
@@ -299,7 +310,7 @@ public class DayClockAdWatching : AdWatchingBase
                                     if (dateTime < DateTime.Now) break;
 
                                     var r = new Random().Next(3000, 8000);
-                                    await SwipeAsync(device, _device, SwipeDirection.Up, 5000, "上滑继续看刷视频", 200);
+                                    await SwipeAsync(device, _device, SwipeDirection.Up, r, "上滑继续看刷视频", 200);
                                 }
                                 await ClickBackButtonAsync(device, _device, 3000);
                                 continue;
