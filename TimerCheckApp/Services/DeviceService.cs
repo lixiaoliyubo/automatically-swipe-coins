@@ -132,6 +132,8 @@ public class DeviceService : IDeviceService, IDisposable
                     Id = device.Serial,
                     Name = device.Name ?? GetDeviceName(device.Serial),
                     Status = device.State.ToString(),
+                    CurPlatform = enums.PlatformType.DayClock,
+                    CurPage = enums.AppPageEnum.DayClockIn,
                     IsRunning = _deviceTasks.ContainsKey(device.Serial) && !_deviceTasks[device.Serial].IsCancellationRequested
                 };
 
@@ -141,11 +143,6 @@ public class DeviceService : IDeviceService, IDisposable
                 {
                     deviceModel.Width = sizeReceiver.width;
                     deviceModel.Height = sizeReceiver.height;
-                }
-                if (DateTime.Now.Hour >= 0 && DateTime.Now.Hour < 8)
-                {
-                    deviceModel.CurPlatform =  enums.PlatformType.AliPay;
-                    deviceModel.CurPage =  enums.AppPageEnum.Node;
                 }
 
                 devices.Add(deviceModel);

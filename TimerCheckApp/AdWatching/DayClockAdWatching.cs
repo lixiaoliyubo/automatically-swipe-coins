@@ -154,6 +154,18 @@ public class DayClockAdWatching : AdWatchingBase
                                 continue;
                             }
                         }
+                        else if (text.TextBlocks.Any(a => Regex.IsMatch(a.Text, @"看(\d+)个指定视频")) && text.TextBlocks.Any(a => a.Text == "打卡日程"))
+                        {
+                            var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "去观看");
+                            if (BoxPoint != null)
+                            {
+                                await ClickAsync(device, _device, BoxPoint.BoxPoints, 5000, BoxPoint.Text);
+                                continue;
+                            }
+                            else {
+                                await Task.Delay(5000);
+                            }
+                        }
                         else if (text.TextBlocks.Any(a => a.Text.EndsWith("广告完成打卡") || a.Text == "看广告完成打卡"))
                         {
                             var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text.EndsWith("广告完成打卡") || a.Text == "看广告完成打卡");
