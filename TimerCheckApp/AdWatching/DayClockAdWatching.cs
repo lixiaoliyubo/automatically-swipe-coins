@@ -163,7 +163,7 @@ public class DayClockAdWatching : AdWatchingBase
                                 continue;
                             }
                             else {
-                                await Task.Delay(5000);
+                                await Task.Delay(10000);
                             }
                         }
                         else if (text.TextBlocks.Any(a => a.Text.EndsWith("广告完成打卡") || a.Text == "看广告完成打卡"))
