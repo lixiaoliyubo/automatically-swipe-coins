@@ -58,9 +58,10 @@ public class DayClockAdWatching : AdWatchingBase
             {
                 try
                 {
-                    if (device.CurPage == AppPageEnum.SlideUp && DateTime.Now.Hour > 23 && DateTime.Now.Minute > 30)
+                    if (device.CurPage == AppPageEnum.SlideUp)
                     {
-                        await Task.Delay(5000);
+                        var r = new Random().Next(3000, 8000);
+                        await SwipeAsync(device, _device, SwipeDirection.Up, r, "上滑继续看刷视频", 200);
                         continue;
                     }
                     OCRResult? text = await _deviceService.GetOCRText(device);
