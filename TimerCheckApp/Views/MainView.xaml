@@ -21,7 +21,6 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
-                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="300"/>
                     </Grid.RowDefinitions>
                     
@@ -32,87 +31,128 @@
                         <ToggleButton Content="所有日志" IsChecked="{Binding ShowAllLogs}" Command="{Binding ViewAllLogsCommand}" Margin="5" Padding="5"  BorderBrush="{ui:ThemeResource ControlBorderColorBrush}"/>
                     </ToolBar>
                     
-                    <!-- 设备列表 -->
-                    <ui:DataGrid Grid.Row="1" 
-                            MinRowHeight="25" 
-                            ColumnHeaderPadding="10,0" 
-                            HeadersVisibility="All" 
-                            GridLinesVisibility="All" 
-                            CanUserAddRows="False" 
-                            RowHeaderWidth="0"
-                            ColumnHeaderHeight="30"
-                            SelectionUnit="FullRow"
-                            BorderThickness="1"  AlternationCount="2"
-                            ScrollViewer.VerticalScrollBarVisibility="Auto"
-                            ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                            ItemsSource="{Binding Devices}" 
-                            SelectedItem="{Binding SelectedDevice}" 
-                            AutoGenerateColumns="False" 
-                            IsReadOnly="False" 
-                            SelectionMode="Single" 
-                            Margin="5">
-                        <ui:DataGrid.Columns>
-                            <ui:DataGridTextColumn Header="设备ID" Binding="{Binding Id}" Width="120"/>
-                            <ui:DataGridTextColumn Header="设备名称" Binding="{Binding Name}" Width="150"/>
-                            <ui:DataGridTextColumn Header="状态" Binding="{Binding Status}" Width="80"/>
-                            <!--<ui:DataGridTextColumn Header="当前应用" Binding="{Binding CurrentApp}" Width="150"/>-->
-                            <ui:DataGridComboBoxColumn Header="当前平台" SelectedValueBinding="{Binding CurPlatform}"  SelectedValuePath="Value" DisplayMemberPath="Description" ItemsSource="{ext:Enumeration {x:Type enums:PlatformType}}"  Width="100"/>
-                            <ui:DataGridComboBoxColumn Header="当前页面" SelectedValueBinding="{Binding CurPage}" SelectedValuePath="Value" DisplayMemberPath="Description" ItemsSource="{ext:Enumeration {x:Type enums:AppPageEnum}}" Width="100"/>
-                            <ui:DataGridTextColumn Header="最后检查时间" Binding="{Binding LastCheckTime, StringFormat='{}{0:HH:mm:ss}'}" Width="120"/>
-                            <ui:DataGridTemplateColumn Header="操作" Width="*">
-                                <ui:DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Orientation="Horizontal">
-                                            <ui:Button Content="启动" Margin="2" Padding="5,2" Appearance="Primary"
-                                                    Command="{Binding DataContext.StartDeviceCheckCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                    CommandParameter="{Binding}"
-                                                    Visibility="{Binding IsRunning, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=Inverse}"/>
-                                            <ui:Button Content="停止" Margin="2" Padding="5,2" Appearance="Error"
-                                                    Command="{Binding DataContext.StopDeviceCheckCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                    CommandParameter="{Binding}"
-                                                    Visibility="{Binding IsRunning, Converter={StaticResource BoolToVisibilityConverter}}"/>
-                                            <ui:Button Content="清理应用" Margin="2" Padding="5,2" Appearance="Error"
-                                                    Command="{Binding DataContext.CleanDeviceAppsCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                    CommandParameter="{Binding}"/>
-                                            <ui:Button Content="查看日志" Margin="2" Padding="5,2" Appearance="Warning"
-                                                    Command="{Binding DataContext.ViewDeviceLogsCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                    CommandParameter="{Binding}"/>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </ui:DataGridTemplateColumn.CellTemplate>
-                            </ui:DataGridTemplateColumn>
-                        </ui:DataGrid.Columns>
-                    </ui:DataGrid>
-                    
-                    <!-- 设备详情 -->
-                    <Expander Grid.Row="2" Header="设备详情" IsExpanded="True" Margin="5">
-                        <Grid Margin="5">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="100"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
+                    <!-- 设备列表区域：左侧DataGrid + 右侧操作面板 -->
+                    <Grid Grid.Row="1" Margin="5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- 左侧：设备列表DataGrid -->
+                        <Grid Grid.Row="1" Margin="5">
                             <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
+                            <ui:DataGrid Grid.Row="0" x:Name="DeviceDataGrid"
+                                MinRowHeight="25" 
+                                ColumnHeaderPadding="10,0" 
+                                HeadersVisibility="All" 
+                                GridLinesVisibility="All" 
+                                CanUserAddRows="False" 
+                                RowHeaderWidth="0"
+                                ColumnHeaderHeight="30"
+                                SelectionUnit="FullRow"
+                                BorderThickness="1" AlternationCount="2"
+                                ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                ItemsSource="{Binding Devices}" 
+                                SelectedItem="{Binding SelectedDevice}" 
+                                AutoGenerateColumns="False" 
+                                IsReadOnly="True" 
+                                SelectionMode="Single">
+                                <ui:DataGrid.Columns>
+                                    <ui:DataGridTextColumn Header="设备ID" Binding="{Binding Id}" Width="120"/>
+                                    <ui:DataGridTextColumn Header="设备名称" Binding="{Binding Name}" Width="150"/>
+                                    <ui:DataGridTextColumn Header="状态" Binding="{Binding Status}" Width="80"/>
+                                    <ui:DataGridTextColumn Header="最后检查时间" Binding="{Binding LastCheckTime, StringFormat='{}{0:HH:mm:ss}'}" Width="*"/>
+                                </ui:DataGrid.Columns>
+                            </ui:DataGrid>
+                            <!-- 设备详情 -->
+                            <Expander Grid.Row="1" Header="设备详情" IsExpanded="True" Margin="5">
+                                <Grid Margin="5">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="100"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
 
-                            <ui:TextBlock Grid.Row="0" Grid.Column="0" Text="当前应用:" FontWeight="Bold" Margin="0,0,5,0"/>
-                            <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal">
+                                    <ui:TextBlock Grid.Row="0" Grid.Column="0" Text="当前应用:" FontWeight="Bold" Margin="0,0,5,0"/>
+                                    <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal">
+                                        <ui:TextBlock Text="{Binding SelectedDevice.CurrentApp}" TextWrapping="Wrap" Margin="0,0,5,0"/>
+                                        <ui:TextBlock Text="{Binding SelectedDevice.CurPlatform}" TextWrapping="Wrap" Margin="0,0,5,0"/>
+                                        <ui:TextBlock Text="{Binding SelectedDevice.CurPage}" TextWrapping="Wrap" Margin="0,0,5,0"/>
+                                        <ui:TextBlock Text="{Binding SelectedDevice.Width}" TextWrapping="Wrap" Margin="0,0,5,0"/>
+                                        <ui:TextBlock Text="{Binding SelectedDevice.Height}" TextWrapping="Wrap" Margin="0,0,5,0"/>
+                                    </StackPanel>
 
-                                <ui:TextBlock Text="{Binding SelectedDevice.CurrentApp}" TextWrapping="Wrap" Margin="0,0,5,0"/>
-                                <ui:TextBlock Text="{Binding SelectedDevice.CurPlatform}" TextWrapping="Wrap" Margin="0,0,5,0"/>
-                                <ui:TextBlock Text="{Binding SelectedDevice.CurPage}" TextWrapping="Wrap" Margin="0,0,5,0"/>
-                                <ui:TextBlock Text="{Binding SelectedDevice.Width}" TextWrapping="Wrap" Margin="0,0,5,0"/>
-                                <ui:TextBlock Text="{Binding SelectedDevice.Height}" TextWrapping="Wrap" Margin="0,0,5,0"/>
-                            </StackPanel>
-
-                            <ui:TextBlock Grid.Row="1" Grid.Column="0" Text="OCR识别结果:" FontWeight="Bold" Margin="0,5,5,0"/>
-                            <ui:TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedDevice.LastOcrResult}" TextWrapping="Wrap" Margin="0,5,0,0" Height="50"/>
+                                    <ui:TextBlock Grid.Row="1" Grid.Column="0" Text="OCR识别结果:" FontWeight="Bold" Margin="0,5,5,0"/>
+                                    <ui:TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedDevice.LastOcrResult}" TextWrapping="Wrap" Margin="0,5,0,0" Height="50"/>
+                                </Grid>
+                            </Expander>
                         </Grid>
-                    </Expander>
+
+                        <!-- 右侧：操作面板 -->
+                        <GroupBox Grid.Column="1" Header="操作" Margin="5,0,0,0" Width="500">
+                            <ui:UniformGrid Margin="5" DataContext="{Binding SelectedDevice}">
+                                <StackPanel Orientation="Vertical" VerticalAlignment="Top" HorizontalAlignment="Left">
+                                    <ui:FormItem Prefix="选择设备：" PrefixWidth="150">
+                                        <ui:TextBlock Text="{Binding Id}" VerticalAlignment="Center"/>
+                                    </ui:FormItem>
+                                    <ui:FormItem Prefix="选择平台：" PrefixWidth="150">
+                                        <ComboBox SelectedValue="{Binding CurPlatform}" SelectedValuePath="Value" DisplayMemberPath="Description" ItemsSource="{ext:Enumeration {x:Type enums:PlatformType}}" Margin="2"/>
+                                    </ui:FormItem>
+                                    <ui:FormItem Prefix="选择页面：" PrefixWidth="150">
+                                        <ComboBox SelectedValue="{Binding CurPage}" SelectedValuePath="Value" DisplayMemberPath="Description" ItemsSource="{ext:Enumeration {x:Type enums:AppPageEnum}}" Margin="2"/>
+                                    </ui:FormItem>
+                                    <ui:FormItem Prefix="间隔时间：" PrefixWidth="150">
+                                        <StackPanel Orientation="Horizontal">
+                                            <ui:TextBox Text="{Binding IntervalMinutes}" Width="80" Margin="2"/>
+                                            <ui:TextBlock Text="分" VerticalAlignment="Center" Margin="2,0"/>
+                                            <ui:TextBox Text="{Binding IntervalSeconds}" Width="80" Margin="2"/>
+                                            <ui:TextBlock Text="秒" VerticalAlignment="Center" Margin="2,0"/>
+                                        </StackPanel>
+                                    </ui:FormItem>
+                                    <ui:FormItem Prefix="随机暂停时间：" PrefixWidth="150">
+                                        <StackPanel Orientation="Horizontal">
+                                            <ui:TextBox Text="{Binding RandomPauseMinSeconds}" Width="80" Margin="2"/>
+                                            <ui:TextBlock Text="~" VerticalAlignment="Center" Margin="2,0"/>
+                                            <ui:TextBox Text="{Binding RandomPauseMaxSeconds}" Width="80" Margin="2"/>
+                                            <ui:TextBlock Text="秒" VerticalAlignment="Center" Margin="2,0"/>
+                                        </StackPanel>
+                                    </ui:FormItem>
+                                    <ui:FormItem Prefix="重复次数：" PrefixWidth="150" HorizontalAlignment="Left">
+                                        <ui:TextBox Text="{Binding RepeatCount}" Width="100" Margin="2"/>
+                                    </ui:FormItem>
+                                    <ui:FormItem Prefix="" PrefixWidth="150">
+                                        <StackPanel Orientation="Horizontal">
+                                            <ui:Button Content="启动" Margin="2" Padding="8,4" Appearance="Primary"
+                                                        Command="{Binding DataContext.StartDeviceCheckCommand, ElementName=DeviceDataGrid}"
+                                                        CommandParameter="{Binding}"
+                                                        Visibility="{Binding IsRunning, Converter={StaticResource InvertedBooleanToVisibilityConverter}}"/>
+                                            <ui:Button Content="停止" Margin="2" Padding="8,4" Appearance="Error"
+                                                        Command="{Binding DataContext.StopDeviceCheckCommand, ElementName=DeviceDataGrid}"
+                                                        CommandParameter="{Binding}"
+                                                        Visibility="{Binding IsRunning, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                            <ui:Button Content="清理应用" Margin="2" Padding="8,4" Appearance="Error"
+                                                        Command="{Binding DataContext.CleanDeviceAppsCommand, ElementName=DeviceDataGrid}"
+                                                        CommandParameter="{Binding}"/>
+                                            <ui:Button Content="查看日志" Margin="2" Padding="8,4" Appearance="Warning"
+                                                        Command="{Binding DataContext.ViewDeviceLogsCommand, ElementName=DeviceDataGrid}"
+                                                        CommandParameter="{Binding}"/>
+                                        </StackPanel>
+                                    </ui:FormItem>
+                                </StackPanel>
+                            </ui:UniformGrid>
+                        </GroupBox>
+                    </Grid>
+                    
                     
                     <!-- 日志列表 -->
-                    <GroupBox Grid.Row="3" Header="日志" Margin="5">
+                    <GroupBox Grid.Row="2" Header="日志" Margin="5">
                         <Grid>
                             <TextBox x:Name="LogsTextBox"
                                      AcceptsReturn="True"

@@ -111,6 +111,36 @@ public partial class DeviceModel : ObservableObject
     [ObservableProperty]
     private int _height;
 
+    /// <summary>
+    /// 检查间隔时间（分钟）
+    /// </summary>
+    [ObservableProperty]
+    private int _intervalMinutes = 0;
+
+    /// <summary>
+    /// 检查间隔时间（秒）
+    /// </summary>
+    [ObservableProperty]
+    private int _intervalSeconds;
+
+    /// <summary>
+    /// 随机暂停最小时间（秒）
+    /// </summary>
+    [ObservableProperty]
+    private int _randomPauseMinSeconds;
+
+    /// <summary>
+    /// 随机暂停最大时间（秒）
+    /// </summary>
+    [ObservableProperty]
+    private int _randomPauseMaxSeconds;
+
+    /// <summary>
+    /// 重复次数
+    /// </summary>
+    [ObservableProperty]
+    private int _repeatCount = 0;
+
 
     /// <summary>
     /// 构造函数

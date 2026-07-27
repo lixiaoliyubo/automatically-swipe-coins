@@ -51,6 +51,11 @@ public class DayClockAdWatching : AdWatchingBase
         int StopTimeSpan = 0;
         int AdTime = 0;
         bool isCompele = false; //是否强制结束
+        // 重复次数计数
+        int repeatIndex = 0;
+        // 计算间隔延迟毫秒数
+        int intervalDelayMs = device.IntervalMinutes * 60 * 1000 + device.IntervalSeconds * 1000;
+        if (intervalDelayMs <= 0) intervalDelayMs = 1000; // 默认1秒
         try
         {
             List<string> PagePosChange = new List<string>();
@@ -58,10 +63,18 @@ public class DayClockAdWatching : AdWatchingBase
             {
                 try
                 {
+                    // 检查重复次数限制
+                    if (device.RepeatCount > 0 && repeatIndex >= device.RepeatCount)
+                    {
+                        _logService.LogInfo($"达到重复次数限制({device.RepeatCount})，退出自动化", device.Id);
+                        break;
+                    }
+                    repeatIndex++;
                     if (device.CurPage == AppPageEnum.SlideUp)
                     {
-                        var r = new Random().Next(3000, 8000);
-                        await SwipeAsync(device, _device, SwipeDirection.Up, r, "上滑继续看刷视频", 200);
+                        var r = GetRandomPauseMs(device);
+                        await SwipeAsync(device, _device, SwipeDirection.Up, intervalDelayMs, "上滑继续看刷视频", 200);
+                        await Task.Delay(r);
                         continue;
                     }
                     OCRResult? text = await _deviceService.GetOCRText(device);
@@ -374,6 +387,19 @@ public class DayClockAdWatching : AdWatchingBase
         {
             _logService.LogInfo($"自动化过程出错: {ex.Message}", device.Id);
         }
+    }
+
+    /// <summary>
+    /// 获取随机暂停毫秒数
+    /// </summary>
+    private static int GetRandomPauseMs(DeviceModel device)
+    {
+        int minMs = device.RandomPauseMinSeconds > 0 || device.RandomPauseMaxSeconds > 0
+            ? device.RandomPauseMinSeconds * 1000 : 3000;
+        int maxMs = device.RandomPauseMinSeconds > 0 || device.RandomPauseMaxSeconds > 0
+            ? device.RandomPauseMaxSeconds * 1000 : 8000;
+        if (maxMs <= minMs) maxMs = minMs + 1000;
+        return new Random().Next(minMs, maxMs);
     }
 
 }

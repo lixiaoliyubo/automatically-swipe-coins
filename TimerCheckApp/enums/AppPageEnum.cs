@@ -5,7 +5,7 @@ namespace TimerCheckApp.enums
     public enum AppPageEnum
     {
         Node = 0,
-        [Description("滑动看短剧")]
+        [Description("上滑刷视频")]
         SlideUp = 1,
         /// <summary>
         /// 刷视频
