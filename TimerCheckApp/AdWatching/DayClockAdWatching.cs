@@ -170,8 +170,9 @@ public class DayClockAdWatching : AdWatchingBase
                         }
                         else if (text.TextBlocks.Any(a => Regex.IsMatch(a.Text, @"看(\d+)个指定视频")) && text.TextBlocks.Any(a => a.Text == "打卡日程"))
                         {
+                            var row = text.TextBlocks.FirstOrDefault(a => Regex.IsMatch(a.Text, @"看(\d+)个指定视频"));
                             var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "去观看");
-                            if (BoxPoint != null)
+                            if (BoxPoint != null && (BoxPoint.BoxPoints[0].Y - row?.BoxPoints[0].Y) < 50)
                             {
                                 await ClickAsync(device, _device, BoxPoint.BoxPoints, 5000, BoxPoint.Text);
                                 continue;
