@@ -352,6 +352,24 @@ public class DayClockAdWatching : AdWatchingBase
                                 continue;
                             }
                         }
+                        else if (text.TextBlocks.Any(a => a.Text == "已成功领取奖励" || a.Text == "已成功领取奖励 ×" || a.Text == "已成功领取奖励×"))
+                        {
+                            var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "已成功领取奖励" || a.Text == "已成功领取奖励 ×" || a.Text == "已成功领取奖励×");
+                            if (BoxPoint != null)
+                            {
+                                await ClickAsync(device, _device, BoxPoint.BoxPoints, 3000, BoxPoint.Text);
+                                continue;
+                            }
+                        }
+                        else if (text.TextBlocks.Any(a => a.Text == "今日广告任务") && text.TextBlocks.Any(a => a.Text == "去看广告"))
+                        {
+                            var BoxPoint = text.TextBlocks.FirstOrDefault(a => a.Text == "去看广告");
+                            if (BoxPoint != null)
+                            {
+                                await ClickAsync(device, _device, BoxPoint.BoxPoints, 3000, BoxPoint.Text);
+                                continue;
+                            }
+                        }
                         #endregion
 
 
