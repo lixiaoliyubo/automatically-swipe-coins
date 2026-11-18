@@ -1,36 +1,59 @@
-# 自动刷金币
+# Android Auto Video Assistant
 
-#### Description
-{**When you're done, you can delete the content in this README and update the file with details for others getting started with your repository**}
+A Windows desktop assistant for automating repetitive short-video tasks on Android devices. Built with **C# / WPF / ADB / OCR**, it connects to devices over USB debugging, recognizes on-screen text, and drives tap/swipe/back actions for multiple apps.
 
-#### Software Architecture
-Software architecture description
+> For personal learning and automation research on devices you own only. Read the disclaimer in the Chinese README before use.
 
-#### Installation
+## Features
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+- Multi-device management over ADB: discover, start/stop per device, clear background apps.
+- Automation flows for Douyin, Douyin Lite, Kuaishou, Kuaishou Lite, Xigua, Fanqie FM / Novel, Hongguo, Hema and Alipay.
+- Screen capture via ADB framebuffer + PaddleOCR text recognition + keyword-based page state machine.
+- Task scheduling: interval, random pause range, repeat count, nightly device check, daily cleanup.
+- Daily check-in flow for scheduled video/ad tasks.
+- NLog file logging, TTS alerts, per-device logs.
+- SQLite persistence (SqlSugar) and in-memory cache keyed by device.
+- Optional local WebSocket bridge (`ws://127.0.0.1:33332`) for device info, screenshots and input commands.
+- Fluent UI with light/dark theme.
 
-#### Instructions
+## Requirements
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+- Windows 10/11 (x64)
+- .NET 8 SDK
+- Android device with USB debugging enabled
+- `adb` available in `PATH` (or use the bundled `scrcpy/adb.exe`)
+- Target apps installed on the device
 
-#### Contribution
+## Build & Run
 
-1.  Fork the repository
-2.  Create Feat_xxx branch
-3.  Commit your code
-4.  Create Pull Request
+```bash
+git clone https://gitee.com/lixiaoliyubo/automatically-swipe-coins.git
+cd automatically-swipe-coins
+dotnet restore
+dotnet build TimerCheckApp/TimerCheckApp.csproj -c Release
+dotnet run --project TimerCheckApp/TimerCheckApp.csproj
+```
 
+Check the device connection first:
 
-#### Gitee Feature
+```bash
+adb devices
+```
 
-1.  You can use Readme\_XXX.md to support different languages, such as Readme\_en.md, Readme\_zh.md
-2.  Gitee blog [blog.gitee.com](https://blog.gitee.com)
-3.  Explore open source project [https://gitee.com/explore](https://gitee.com/explore)
-4.  The most valuable open source project [GVP](https://gitee.com/gvp)
-5.  The manual of Gitee [https://gitee.com/help](https://gitee.com/help)
-6.  The most popular members  [https://gitee.com/gitee-stars/](https://gitee.com/gitee-stars/)
+Open `安卓自动刷视频辅助工具.sln` in Visual Studio 2022 if you prefer an IDE.
+
+## Usage
+
+1. Open the **ADB设备** tab and click **刷新设备**.
+2. Configure interval, random pause and repeat count per device.
+3. Choose a platform and click **启动**. Click **停止** to cancel.
+4. View global or per-device logs in the log panel.
+5. The **WebSocket** tab connects to a local bridge service for remote device info and input commands.
+
+## Documentation
+
+The full documentation, supported package names, configuration details, FAQ and disclaimer are in the Chinese [README.md](README.md).
+
+## License
+
+[MIT License](LICENSE)

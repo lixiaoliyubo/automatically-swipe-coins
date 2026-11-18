@@ -12,7 +12,7 @@
         Background="{ui:ThemeResource ApplicationFillBrush}"
         Foreground="{ui:ThemeResource ApplicationTextColorBrush}"    
         mc:Ignorable="d"  Icon="/app_icon.ico"
-        Title="Android设备监控工具" Height="800" Width="1100"
+        Title="安卓自动刷视频辅助工具" Height="800" Width="1100"
         ExtendsContentIntoTitleBar="True"
         WindowBackdropType="Mica"
         WindowCornerPreference="Round"
@@ -24,7 +24,7 @@
             <RowDefinition Height="40"/>
             <RowDefinition/>
         </Grid.RowDefinitions>
-        <ui:TitleBar Grid.Row="0" Title="刷广告挂机工具" ShowHelp="False">
+        <ui:TitleBar Grid.Row="0" Title="安卓自动刷视频辅助工具" ShowHelp="False">
             <ui:TitleBar.Icon>
                 <Image Source="pack://application:,,,/TimerCheckApp;component/app_icon.ico" Width="20" Height="20" Stretch="Uniform"/>
             </ui:TitleBar.Icon>
