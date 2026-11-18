@@ -3,6 +3,8 @@ using AdvancedSharpAdbClient.Models;
 using AdvancedSharpAdbClient.Receivers;
 using PaddleOCRSharp;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.IO;
 using System.Text.RegularExpressions;
 using TimerCheckApp.AdWatching;
 using TimerCheckApp.Extensions;
@@ -581,6 +583,73 @@ public class DeviceService : IDeviceService, IDisposable
             _logService.LogError($"获取设备尺寸失败: {ex.Message}", deviceId);
             return (0, 0);
         }
+    }
+
+    /// <summary>
+    /// 启动指定设备的投屏（scrcpy）
+    /// </summary>
+    /// <param name="deviceId">设备ID</param>
+    /// <returns>是否成功启动</returns>
+    public bool StartScreenMirror(string deviceId)
+    {
+        try
+        {
+            var scrcpyPath = FindScrcpyPath();
+            if (scrcpyPath == null)
+            {
+                _logService.LogError("未找到 scrcpy.exe，请将 scrcpy 放在程序目录下的 scrcpy 文件夹中", deviceId);
+                return false;
+            }
+
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = scrcpyPath,
+                Arguments = $"-s \"{deviceId}\"",
+                WorkingDirectory = Path.GetDirectoryName(scrcpyPath)!,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            Process.Start(startInfo);
+            _logService.LogInfo($"已启动设备 {deviceId} 投屏", deviceId);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logService.LogError($"启动投屏失败: {ex.Message}", deviceId);
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// 查找 scrcpy.exe：先查程序目录及上级目录，再查环境变量 PATH
+    /// </summary>
+    private static string? FindScrcpyPath()
+    {
+        var baseDir = AppContext.BaseDirectory;
+        var candidates = new List<string>
+        {
+            Path.Combine(baseDir, "scrcpy", "scrcpy.exe"),
+            Path.Combine(baseDir, "scrcpy.exe")
+        };
+
+        var dir = Directory.GetParent(baseDir);
+        for (int i = 0; i < 5 && dir != null; i++, dir = dir.Parent)
+        {
+            candidates.Add(Path.Combine(dir.FullName, "scrcpy", "scrcpy.exe"));
+            candidates.Add(Path.Combine(dir.FullName, "scrcpy.exe"));
+        }
+
+        var found = candidates.FirstOrDefault(File.Exists);
+        if (found != null)
+        {
+            return found;
+        }
+
+        var pathDirs = Environment.GetEnvironmentVariable("PATH")?.Split(Path.PathSeparator) ?? Array.Empty<string>();
+        return pathDirs
+            .Select(p => Path.Combine(p.Trim(), "scrcpy.exe"))
+            .FirstOrDefault(File.Exists);
     }
 
     #endregion

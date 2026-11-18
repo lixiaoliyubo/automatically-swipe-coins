@@ -71,6 +71,13 @@ namespace TimerCheckApp.Services.Interfaces
         (int width, int height) GetDeviceSize(string deviceId);
 
         /// <summary>
+        /// 启动指定设备的投屏（scrcpy）
+        /// </summary>
+        /// <param name="deviceId">设备ID</param>
+        /// <returns>是否成功启动</returns>
+        bool StartScreenMirror(string deviceId);
+
+        /// <summary>
         /// 播放提示音
         /// </summary>
         /// <param name="fileName">音频文件名</param>

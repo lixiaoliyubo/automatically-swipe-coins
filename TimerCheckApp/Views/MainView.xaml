@@ -29,6 +29,7 @@
                         <ui:Button Content="刷新设备" Command="{Binding RefreshDevicesCommand}" Margin="5" Padding="5" Appearance="Success"/>
                         <ui:Button Content="清理所有" Command="{Binding CleanupAllCommand}" Margin="5" Padding="5" Appearance="Warning"/>
                         <ToggleButton Content="所有日志" IsChecked="{Binding ShowAllLogs}" Command="{Binding ViewAllLogsCommand}" Margin="5" Padding="5"  BorderBrush="{ui:ThemeResource ControlBorderColorBrush}"/>
+                        <ui:Button Content="投屏" Command="{Binding StartScreenMirrorCommand}" Margin="5" Padding="5" Appearance="Primary" ToolTip="投屏设备列表中选中的设备"/>
                     </ToolBar>
                     
                     <!-- 设备列表区域：左侧DataGrid + 右侧操作面板 -->

@@ -479,6 +479,21 @@ public partial class MainViewModel : ObservableObject
     }
 
     /// <summary>
+    /// 投屏选中的设备命令
+    /// </summary>
+    [RelayCommand]
+    private void StartScreenMirror()
+    {
+        if (SelectedDevice == null)
+        {
+            _logService.LogWarning("请先在设备列表中选择要投屏的设备", "System");
+            return;
+        }
+
+        _deviceService.StartScreenMirror(SelectedDevice.Id);
+    }
+
+    /// <summary>
     /// 清理指定设备上的所有应用命令
     /// </summary>
     [RelayCommand]
